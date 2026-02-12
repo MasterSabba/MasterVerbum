@@ -2,8 +2,7 @@ const peerConfig = { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:193
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false, isProcessing = false;
-let timerInterval, timeLeft = 60;
-let myScore = 0, oppScore = 0;
+let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0;
 
 const dizionarioReale = ["ABITUDINE", "ASTRONAVE", "BICICLETTA", "BOTTIGLIA", "BUSSOLA", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", "GENTILEZZA", "GIARDINO", "LABIRINTO", "MONTAGNA", "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", "VELOCITA", "ZAFFERANO", "ZUCCHERO", "PIRAMIDE", "ORCHESTRA", "VULCANO", "SATELLITE", "AVVENTURA", "MERAVIGLIA"];
 
@@ -42,7 +41,6 @@ document.getElementById('bot-btn').onclick = () => {
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('keyboard').classList.add('hidden');
     document.getElementById('word-display').innerText = "GENERAZIONE...";
-    
     setTimeout(() => {
         secretWord = dizionarioReale[Math.floor(Math.random()*dizionarioReale.length)];
         isProcessing = false;
@@ -101,11 +99,9 @@ function end(win) {
     const ov = document.getElementById('overlay');
     ov.classList.remove('hidden');
     let v = amIMaster ? !win : win;
-    
     if(v) myScore++; else oppScore++;
     document.getElementById('my-score').innerText = myScore;
     document.getElementById('opp-score').innerText = oppScore;
-
     document.getElementById('result-title').innerText = v ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
     document.getElementById('result-title').style.color = v ? "var(--neon-blue)" : "var(--neon-pink)";
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
@@ -116,6 +112,8 @@ document.getElementById('retry-btn').onclick = () => {
     if(isBot) document.getElementById('bot-btn').click();
     else if(conn) { conn.send({ type: 'REMATCH' }); prepareNextRound(); }
 };
+
+document.getElementById('exit-btn').onclick = () => location.reload();
 
 function prepareNextRound() {
     amIMaster = !amIMaster;
@@ -130,7 +128,6 @@ function prepareNextRound() {
     }
 }
 
-// Tastiera e resto rimane come prima
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div'); b.className = 'key'; b.innerText = l;
     b.onclick = () => { if(!amIMaster && !b.classList.contains('used') && !isProcessing) { b.classList.add('used'); if(!isBot && conn) conn.send({type:'GUESS', letter:l}); processMove(l); } };
@@ -151,7 +148,7 @@ function draw(s) {
 function sendEmoji(e) { if(conn && conn.open) conn.send({ type: 'EMOJI', emoji: e }); showEmoji(e); }
 function showEmoji(e) {
     const el = document.createElement('div'); el.className = 'floating-emoji'; el.innerText = e;
-    document.getElementById('emoji-area').appendChild(el);
+    document.body.appendChild(el); // Emoji libera sullo schermo
     setTimeout(() => el.remove(), 1200);
 }
 document.getElementById('copy-btn').onclick = () => {
