@@ -5,18 +5,24 @@ const peerConfig = {
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
+let isProcessing = false; // Impedisce clic multipli durante il caricamento
 
-// --- MEGA DIZIONARIO DI SICUREZZA ---
-const superDizionario = ["ABITUDINE", "ACQUARIO", "ALLENATORE", "ASTRONAVE", "AVVENTURA", "BICICLETTA", "BOTTIGLIA", "BUSSOLA", "CALCIATORE", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", "FAMIGLIA", "FANTASIA", "GENTILEZZA", "GIARDINO", "IDROGENO", "LABIRINTO", "MONTAGNA", "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", "VELOCITA", "ZAFFERANO", "ZUCCHERO"];
+// --- DIZIONARIO DI SICUREZZA ---
+const superDizionario = [
+    "ABITUDINE", "ACQUARIO", "ALLENATORE", "ASTRONAVE", "AVVENTURA", "BICICLETTA", "BOTTIGLIA", 
+    "BUSSOLA", "CALCIATORE", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", 
+    "FAMIGLIA", "FANTASIA", "GENTILEZZA", "GIARDINO", "IDROGENO", "LABIRINTO", "MONTAGNA", 
+    "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", 
+    "VELOCITA", "ZAFFERANO", "ZUCCHERO", "AEROPLANO", "CANCELLERIA", "DIPLOMAZIA", "ESPLORAZIONE"
+];
 
-// --- GENERATORE CASUALE SILLABICO (Logica Italiana) ---
+// --- GENERATORE SILLABICO (LOGICA ITALIANA) ---
 function generaParolaCasuale() {
     const voc = "AEIOU";
     const cons = "BCDFGLMNPQRSTV";
     const sillabe = ["STR", "BR", "CR", "PR", "TR", "GL", "CH", "SC", "GN"];
     let parola = "";
-    const len = Math.floor(Math.random() * 3) + 6; // Lunghezza 6-8
-
+    const len = Math.floor(Math.random() * 3) + 6;
     for(let i=0; i<len; i++) {
         if(i % 2 === 0) {
             parola += (Math.random() > 0.8) ? sillabe[Math.floor(Math.random()*sillabe.length)] : cons[Math.floor(Math.random()*cons.length)];
@@ -24,16 +30,11 @@ function generaParolaCasuale() {
             parola += voc[Math.floor(Math.random()*voc.length)];
         }
     }
-    // Assicura che finisca con una vocale
     if(!voc.includes(parola.slice(-1))) parola += voc[Math.floor(Math.random()*voc.length)];
     return parola.toUpperCase();
 }
 
-// --- ANTI-BLOCCO ---
-function startHeartbeat() {
-    setInterval(() => { if (conn && conn.open) conn.send({ type: 'KEEP_ALIVE' }); }, 3000);
-}
-
+// --- CONNESSIONE PEER ---
 peer.on('open', id => { document.getElementById('my-id').innerText = id; });
 peer.on('connection', c => { conn = c; setupLogic(); });
 
@@ -45,7 +46,6 @@ document.getElementById('connect-btn').onclick = () => {
 function setupLogic() {
     conn.on('open', () => {
         amIMaster = myId < conn.peer;
-        startHeartbeat();
         document.getElementById('setup-screen').classList.add('hidden');
         if(amIMaster) {
             document.getElementById('host-screen').classList.remove('hidden');
@@ -58,36 +58,41 @@ function setupLogic() {
     });
 
     conn.on('data', data => {
-        if (data.type === 'KEEP_ALIVE') return;
         if (data.type === 'START') { secretWord = data.word; isBot = false; startPlay("SFIDANTE"); }
         else if (data.type === 'GUESS') processMove(data.letter);
         else if (data.type === 'EMOJI') showEmoji(data.emoji);
     });
 }
 
-// --- BOT IBRIDO (Casuale + Dizionario) ---
+// --- AZIONE BOT (CON BLOCCO TASTI) ---
 document.getElementById('bot-btn').onclick = () => {
+    if (isProcessing) return; 
+    isProcessing = true;
+    
     const display = document.getElementById('word-display');
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
-    
+    document.getElementById('keyboard').classList.add('hidden'); // Nasconde tastiera
+    document.getElementById('role-badge').innerText = "GENERAZIONE...";
+
     let loader = setInterval(() => {
         display.innerText = Math.random().toString(36).substring(2, 9).toUpperCase();
+        display.style.textShadow = "0 0 10px var(--neon-pink)";
     }, 50);
 
     setTimeout(() => {
         clearInterval(loader);
+        display.style.textShadow = "0 0 15px var(--neon-blue)";
         
-        // LOGICA IBRIDA: 70% parola reale dal dizionario, 30% parola generata dai suoni
-        if(Math.random() > 0.3) {
-            secretWord = superDizionario[Math.floor(Math.random() * superDizionario.length)];
-        } else {
-            secretWord = generaParolaCasuale();
-        }
+        // Logica Ibrida
+        secretWord = (Math.random() > 0.3) ? 
+            superDizionario[Math.floor(Math.random() * superDizionario.length)] : 
+            generaParolaCasuale();
         
         isBot = true; amIMaster = false;
+        isProcessing = false; 
         startPlay("BOT CHALLENGE");
-    }, 800);
+    }, 1200);
 };
 
 document.getElementById('start-btn').onclick = () => {
@@ -106,37 +111,54 @@ function startPlay(role) {
     document.getElementById('wrong-letters').innerText = "";
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.clearRect(0,0,200,200);
-    if(role !== "MASTER") document.getElementById('keyboard').classList.remove('hidden');
-    render();
-}
 
-function processMove(l) {
-    if(!guessedLetters.includes(l)) {
-        guessedLetters.push(l);
-        if(!secretWord.includes(l)) { 
-            mistakes++; draw(mistakes); 
-            document.getElementById('wrong-letters').innerText += l + " "; 
-        }
+    if(role !== "MASTER") {
+        document.getElementById('keyboard').classList.remove('hidden');
         render();
+    } else {
+        document.getElementById('word-display').innerText = "L'AMICO STA GIOCANDO";
     }
 }
 
+function processMove(l) {
+    if(isProcessing || guessedLetters.includes(l)) return;
+    guessedLetters.push(l);
+    if(!secretWord.includes(l)) { 
+        mistakes++; draw(mistakes); 
+        document.getElementById('wrong-letters').innerText += l + " "; 
+    }
+    render();
+}
+
 function render() {
-    if(!secretWord || document.getElementById('word-display').innerText.includes("SCEGLIE")) return;
+    if(!secretWord || isProcessing) return;
     let content = secretWord.split('').map(l => 
         guessedLetters.includes(l) ? `<span>${l}</span>` : "_"
     ).join('\u00A0');
     document.getElementById('word-display').innerHTML = content;
+
     const win = secretWord.split('').every(l => guessedLetters.includes(l));
-    if(win) end(true); else if(mistakes >= 6) end(false);
+    if(win) end(true);
+    else if(mistakes >= 6) end(false);
 }
 
 function end(wordGuessed) {
-    document.getElementById('overlay').classList.remove('hidden');
-    let title = document.getElementById('result-title');
-    if (amIMaster) title.innerText = wordGuessed ? "HAI PERSO!" : "HAI VINTO!";
-    else title.innerText = wordGuessed ? "HAI VINTO!" : "HAI PERSO!";
-    document.getElementById('result-desc').innerText = "La parola era: " + secretWord;
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('result-title');
+    overlay.classList.remove('hidden');
+    
+    let vinta = amIMaster ? !wordGuessed : wordGuessed;
+
+    if (vinta) {
+        title.innerText = "MISSIONE COMPIUTA";
+        title.style.color = "var(--neon-blue)";
+        overlay.style.background = "rgba(0, 15, 30, 0.98)";
+    } else {
+        title.innerText = "SISTEMA COMPROMESSO";
+        title.style.color = "var(--neon-pink)";
+        overlay.style.background = "rgba(30, 0, 5, 0.98)";
+    }
+    document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
 }
 
 // --- TASTIERA ---
@@ -145,7 +167,7 @@ kb.innerHTML = "";
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div'); b.className = 'key'; b.innerText = l;
     b.onclick = () => {
-        if(amIMaster || b.classList.contains('used')) return;
+        if(amIMaster || b.classList.contains('used') || isProcessing) return;
         b.classList.add('used');
         if(!isBot && conn) conn.send({ type: 'GUESS', letter: l });
         processMove(l);
@@ -153,6 +175,7 @@ kb.innerHTML = "";
     kb.appendChild(b);
 });
 
+// --- DISEGNO IMPICCATO ---
 function draw(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.beginPath();
@@ -171,9 +194,11 @@ function showEmoji(e) {
     document.getElementById('emoji-area').appendChild(el);
     setTimeout(() => el.remove(), 2000);
 }
+
 document.getElementById('copy-btn').onclick = () => {
     navigator.clipboard.writeText(myId);
     document.getElementById('copy-btn').innerText = "COPIATO!";
-    setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA", 2000);
+    setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA CODICE", 2000);
 };
+
 document.getElementById('retry-btn').onclick = () => location.reload();
