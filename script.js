@@ -1,70 +1,84 @@
-// --- CONFIGURAZIONE E FILTRO ITALIANO ---
-const config = { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }] } };
-const sillabeITA = ["MA", "RE", "PA", "NE", "LI", "BRO", "CA", "SA", "SO", "LE", "GA", "TO", "VI", "TA", "MON", "TE", "FIO", "RE"];
+// Configurazione per stabilità massima su iPad
+const peerConfig = {
+    config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }, { url: 'stun:stun1.l.google.com:19302' }] },
+    debug: 1
+};
 
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
-const peer = new Peer(myId, config);
+const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 
-// --- GENERATORE DI PAROLE SENZA NOMI ---
-async function ottieniParolaCasuale() {
-    try {
-        const response = await fetch('https://it.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=5&origin=*');
-        const data = await response.json();
-        
-        // Cerchiamo tra i 5 risultati quello che sembra più una parola italiana comune
-        for (let obj of data.query.random) {
-            let p = obj.title.toUpperCase().split(' ')[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            
-            // Filtro: No nomi (spesso iniziano con lettere specifiche o sono lunghi), No simboli, No parole troppo corte
-            if (p.length > 3 && p.length < 9 && /^[A-Z]+$/.test(p)) {
-                // Evitiamo nomi comuni che Wikipedia pesca spesso (Philippe, ecc) 
-                // controllando se la parola non finisce in modo "strano" per l'italiano
-                const finaliStrane = ["EPE", "IKE", "IPE", "Y", "W", "K"]; 
-                if (!finaliStrane.some(f => p.endsWith(f))) return p;
-            }
-        }
-        return generaParolaSillabica();
-    } catch(e) { return generaParolaSillabica(); }
+// Sistema Anti-Blocco: invia un segnale ogni 5 secondi per tenere attiva la connessione
+function startHeartbeat() {
+    setInterval(() => { if (conn && conn.open) conn.send({ type: 'KEEP_ALIVE' }); }, 5000);
 }
 
-function generaParolaSillabica() {
-    let p = "";
-    for(let i=0; i<3; i++) p += sillabeITA[Math.floor(Math.random() * sillabeITA.length)];
-    return p;
-}
-
-// --- LOGICA CONNESSIONE ---
 peer.on('open', id => { document.getElementById('my-id').innerText = id; });
-peer.on('connection', c => { conn = c; setupLogic(); });
 
+// Gestione connessione in entrata
+peer.on('connection', c => {
+    conn = c;
+    setupLogic();
+});
+
+// Gestione connessione in uscita
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase();
-    if(target) { conn = peer.connect(target); setupLogic(); }
+    if(target) {
+        conn = peer.connect(target, { reliable: true });
+        setupLogic();
+    }
 };
 
 function setupLogic() {
     conn.on('open', () => {
         amIMaster = myId < conn.peer;
+        startHeartbeat();
         document.getElementById('setup-screen').classList.add('hidden');
-        if(amIMaster) document.getElementById('host-screen').classList.remove('hidden');
-        else {
+        if(amIMaster) {
+            document.getElementById('host-screen').classList.remove('hidden');
+        } else {
             document.getElementById('play-screen').classList.remove('hidden');
-            document.getElementById('word-display').innerText = "ATTESA MASTER...";
+            document.getElementById('word-display').innerText = "IL MASTER SCRIVE...";
             document.getElementById('keyboard').classList.add('hidden');
         }
     });
+
     conn.on('data', data => {
-        if(data.type === 'START') { secretWord = data.word; startPlay("SFIDANTE"); }
-        else if(data.type === 'GUESS') processMove(data.letter);
-        else if(data.type === 'EMOJI') showEmoji(data.emoji);
+        if(data.type === 'START') {
+            secretWord = data.word;
+            isBot = false;
+            startPlay("SFIDANTE");
+        } else if(data.type === 'GUESS') {
+            processMove(data.letter);
+        } else if(data.type === 'EMOJI') {
+            showEmoji(data.emoji);
+        }
     });
+    
+    conn.on('close', () => { location.reload(); });
 }
 
-// --- GESTIONE TURNI ---
+// --- LOGICA BOT (Solo parole comuni italiane) ---
+async function ottieniParolaCasuale() {
+    try {
+        const resp = await fetch('https://it.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=10&origin=*');
+        const data = await resp.json();
+        const blacklist = ["PHILIPPE", "JEAN", "PIERRE", "LOUIS", "RENE", "HENRI"];
+        
+        for (let item of data.query.random) {
+            let p = item.title.toUpperCase().split(' ')[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (p.length > 4 && p.length < 9 && /^[A-Z]+$/.test(p) && !blacklist.includes(p)) {
+                return p;
+            }
+        }
+        return "GALAXY";
+    } catch(e) { return "UNIVERSO"; }
+}
+
 document.getElementById('bot-btn').onclick = async () => {
     isBot = true; amIMaster = false;
-    document.getElementById('status-msg').innerText = "🤖 Bot sta scegliendo...";
+    document.getElementById('status-msg').innerText = "🤖 Scelta parola...";
     secretWord = await ottieniParolaCasuale();
     startPlay("SOLO VS BOT");
 };
@@ -107,7 +121,7 @@ function processMove(l) {
 }
 
 function render() {
-    if(!secretWord || document.getElementById('word-display').innerText.includes("ATTESA")) return;
+    if(!secretWord || document.getElementById('word-display').innerText.includes("SCRIVE")) return;
     const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
     document.getElementById('word-display').innerText = res;
     if(!res.includes('_') && secretWord) end(true);
