@@ -3,64 +3,69 @@ let conn;
 let secretWord = "";
 let guessedLetters = [];
 let mistakes = 0;
+let isHost = false; // Chi mette la parola è l'Host
 
-peer.on('open', (id) => {
-    document.getElementById('my-id').innerText = id;
-});
+// Visualizza e Copia ID
+peer.on('open', id => { document.getElementById('my-id').innerText = id; });
+document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(document.getElementById('my-id').innerText);
+    alert("Codice copiato!");
+};
 
-peer.on('connection', (c) => {
-    conn = c;
-    setupDataListener();
-    document.getElementById('status').innerText = "Nemico connesso! Attendi il Verbum...";
-    document.getElementById('setup-screen').classList.add('hidden');
-});
-
+// Connessione
 document.getElementById('connect-btn').onclick = () => {
     const remoteId = document.getElementById('peer-id-input').value;
     conn = peer.connect(remoteId);
-    setupDataListener();
-    conn.on('open', () => {
-        document.getElementById('setup-screen').classList.add('hidden');
-        document.getElementById('word-input-screen').classList.remove('hidden');
-    });
+    setupConnection();
 };
 
-function setupDataListener() {
-    conn.on('data', (data) => {
-        if (data.type === 'START_GAME') {
+peer.on('connection', c => {
+    conn = c;
+    setupConnection();
+});
+
+function setupConnection() {
+    conn.on('open', () => {
+        document.getElementById('setup-screen').classList.add('hidden');
+        // Il primo che si connette/riceve decide se mostrare la scelta parola
+        document.getElementById('word-input-screen').classList.remove('hidden');
+    });
+
+    conn.on('data', data => {
+        if (data.type === 'START') {
             secretWord = data.word.toUpperCase();
-            initGameUI();
+            isHost = false; // Io indovino
+            startUI("DEVI INDOVINARE");
         } else if (data.type === 'GUESS') {
-            handleGuess(data.letter);
+            handleMove(data.letter);
         }
     });
 }
 
+// Inizio Gioco
 document.getElementById('start-game-btn').onclick = () => {
     const word = document.getElementById('secret-word').value.trim();
-    if (word.length >= 3) {
-        conn.send({ type: 'START_GAME', word: word });
+    if (word) {
         secretWord = word.toUpperCase();
-        initGameUI();
+        isHost = true; // Io ho messo la parola
+        conn.send({ type: 'START', word: secretWord });
+        startUI("STAI OSSERVANDO...");
         document.getElementById('word-input-screen').classList.add('hidden');
-    } else {
-        alert("Il Verbum deve avere almeno 3 lettere!");
     }
 };
 
-function initGameUI() {
+function startUI(roleText) {
     document.getElementById('play-screen').classList.remove('hidden');
+    document.getElementById('role-indicator').innerText = roleText;
+    if (isHost) document.getElementById('keyboard').classList.add('hidden');
     renderWord();
-    renderKeyboard();
 }
 
 function renderWord() {
     const display = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
     document.getElementById('word-display').innerText = display;
-    
-    if (!display.includes("_") && secretWord !== "") {
-        document.getElementById('message').innerText = "VITTORIA! HAI DOMINATO IL VERBUM 🎉";
-        document.getElementById('message').style.color = "var(--primary)";
+    if (!display.includes("_") && secretWord) {
+        document.getElementById('message').innerText = "PARTITA FINITA!";
     }
 }
 
@@ -72,42 +77,34 @@ function renderKeyboard() {
         btn.className = 'key';
         btn.innerText = l;
         btn.onclick = () => {
-            if (!guessedLetters.includes(l)) {
-                guessedLetters.push(l);
-                btn.classList.add('used');
-                conn.send({ type: 'GUESS', letter: l });
-                handleGuess(l);
-            }
+            btn.classList.add('used');
+            conn.send({ type: 'GUESS', letter: l });
+            handleMove(l);
         };
         kb.appendChild(btn);
     });
 }
+renderKeyboard();
 
-function handleGuess(letter) {
-    if (!secretWord.includes(letter)) {
-        mistakes++;
-        drawHangman(mistakes);
-        if (mistakes >= 6) {
-            document.getElementById('message').innerText = `SCONFITTA! IL VERBUM ERA: ${secretWord}`;
-            document.getElementById('message').style.color = "var(--accent)";
+function handleMove(letter) {
+    if (!guessedLetters.includes(letter)) {
+        guessedLetters.push(letter);
+        if (!secretWord.includes(letter)) {
+            mistakes++;
+            drawHangman(mistakes);
         }
+        renderWord();
     }
-    renderWord();
 }
 
 function drawHangman(step) {
-    const canvas = document.getElementById('hangmanCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = "#ff0055";
-    ctx.lineWidth = 5;
-    ctx.lineCap = "round";
-
-    switch(step) {
-        case 1: ctx.beginPath(); ctx.arc(100, 50, 25, 0, Math.PI*2); ctx.stroke(); break;
-        case 2: ctx.moveTo(100, 75); ctx.lineTo(100, 160); ctx.stroke(); break;
-        case 3: ctx.moveTo(100, 100); ctx.lineTo(60, 130); ctx.stroke(); break;
-        case 4: ctx.moveTo(100, 100); ctx.lineTo(140, 130); ctx.stroke(); break;
-        case 5: ctx.moveTo(100, 160); ctx.lineTo(60, 210); ctx.stroke(); break;
-        case 6: ctx.moveTo(100, 160); ctx.lineTo(140, 210); ctx.stroke(); break;
-    }
+    const ctx = document.getElementById('hangmanCanvas').getContext('2d');
+    ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 3;
+    if (step === 1) ctx.strokeRect(90, 20, 20, 20); // Testa
+    if (step === 2) { ctx.moveTo(100, 40); ctx.lineTo(100, 100); } // Corpo
+    if (step === 3) { ctx.moveTo(100, 50); ctx.lineTo(70, 80); } // Braccio L
+    if (step === 4) { ctx.moveTo(100, 50); ctx.lineTo(130, 80); } // Braccio R
+    if (step === 5) { ctx.moveTo(100, 100); ctx.lineTo(70, 140); } // Gamba L
+    if (step === 6) { ctx.moveTo(100, 100); ctx.lineTo(130, 140); } // Gamba R
+    ctx.stroke();
 }
