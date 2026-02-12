@@ -1,56 +1,82 @@
 :root {
     --neon-blue: #00f2ff;
     --neon-pink: #ff0055;
-    --card-bg: rgba(15, 15, 25, 0.95);
+    --bg-dark: #0a0a0c;
 }
 
 body {
-    margin: 0; padding: 0; background: #050508; color: white;
+    margin: 0; padding: 0;
+    background: var(--bg-dark);
+    color: white;
     font-family: 'Courier New', Courier, monospace;
-    display: flex; justify-content: center; align-items: center; min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh;
     overflow: hidden;
 }
 
-.panel { width: 95%; max-width: 450px; text-align: center; z-index: 10; }
-
-.neon-title { font-size: 2.2rem; letter-spacing: 5px; text-shadow: 0 0 10px var(--neon-blue); margin: 5px 0; }
-.neon-title span { color: var(--neon-blue); }
-
-.rank-display { font-size: 0.7rem; color: var(--neon-blue); margin-bottom: 15px; letter-spacing: 3px; }
-
-.card { background: var(--card-bg); padding: 25px; border-radius: 10px; border: 1px solid var(--neon-blue); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); }
-
-.hidden { display: none !important; }
-
-input {
-    width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--neon-blue);
-    background: black; color: var(--neon-blue); text-align: center; border-radius: 5px;
+/* Effetto Righe (Scanlines) dello screenshot */
+.scanlines {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 3px, 2px 100%;
+    z-index: 100; pointer-events: none;
 }
 
-button { padding: 12px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; width: 100%; text-transform: uppercase; }
+.panel { width: 90%; max-width: 400px; text-align: center; z-index: 10; }
 
-.btn-primary { background: var(--neon-blue); color: black; }
-.btn-bot { background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue); }
+.neon-title { font-size: 2.2rem; letter-spacing: 4px; margin: 0; text-shadow: 0 0 10px var(--neon-blue); }
+.neon-title span { color: var(--neon-blue); filter: brightness(1.2); }
 
-.id-display { font-family: monospace; border: 1px dashed var(--neon-blue); padding: 10px; margin: 10px 0; color: var(--neon-blue); }
+.rank-display { color: var(--neon-blue); font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 20px; }
 
-.role-badge { font-size: 0.7rem; background: var(--neon-blue); color: black; padding: 2px 10px; display: inline-block; margin-bottom: 10px; }
+.card {
+    background: rgba(20, 20, 25, 0.8);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
 
-#word-display { display: flex; justify-content: center; gap: 5px; margin: 15px 0; min-height: 40px; flex-wrap: wrap; }
-.letter-slot { width: 25px; border-bottom: 3px solid var(--neon-blue); font-size: 1.5rem; font-weight: bold; height: 35px; }
+.id-display { font-size: 3rem; font-weight: bold; color: var(--neon-blue); letter-spacing: 10px; margin: 10px 0; }
 
-#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 4px; }
-.key { background: #111; border: 1px solid #333; padding: 8px 0; font-size: 0.8rem; border-radius: 3px; }
-.key.used { opacity: 0.2; pointer-events: none; }
+.label { font-size: 0.8rem; opacity: 0.8; margin: 0; }
+.system-text { font-size: 0.6rem; opacity: 0.4; letter-spacing: 3px; margin: 20px 0 10px; }
 
-.power-btn { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); font-size: 0.6rem; margin-bottom: 10px; }
-.power-btn:disabled { opacity: 0.3; }
+/* Pulsanti dello Screenshot */
+button { 
+    width: 100%; padding: 15px; border: none; border-radius: 10px; 
+    font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 10px;
+}
 
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-.win-glow { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
-.lose-glow { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
+.btn-copy { background: white; color: black; padding: 5px; width: auto; font-size: 0.7rem; }
 
-.glitch-error { animation: flash 0.2s; }
-@keyframes flash { 0% { background: rgba(255,0,85,0.3); } 100% { background: transparent; } }
+.btn-connetti { 
+    background: var(--neon-blue); color: black; 
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+}
 
-#volume-toggle { position: fixed; top: 20px; right: 20px; cursor: pointer; z-index: 100; }
+.btn-bot-pink { 
+    background: var(--neon-pink); color: white;
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+}
+
+input {
+    width: 100%; background: #000; border: none; padding: 15px;
+    border-radius: 10px; color: white; text-align: center; margin-bottom: 15px;
+    font-family: monospace; font-size: 1.1rem;
+}
+
+/* Griglia gioco */
+#word-display { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }
+.letter-slot { width: 25px; border-bottom: 3px solid var(--neon-blue); font-size: 1.5rem; height: 35px; }
+
+#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 5px; }
+.key { background: rgba(255,255,255,0.1); padding: 10px 0; border-radius: 5px; font-size: 0.8rem; }
+.key.used { opacity: 0.2; }
+
+.wrong-letters { color: var(--neon-pink); text-decoration: line-through; margin: 10px 0; height: 20px; }
+#timer-display { font-size: 1.5rem; color: var(--neon-pink); margin-bottom: 10px; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+.hidden { display: none !important; }
