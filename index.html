@@ -22,15 +22,15 @@
                 <input type="text" id="peer-id-input" placeholder="Codice Amico" maxlength="5">
                 <button id="connect-btn" class="btn-primary">SFIDA AMICO</button>
                 <div class="divider">OPPURE</div>
-                <button id="bot-btn" class="btn-bot">SFIDA IL BOT</button>
+                <button id="bot-btn" class="btn-bot">SFIDA IL BOT (ITA)</button>
             </div>
-            <p id="status-msg">Pronto alla sfida</p>
+            <p id="status-msg">Inizializzazione sistema...</p>
         </div>
 
         <div id="host-screen" class="panel hidden">
             <div class="card pulse">
                 <h2>SEI IL MASTER</h2>
-                <p>Inserisci la parola segreta</p>
+                <p>Inserisci il Verbum Segreto</p>
                 <input type="password" id="secret-word" placeholder="Parola...">
                 <button id="start-btn" class="btn-primary">LANCIA SFIDA</button>
             </div>
@@ -41,15 +41,27 @@
             <div class="game-box">
                 <canvas id="hangmanCanvas" width="200" height="200"></canvas>
                 <div id="word-display"></div>
+                <div class="wrong-letters-container">
+                    <span>Errori: </span><span id="wrong-letters"></span>
+                </div>
             </div>
             <div id="keyboard"></div>
+            
+            <div id="emoji-bar">
+                <button onclick="sendEmoji('🔥')">🔥</button>
+                <button onclick="sendEmoji('😂')">😂</button>
+                <button onclick="sendEmoji('💀')">💀</button>
+                <button onclick="sendEmoji('🤡')">🤡</button>
+            </div>
         </div>
+
+        <div id="emoji-area"></div>
 
         <div id="overlay" class="overlay hidden">
             <div class="overlay-content">
                 <h1 id="result-title"></h1>
                 <p id="result-desc"></p>
-                <button onclick="location.reload()" class="btn-primary">RIPROVA</button>
+                <button onclick="location.reload()" class="btn-primary">NUOVA PARTITA</button>
             </div>
         </div>
     </div>
