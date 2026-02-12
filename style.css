@@ -1,119 +1,25 @@
-:root {
-    --primary: #00d4ff;
-    --accent: #ff0055;
-    --bg: #050a14;
-}
-
 body {
-    margin: 0;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: radial-gradient(circle at center, #1a2a44 0%, #050a14 100%);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
+    margin: 0; font-family: sans-serif; background: #0a0e17; color: white;
+    display: flex; justify-content: center; align-items: center; height: 100vh;
 }
-
-.logo {
-    font-size: 2.8rem;
-    font-weight: 900;
-    letter-spacing: 4px;
-    text-align: center;
-    margin-bottom: 30px;
-    text-shadow: 0 0 15px var(--primary);
-}
-
-.logo span {
-    color: var(--accent);
-    text-shadow: 0 0 15px var(--accent);
-}
-
 .glass {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 30px;
-    padding: 3rem;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    text-align: center;
-    max-width: 90vw;
+    background: #1a2233; padding: 20px; border-radius: 20px; text-align: center;
+    width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
-
-.id-badge {
-    background: #ffffff10;
-    padding: 10px;
-    border-radius: 10px;
-    font-family: monospace;
-    font-size: 1.4rem;
-    margin: 15px 0;
-    color: var(--primary);
-    border: 1px dashed var(--primary);
-}
-
 .hidden { display: none; }
-
-input {
-    padding: 15px;
-    border-radius: 12px;
-    border: 2px solid rgba(255,255,255,0.1);
-    background: #000;
-    color: white;
-    font-size: 1.1rem;
-    width: 80%;
+.logo { font-size: 2rem; margin-bottom: 20px; }
+.logo span { color: #00d4ff; }
+.copy-box {
+    background: #000; padding: 10px; border-radius: 10px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center;
 }
-
+input { padding: 10px; border-radius: 8px; border: none; width: 80%; margin: 10px 0; }
 button {
-    margin-top: 15px;
-    padding: 15px 30px;
-    border-radius: 12px;
-    border: none;
-    background: linear-gradient(45deg, var(--primary), #0044ff);
-    color: white;
-    font-weight: bold;
-    text-transform: uppercase;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+    padding: 10px 20px; border-radius: 8px; border: none;
+    background: #00d4ff; color: #000; font-weight: bold; cursor: pointer;
 }
-
-#word-display {
-    font-size: 3rem;
-    font-weight: bold;
-    letter-spacing: 12px;
-    margin: 30px 0;
-    color: #fff;
-    text-shadow: 0 0 10px rgba(255,255,255,0.5);
-}
-
-#keyboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-    gap: 10px;
-    max-width: 600px;
-}
-
-.key {
-    background: rgba(255, 255, 255, 0.08);
-    aspect-ratio: 1/1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    font-weight: bold;
-    font-size: 1.2rem;
-    transition: 0.2s;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-.key:active { background: var(--primary); color: #000; }
-.key.used { opacity: 0.2; transform: scale(0.9); pointer-events: none; }
-
-#message {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-top: 20px;
-    animation: blink 1s infinite alternate;
-}
-
-@keyframes blink { from { opacity: 0.4; } to { opacity: 1; } }
+#word-display { font-size: 2rem; letter-spacing: 8px; margin: 20px 0; min-height: 40px; }
+#keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.key { background: #334155; padding: 10px 5px; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
+.key.used { opacity: 0.3; pointer-events: none; }
+.badge { background: #ff0055; padding: 5px 10px; border-radius: 5px; margin-bottom: 10px; font-size: 0.8rem; }
