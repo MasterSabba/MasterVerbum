@@ -1,62 +1,38 @@
-const peerConfig = {
-    config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }, { url: 'stun:stun1.l.google.com:19302' }] }
-};
-
+const peerConfig = { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }] } };
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
-let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
-let isProcessing = false; // Impedisce clic multipli durante il caricamento
+let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false, isProcessing = false;
+let timerInterval, timeLeft = 60;
 
-// --- DIZIONARIO DI SICUREZZA ---
-const superDizionario = [
-    "ABITUDINE", "ACQUARIO", "ALLENATORE", "ASTRONAVE", "AVVENTURA", "BICICLETTA", "BOTTIGLIA", 
-    "BUSSOLA", "CALCIATORE", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", 
-    "FAMIGLIA", "FANTASIA", "GENTILEZZA", "GIARDINO", "IDROGENO", "LABIRINTO", "MONTAGNA", 
-    "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", 
-    "VELOCITA", "ZAFFERANO", "ZUCCHERO", "AEROPLANO", "CANCELLERIA", "DIPLOMAZIA", "ESPLORAZIONE"
-];
+const superDizionario = ["ABITUDINE", "ASTRONAVE", "BICICLETTA", "BOTTIGLIA", "BUSSOLA", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", "GENTILEZZA", "GIARDINO", "LABIRINTO", "MONTAGNA", "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", "VELOCITA", "ZAFFERANO", "ZUCCHERO", "CANCELLERIA", "DIPLOMAZIA"];
 
-// --- GENERATORE SILLABICO (LOGICA ITALIANA) ---
 function generaParolaCasuale() {
-    const voc = "AEIOU";
-    const cons = "BCDFGLMNPQRSTV";
-    const sillabe = ["STR", "BR", "CR", "PR", "TR", "GL", "CH", "SC", "GN"];
-    let parola = "";
-    const len = Math.floor(Math.random() * 3) + 6;
+    const voc = "AEIOU", cons = "BCDFGLMNPQRSTV", sill = ["STR", "BR", "CR", "TR", "SC", "GN"];
+    let p = ""; const len = Math.floor(Math.random() * 2) + 6;
     for(let i=0; i<len; i++) {
-        if(i % 2 === 0) {
-            parola += (Math.random() > 0.8) ? sillabe[Math.floor(Math.random()*sillabe.length)] : cons[Math.floor(Math.random()*cons.length)];
-        } else {
-            parola += voc[Math.floor(Math.random()*voc.length)];
-        }
+        p += (i%2==0) ? (Math.random()>0.8 ? sill[Math.floor(Math.random()*sill.length)] : cons[Math.floor(Math.random()*cons.length)]) : voc[Math.floor(Math.random()*voc.length)];
     }
-    if(!voc.includes(parola.slice(-1))) parola += voc[Math.floor(Math.random()*voc.length)];
-    return parola.toUpperCase();
+    return (p + voc[Math.floor(Math.random()*5)]).toUpperCase();
 }
 
-// --- CONNESSIONE PEER ---
-peer.on('open', id => { document.getElementById('my-id').innerText = id; });
+peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
 
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase();
-    if(target) { conn = peer.connect(target, { reliable: true }); setupLogic(); }
+    if(target) { conn = peer.connect(target); setupLogic(); }
 };
 
 function setupLogic() {
     conn.on('open', () => {
         amIMaster = myId < conn.peer;
         document.getElementById('setup-screen').classList.add('hidden');
-        if(amIMaster) {
-            document.getElementById('host-screen').classList.remove('hidden');
-        } else {
+        if(amIMaster) document.getElementById('host-screen').classList.remove('hidden');
+        else {
             document.getElementById('play-screen').classList.remove('hidden');
-            document.getElementById('role-badge').innerText = "SFIDANTE";
             document.getElementById('word-display').innerText = "IL MASTER SCEGLIE...";
-            document.getElementById('keyboard').classList.add('hidden');
         }
     });
-
     conn.on('data', data => {
         if (data.type === 'START') { secretWord = data.word; isBot = false; startPlay("SFIDANTE"); }
         else if (data.type === 'GUESS') processMove(data.letter);
@@ -64,35 +40,19 @@ function setupLogic() {
     });
 }
 
-// --- AZIONE BOT (CON BLOCCO TASTI) ---
 document.getElementById('bot-btn').onclick = () => {
-    if (isProcessing) return; 
-    isProcessing = true;
-    
-    const display = document.getElementById('word-display');
+    if (isProcessing) return; isProcessing = true;
+    const disp = document.getElementById('word-display');
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
-    document.getElementById('keyboard').classList.add('hidden'); // Nasconde tastiera
-    document.getElementById('role-badge').innerText = "GENERAZIONE...";
-
-    let loader = setInterval(() => {
-        display.innerText = Math.random().toString(36).substring(2, 9).toUpperCase();
-        display.style.textShadow = "0 0 10px var(--neon-pink)";
-    }, 50);
-
+    document.getElementById('keyboard').classList.add('hidden');
+    let loader = setInterval(() => { disp.innerText = Math.random().toString(36).substring(2, 8).toUpperCase(); }, 50);
     setTimeout(() => {
         clearInterval(loader);
-        display.style.textShadow = "0 0 15px var(--neon-blue)";
-        
-        // Logica Ibrida
-        secretWord = (Math.random() > 0.3) ? 
-            superDizionario[Math.floor(Math.random() * superDizionario.length)] : 
-            generaParolaCasuale();
-        
-        isBot = true; amIMaster = false;
-        isProcessing = false; 
+        secretWord = (Math.random() > 0.4) ? superDizionario[Math.floor(Math.random()*superDizionario.length)] : generaParolaCasuale();
+        isBot = true; amIMaster = false; isProcessing = false;
         startPlay("BOT CHALLENGE");
-    }, 1200);
+    }, 1000);
 };
 
 document.getElementById('start-btn').onclick = () => {
@@ -101,6 +61,18 @@ document.getElementById('start-btn').onclick = () => {
     if(conn) conn.send({ type: 'START', word: secretWord });
     startPlay("MASTER");
 };
+
+function startTimer() {
+    clearInterval(timerInterval); timeLeft = 60;
+    timerInterval = setInterval(() => {
+        timeLeft--; updateTimer();
+        if(timeLeft <= 0) { clearInterval(timerInterval); end(false); }
+    }, 1000);
+}
+function updateTimer() {
+    const s = timeLeft % 60;
+    document.getElementById('timer-display').innerText = `00:${s < 10 ? '0' : ''}${s}`;
+}
 
 function startPlay(role) {
     document.getElementById('setup-screen').classList.add('hidden');
@@ -111,71 +83,43 @@ function startPlay(role) {
     document.getElementById('wrong-letters').innerText = "";
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.clearRect(0,0,200,200);
-
-    if(role !== "MASTER") {
-        document.getElementById('keyboard').classList.remove('hidden');
-        render();
-    } else {
-        document.getElementById('word-display').innerText = "L'AMICO STA GIOCANDO";
-    }
+    if(role !== "MASTER") { document.getElementById('keyboard').classList.remove('hidden'); startTimer(); }
+    else { document.getElementById('word-display').innerText = "L'AMICO GIOCA..."; clearInterval(timerInterval); }
+    render();
 }
 
 function processMove(l) {
     if(isProcessing || guessedLetters.includes(l)) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) { 
-        mistakes++; draw(mistakes); 
-        document.getElementById('wrong-letters').innerText += l + " "; 
-    }
+    if(!secretWord.includes(l)) { mistakes++; draw(mistakes); document.getElementById('wrong-letters').innerText += l + " "; }
     render();
 }
 
 function render() {
-    if(!secretWord || isProcessing) return;
-    let content = secretWord.split('').map(l => 
-        guessedLetters.includes(l) ? `<span>${l}</span>` : "_"
-    ).join('\u00A0');
-    document.getElementById('word-display').innerHTML = content;
-
-    const win = secretWord.split('').every(l => guessedLetters.includes(l));
-    if(win) end(true);
+    if(!secretWord || isProcessing || document.getElementById('word-display').innerText.includes("GIOCA")) return;
+    document.getElementById('word-display').innerHTML = secretWord.split('').map(l => guessedLetters.includes(l) ? `<span>${l}</span>` : "<span>_</span>").join('');
+    if(secretWord.split('').every(l => guessedLetters.includes(l))) end(true);
     else if(mistakes >= 6) end(false);
 }
 
-function end(wordGuessed) {
-    const overlay = document.getElementById('overlay');
-    const title = document.getElementById('result-title');
-    overlay.classList.remove('hidden');
-    
-    let vinta = amIMaster ? !wordGuessed : wordGuessed;
-
-    if (vinta) {
-        title.innerText = "MISSIONE COMPIUTA";
-        title.style.color = "var(--neon-blue)";
-        overlay.style.background = "rgba(0, 15, 30, 0.98)";
-    } else {
-        title.innerText = "SISTEMA COMPROMESSO";
-        title.style.color = "var(--neon-pink)";
-        overlay.style.background = "rgba(30, 0, 5, 0.98)";
-    }
+function end(win) {
+    clearInterval(timerInterval);
+    const ov = document.getElementById('overlay');
+    ov.classList.remove('hidden');
+    let v = amIMaster ? !win : win;
+    document.getElementById('result-title').innerText = v ? "MISSIONE COMPIUTA" : (timeLeft<=0 ? "TEMPO SCADUTO" : "SISTEMA COMPROMESSO");
+    document.getElementById('result-title').style.color = v ? "var(--neon-blue)" : "var(--neon-pink)";
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
+    ov.style.background = v ? "rgba(0,10,20,0.95)" : "rgba(20,0,5,0.95)";
 }
 
-// --- TASTIERA ---
 const kb = document.getElementById('keyboard');
-kb.innerHTML = "";
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div'); b.className = 'key'; b.innerText = l;
-    b.onclick = () => {
-        if(amIMaster || b.classList.contains('used') || isProcessing) return;
-        b.classList.add('used');
-        if(!isBot && conn) conn.send({ type: 'GUESS', letter: l });
-        processMove(l);
-    };
+    b.onclick = () => { if(!amIMaster && !b.classList.contains('used') && !isProcessing) { b.classList.add('used'); if(!isBot && conn) conn.send({type:'GUESS', letter:l}); processMove(l); } };
     kb.appendChild(b);
 });
 
-// --- DISEGNO IMPICCATO ---
 function draw(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.beginPath();
@@ -194,11 +138,9 @@ function showEmoji(e) {
     document.getElementById('emoji-area').appendChild(el);
     setTimeout(() => el.remove(), 2000);
 }
-
 document.getElementById('copy-btn').onclick = () => {
     navigator.clipboard.writeText(myId);
-    document.getElementById('copy-btn').innerText = "COPIATO!";
-    setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA CODICE", 2000);
+    const b = document.getElementById('copy-btn'); b.innerText = "COPIATO!";
+    setTimeout(() => b.innerText = "COPIA CODICE", 2000);
 };
-
 document.getElementById('retry-btn').onclick = () => location.reload();
