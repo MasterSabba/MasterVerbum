@@ -4,16 +4,8 @@ const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false, isProcessing = false;
 let timerInterval, timeLeft = 60;
 
-const superDizionario = ["ABITUDINE", "ASTRONAVE", "BICICLETTA", "BOTTIGLIA", "BUSSOLA", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", "GENTILEZZA", "GIARDINO", "LABIRINTO", "MONTAGNA", "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", "VELOCITA", "ZAFFERANO", "ZUCCHERO", "CANCELLERIA", "DIPLOMAZIA"];
-
-function generaParolaCasuale() {
-    const voc = "AEIOU", cons = "BCDFGLMNPQRSTV", sill = ["STR", "BR", "CR", "TR", "SC", "GN"];
-    let p = ""; const len = Math.floor(Math.random() * 2) + 6;
-    for(let i=0; i<len; i++) {
-        p += (i%2==0) ? (Math.random()>0.8 ? sill[Math.floor(Math.random()*sill.length)] : cons[Math.floor(Math.random()*cons.length)]) : voc[Math.floor(Math.random()*voc.length)];
-    }
-    return (p + voc[Math.floor(Math.random()*5)]).toUpperCase();
-}
+// Dizionario reale potenziato
+const dizionarioReale = ["ABITUDINE", "ASTRONAVE", "BICICLETTA", "BOTTIGLIA", "BUSSOLA", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", "GENTILEZZA", "GIARDINO", "LABIRINTO", "MONTAGNA", "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", "VELOCITA", "ZAFFERANO", "ZUCCHERO", "CANCELLERIA", "DIPLOMAZIA", "AVVENTURA", "MERAVIGLIA", "PIRAMIDE", "ORCHESTRA", "VULCANO", "TELEVISIONE", "SATELLITE"];
 
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
@@ -42,14 +34,13 @@ function setupLogic() {
 
 document.getElementById('bot-btn').onclick = () => {
     if (isProcessing) return; isProcessing = true;
-    const disp = document.getElementById('word-display');
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('keyboard').classList.add('hidden');
-    let loader = setInterval(() => { disp.innerText = Math.random().toString(36).substring(2, 8).toUpperCase(); }, 50);
+    document.getElementById('word-display').innerText = "CALCOLO...";
+    
     setTimeout(() => {
-        clearInterval(loader);
-        secretWord = (Math.random() > 0.4) ? superDizionario[Math.floor(Math.random()*superDizionario.length)] : generaParolaCasuale();
+        secretWord = dizionarioReale[Math.floor(Math.random()*dizionarioReale.length)];
         isBot = true; amIMaster = false; isProcessing = false;
         startPlay("BOT CHALLENGE");
     }, 1000);
@@ -65,13 +56,11 @@ document.getElementById('start-btn').onclick = () => {
 function startTimer() {
     clearInterval(timerInterval); timeLeft = 60;
     timerInterval = setInterval(() => {
-        timeLeft--; updateTimer();
+        timeLeft--; 
+        const s = timeLeft % 60;
+        document.getElementById('timer-display').innerText = `00:${s < 10 ? '0' : ''}${s}`;
         if(timeLeft <= 0) { clearInterval(timerInterval); end(false); }
     }, 1000);
-}
-function updateTimer() {
-    const s = timeLeft % 60;
-    document.getElementById('timer-display').innerText = `00:${s < 10 ? '0' : ''}${s}`;
 }
 
 function startPlay(role) {
@@ -91,13 +80,21 @@ function startPlay(role) {
 function processMove(l) {
     if(isProcessing || guessedLetters.includes(l)) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) { mistakes++; draw(mistakes); document.getElementById('wrong-letters').innerText += l + " "; }
+    if(!secretWord.includes(l)) { 
+        mistakes++; draw(mistakes); 
+        document.getElementById('wrong-letters').innerText += l + " "; 
+    }
     render();
 }
 
 function render() {
-    if(!secretWord || isProcessing || document.getElementById('word-display').innerText.includes("GIOCA")) return;
-    document.getElementById('word-display').innerHTML = secretWord.split('').map(l => guessedLetters.includes(l) ? `<span>${l}</span>` : "<span>_</span>").join('');
+    const container = document.getElementById('word-display');
+    if(!secretWord || isProcessing || container.innerText.includes("GIOCA")) return;
+    
+    container.innerHTML = secretWord.split('').map(l => {
+        return `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`;
+    }).join('');
+
     if(secretWord.split('').every(l => guessedLetters.includes(l))) end(true);
     else if(mistakes >= 6) end(false);
 }
@@ -107,13 +104,13 @@ function end(win) {
     const ov = document.getElementById('overlay');
     ov.classList.remove('hidden');
     let v = amIMaster ? !win : win;
-    document.getElementById('result-title').innerText = v ? "MISSIONE COMPIUTA" : (timeLeft<=0 ? "TEMPO SCADUTO" : "SISTEMA COMPROMESSO");
+    document.getElementById('result-title').innerText = v ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
     document.getElementById('result-title').style.color = v ? "var(--neon-blue)" : "var(--neon-pink)";
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
-    ov.style.background = v ? "rgba(0,10,20,0.95)" : "rgba(20,0,5,0.95)";
 }
 
 const kb = document.getElementById('keyboard');
+kb.innerHTML = "";
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div'); b.className = 'key'; b.innerText = l;
     b.onclick = () => { if(!amIMaster && !b.classList.contains('used') && !isProcessing) { b.classList.add('used'); if(!isBot && conn) conn.send({type:'GUESS', letter:l}); processMove(l); } };
@@ -136,8 +133,9 @@ function sendEmoji(e) { if(conn && conn.open) conn.send({ type: 'EMOJI', emoji: 
 function showEmoji(e) {
     const el = document.createElement('div'); el.className = 'floating-emoji'; el.innerText = e;
     document.getElementById('emoji-area').appendChild(el);
-    setTimeout(() => el.remove(), 2000);
+    setTimeout(() => el.remove(), 1200);
 }
+
 document.getElementById('copy-btn').onclick = () => {
     navigator.clipboard.writeText(myId);
     const b = document.getElementById('copy-btn'); b.innerText = "COPIATO!";
