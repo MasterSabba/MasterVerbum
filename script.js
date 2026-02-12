@@ -172,3 +172,5 @@ document.getElementById('copy-btn').onclick = () => {
     document.getElementById('copy-btn').innerText = "COPIATO!";
     setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA CODICE", 2000);
 };
+// Aggiungi questo in fondo al JS
+document.getElementById('retry-btn').onclick = () => { location.reload(); };
