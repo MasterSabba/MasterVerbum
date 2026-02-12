@@ -14,69 +14,72 @@ body {
     overflow: hidden;
 }
 
-/* Effetto Righe (Scanlines) dello screenshot */
+/* FIX CLICK: pointer-events none permette di cliccare i tasti sotto */
 .scanlines {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-    background-size: 100% 3px, 2px 100%;
-    z-index: 100; pointer-events: none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 3px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.3;
 }
 
 .panel { width: 90%; max-width: 400px; text-align: center; z-index: 10; }
 
 .neon-title { font-size: 2.2rem; letter-spacing: 4px; margin: 0; text-shadow: 0 0 10px var(--neon-blue); }
-.neon-title span { color: var(--neon-blue); filter: brightness(1.2); }
+.neon-title span { color: var(--neon-blue); }
 
 .rank-display { color: var(--neon-blue); font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 20px; }
 
 .card {
-    background: rgba(20, 20, 25, 0.8);
+    background: rgba(20, 20, 25, 0.9);
     border-radius: 20px;
     padding: 30px;
-    border: 1px solid rgba(255,255,255,0.05);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(0, 242, 255, 0.2);
 }
 
-.id-display { font-size: 3rem; font-weight: bold; color: var(--neon-blue); letter-spacing: 10px; margin: 10px 0; }
+/* FIX ID DISPLAY */
+.id-display { 
+    font-size: 2.5rem; 
+    font-weight: bold; 
+    color: var(--neon-blue); 
+    letter-spacing: 5px; 
+    margin: 10px 0;
+    text-align: center;
+}
 
-.label { font-size: 0.8rem; opacity: 0.8; margin: 0; }
+.label { font-size: 0.8rem; opacity: 0.8; }
 .system-text { font-size: 0.6rem; opacity: 0.4; letter-spacing: 3px; margin: 20px 0 10px; }
 
-/* Pulsanti dello Screenshot */
-button { 
-    width: 100%; padding: 15px; border: none; border-radius: 10px; 
-    font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 10px;
-}
+button { border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
-.btn-copy { background: white; color: black; padding: 5px; width: auto; font-size: 0.7rem; }
-
-.btn-connetti { 
-    background: var(--neon-blue); color: black; 
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
-}
-
-.btn-bot-pink { 
-    background: var(--neon-pink); color: white;
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
-}
+.btn-copy { background: white; color: black; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; width: auto; }
+.btn-connetti { background: var(--neon-blue); color: black; width: 100%; padding: 15px; border-radius: 10px; }
+.btn-bot-pink { background: var(--neon-pink); color: white; width: 100%; padding: 15px; border-radius: 10px; margin-top: 10px; }
 
 input {
-    width: 100%; background: #000; border: none; padding: 15px;
-    border-radius: 10px; color: white; text-align: center; margin-bottom: 15px;
-    font-family: monospace; font-size: 1.1rem;
+    width: 100%; background: #000; border: 1px solid rgba(0,242,255,0.3); padding: 15px;
+    border-radius: 10px; color: white; text-align: center; margin-bottom: 15px; font-size: 1rem;
 }
 
-/* Griglia gioco */
 #word-display { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }
 .letter-slot { width: 25px; border-bottom: 3px solid var(--neon-blue); font-size: 1.5rem; height: 35px; }
 
 #keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 5px; }
-.key { background: rgba(255,255,255,0.1); padding: 10px 0; border-radius: 5px; font-size: 0.8rem; }
+.key { background: rgba(255,255,255,0.1); padding: 10px 0; border-radius: 5px; font-size: 0.8rem; color: white; }
 .key.used { opacity: 0.2; }
 
-.wrong-letters { color: var(--neon-pink); text-decoration: line-through; margin: 10px 0; height: 20px; }
-#timer-display { font-size: 1.5rem; color: var(--neon-pink); margin-bottom: 10px; }
+/* ANIMAZIONE VITTORIA/SCONFITTA */
+.win-glow { color: var(--neon-blue); animation: neonBlue 1.5s infinite alternate; }
+.lose-glow { color: var(--neon-pink); animation: neonPink 1.5s infinite alternate; }
 
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+@keyframes neonBlue { from { text-shadow: 0 0 10px var(--neon-blue); } to { text-shadow: 0 0 30px var(--neon-blue); } }
+@keyframes neonPink { from { text-shadow: 0 0 10px var(--neon-pink); } to { text-shadow: 0 0 30px var(--neon-pink); } }
+
+/* TASTI OVERLAY PICCOLI */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+.overlay-btns { display: flex; gap: 10px; margin-top: 20px; }
+.btn-small-rect { width: 110px; padding: 10px; border-radius: 5px; background: var(--neon-blue); color: black; font-size: 0.8rem; }
+.btn-grey { background: #333; color: white; }
+
 .hidden { display: none !important; }
