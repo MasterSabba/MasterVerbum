@@ -6,10 +6,9 @@ let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0, isMuted = false, la
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// --- DIZIONARIO (Invariato) ---
-const dizionario = ["ALGORITMO", "ASTRONAVE", "ANTIMATERIA", "AUTOMAZIONE", "BIOCHIMICA", "BIOSFERA", "BITCOIN", "CIRCUITO", "CRITTOGRAFIA", "CYBERNETICA", "DATABASE", "DIGITALE", "DOMOTICA", "ELETTRODO", "ENERGIA", "GALASSIA", "GENETICA", "GRAVITA", "INFORMATICA", "INTERFACCIA", "IPERSPAZIO", "MAGNETISMO", "MOLECOLA", "NANOTECNOLOGIA", "NEBULOSA", "OLOGRAMMA", "ORBITA", "PROCESSORE", "PROTOCOLLO", "QUANTISTICO", "ROBOTICA", "SATELLITE", "SOFTWARE", "TELESCOPIO", "TRANSISTOR", "UNIVERSO", "VIRTUALE", "ARCIPELAGO", "AURORA", "BOSCO", "CANYON", "CASCATA", "DESERTO", "EQUATORE", "FORESTA", "GHIACCIAIO", "GIUNGLA", "GEYSER", "MONTAGNA", "OCEANO", "ORIZZONTE", "PENISOLA", "PIANURA", "VULCANO", "URAGANO", "TORNADO", "TUNDRA", "ALBATROS", "ARMADILLO", "AVVOLTOIO", "CAMALEONTE", "CAPODOGLIO", "COCCODRILLO", "DINOSAURO", "ELEFANTE", "FENICOTTERO", "GHEPARDO", "GIRAFFA", "IPPOPOTAMO", "ORNITORINCO", "RINOCERONTE", "SALAMANDRA", "TARTARUGA", "TRICHECO", "ACQUEDOTTO", "ARCHITETTURA", "BIBLIOTECA", "BUSSOLA", "CATTEDRALE", "CHITARRA", "DIRIGIBILE", "DIZIONARIO", "ELICOTTERO", "FORTEZZA", "GRATTACIELO", "LABIRINTO", "LOCOMOTIVA", "MICROSCOPIO", "OROLOGIO", "PIANOFORTE", "PIRAMIDE", "SOTTOMARINO", "STETOSCOPIO", "VIOLINO", "AFFRESCO", "ALCHIMIA", "BELLEZZA", "COSCIENZA", "DESTINO", "DILEMMA", "EMOZIONE", "ESPERIENZA", "FANTASIA", "FILOSOFIA", "GENTILEZZA", "GIUSTIZIA", "INFINITO", "LIBERTA", "MERAVIGLIA", "MISTERO", "NOSTALGIA", "PROSPETTIVA", "RESILIENZA", "SAGGEZZA", "SOLITUDINE", "UTOPIA", "VITTORIA"];
+const dizionario = ["ALGORITMO", "ASTRONAVE", "ANTIMATERIA", "AUTOMAZIONE", "BIOCHIMICA", "BIOSFERA", "BITCOIN", "CIRCUITO", "CRITTOGRAFIA", "CYBERNETICA", "DATABASE", "DIGITALE", "DOMOTICA", "ELETTRODO", "ENERGIA", "GALASSIA", "GENETICA", "GRAVITA", "INFORMATICA", "INTERFACCIA", "IPERSPAZIO", "MAGNETISMO", "MOLECOLA", "NANOTECNOLOGIA", "NEBULOSA", "OLOGRAMMA", "ORBITA", "PROCESSORE", "PROTOCOLLO", "QUANTISTICO", "ROBOTICA", "SATELLITE", "SOFTWARE", "TELESCOPIO", "TRANSISTOR", "UNIVERSO", "VIRTUALE", "ARCIPELAGO", "AURORA", "BOSCO", "CANYON", "CASCATA", "DESERTO", "EQUATORE", "FORESTA", "GHIACCIAIO", "GIUNGLA", "GEYSER", "MONTAGNA", "OCEANO", "ORIZZONTE", "PENISOLA", "PIANURA", "VULCANO", "URAGANO", "TORNADO", "TUNDRA", "ALBATROS", "ARMADILLO", "AVVOLTOIO", "CAMALEONTE", "CAPODOGLIO", "COCCODRILLO", "DINOSAURO", "ELEFANTE", "FENICOTTERO", "GHEPARDO", "GIRAFFA", "IPPOPOTAMO", "ORNITORINCO", "RINOCERONTE", "SALAMANDRA", "TARTARUGA", "TRICHECO", "ACQUEDOTTO", "ARCHITETTURA", "BIBLIOTECA", "BUSSOLA", "CATTEDRALE", "CHITARRA", "DIRIGIBILE", "DIZIONARIO", "ELICOTTERO", "FORTEZZA", "GRATTACIELO", "LABIRINTO", "LOCOMOTIVA", "MICROSCOPIO", "OROLOGIO", "PIANOFORTE", "PIRAMIDE", "SOTTOMARINO", "STETOSCOPIO", "VIOLINO", "AFFRESCO", "BELLEZZA", "COSCIENZA", "DESTINO", "DILEMMA", "EMOZIONE", "ESPERIENZA", "FANTASIA", "FILOSOFIA", "GENTILEZZA", "GIUSTIZIA", "INFINITO", "LIBERTA", "MERAVIGLIA", "MISTERO", "NOSTALGIA", "PROSPETTIVA", "RESILIENZA", "SAGGEZZA", "SOLITUDINE", "UTOPIA", "VITTORIA"];
 
-// --- AUDIO & VIBRAZIONE ---
+// --- UTILS ---
 function playSound(type) {
     if (isMuted) return;
     const osc = audioCtx.createOscillator();
@@ -28,36 +27,27 @@ function playSound(type) {
 function vibrate(ms = 50) { if ("vibrate" in navigator) navigator.vibrate(ms); }
 function toggleMute() { isMuted = !isMuted; document.getElementById('volume-toggle').innerText = isMuted ? "🔇" : "🔊"; }
 
-// --- PEER LOGIC (FIXED) ---
-peer.on('open', id => document.getElementById('my-id').innerText = id);
-
-// Ricezione chiamata in entrata
-peer.on('connection', c => { 
-    conn = c; 
-    setupLogic(); 
+// --- VALIDAZIONE INPUT (Solo Lettere) ---
+document.getElementById('secret-word').addEventListener('input', function(e) {
+    this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '');
 });
 
-// Invio chiamata (Tasto Connetti)
+// --- PEER LOGIC ---
+peer.on('open', id => document.getElementById('my-id').innerText = id);
+peer.on('connection', c => { conn = c; setupLogic(); });
+
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase().trim();
     if(target) { 
         conn = peer.connect(target); 
-        // Importante: Aspettiamo che la connessione sia aperta prima di attaccare i listener
-        conn.on('open', () => {
-            setupLogic();
-        });
+        conn.on('open', () => setupLogic());
     }
 };
 
 function setupLogic() {
-    if(!conn) return;
-
-    // Determina chi è il Master in base all'ordine alfabetico degli ID
     amIMaster = myId < conn.peer;
-    
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('score-board').classList.remove('hidden');
-    
     if(amIMaster) {
         document.getElementById('host-screen').classList.remove('hidden');
     } else {
@@ -66,7 +56,6 @@ function setupLogic() {
         document.getElementById('keyboard').classList.add('hidden');
     }
 
-    // Gestione dati in arrivo
     conn.on('data', data => {
         if (data.type === 'START') { 
             secretWord = data.word; 
@@ -77,10 +66,17 @@ function setupLogic() {
         else if (data.type === 'GUESS') processMove(data.letter);
         else if (data.type === 'EMOJI') showEmoji(data.emoji);
         else if (data.type === 'REMATCH') prepareNextRound();
+        else if (data.type === 'END') end(data.win, true); // Riceve la fine del gioco dall'altro
+        else if (data.type === 'SCORE') { // Sincronizza i punteggi
+            myScore = data.oppScore;
+            oppScore = data.myScore;
+            document.getElementById('my-score').innerText = myScore;
+            document.getElementById('opp-score').innerText = oppScore;
+        }
     });
 }
 
-// --- RESTO DEL CODICE (Invariato ma pulito) ---
+// --- GAME LOGIC ---
 document.getElementById('bot-btn').onclick = () => {
     if (isProcessing) return; isProcessing = true;
     isBot = true; amIMaster = false;
@@ -113,21 +109,29 @@ function startPlay(role) {
     document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.clearRect(0,0,200,200);
+    
     if(role !== "MASTER") { 
         document.getElementById('keyboard').classList.remove('hidden'); 
-        startTimer(); render(); 
+        startTimer(); 
+        render(); 
     } else { 
         document.getElementById('word-display').innerText = "L'AMICO GIOCA..."; 
-        clearInterval(timerInterval); 
+        clearInterval(timerInterval);
+        document.getElementById('timer-display').innerText = "01:00";
     }
 }
 
 function startTimer() {
-    clearInterval(timerInterval); timeLeft = 60;
+    clearInterval(timerInterval); 
+    timeLeft = 60;
+    document.getElementById('timer-display').innerText = "01:00";
     timerInterval = setInterval(() => {
         timeLeft--; 
         document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0' : ''}${timeLeft}`;
-        if(timeLeft <= 0) end(false);
+        if(timeLeft <= 0) {
+            clearInterval(timerInterval);
+            end(false);
+        }
     }, 1000);
 }
 
@@ -146,23 +150,49 @@ function render() {
     const container = document.getElementById('word-display');
     if(!secretWord || isProcessing || container.innerText.includes("GIOCA") || container.innerText.includes("ATTESA")) return;
     container.innerHTML = secretWord.split('').map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join('');
+    
     if(secretWord.split('').every(l => guessedLetters.includes(l))) end(true);
     else if(mistakes >= 6) end(false);
 }
 
-function end(win) {
+function end(win, fromRemote = false) {
     clearInterval(timerInterval);
+    
+    // Se la partita finisce localmente, avvisa l'altro
+    if(!fromRemote && !isBot && conn) {
+        conn.send({ type: 'END', win: win });
+    }
+
     const ov = document.getElementById('overlay');
     ov.classList.remove('hidden');
+    
+    // Calcolo vittoria per l'interfaccia
+    // Se io sono sfidante (amIMaster = false) e win è true -> HO VINTO
+    // Se io sono master (amIMaster = true) e win è false -> HO VINTO (l'altro ha perso)
     let ioHoVinto = amIMaster ? !win : win;
-    document.getElementById('result-title').innerText = ioHoVinto ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
-    document.getElementById('result-title').className = ioHoVinto ? "win-glow" : "lose-glow";
-    if(ioHoVinto) { myScore++; spawnParticles(); } else { oppScore++; }
-    document.getElementById('my-score').innerText = myScore;
-    document.getElementById('opp-score').innerText = oppScore;
+
+    const title = document.getElementById('result-title');
+    title.innerText = ioHoVinto ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
+    title.className = ioHoVinto ? "win-glow" : "lose-glow";
+
+    if(!fromRemote) { // Aggiorna punteggio solo una volta
+        if(ioHoVinto) { 
+            myScore++; 
+            spawnParticles(); 
+        } else { 
+            oppScore++; 
+        }
+        document.getElementById('my-score').innerText = myScore;
+        document.getElementById('opp-score').innerText = oppScore;
+        
+        // Invia punteggio aggiornato per sincronizzare
+        if(conn) conn.send({ type: 'SCORE', myScore: myScore, oppScore: oppScore });
+    }
+
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
 }
 
+// --- ALTRE FUNZIONI ---
 function spawnParticles() {
     for(let i=0; i<30; i++) {
         const p = document.createElement('div'); p.className = 'particle';
