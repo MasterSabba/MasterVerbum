@@ -122,7 +122,8 @@ function processMove(l) {
 
 function render() {
     if(!secretWord || document.getElementById('word-display').innerText.includes("SCRIVE")) return;
-    const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
+    // Uso \u00A0 (spazio unificatore) per evitare che i trattini vadano a capo
+    const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join('\u00A0');
     document.getElementById('word-display').innerText = res;
     if(!res.includes('_') && secretWord) end(true);
     else if(mistakes >= 6) end(false);
