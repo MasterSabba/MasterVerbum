@@ -3,108 +3,125 @@ let conn;
 let secretWord = "";
 let guessedLetters = [];
 let mistakes = 0;
-let isHost = false; // Chi mette la parola è l'Host
+let iamMaster = false;
 
-// Visualizza e Copia ID
-peer.on('open', id => { document.getElementById('my-id').innerText = id; });
-document.getElementById('copy-btn').onclick = () => {
-    navigator.clipboard.writeText(document.getElementById('my-id').innerText);
-    alert("Codice copiato!");
-};
+const statusText = document.getElementById('status');
 
-// Connessione
-document.getElementById('connect-btn').onclick = () => {
-    const remoteId = document.getElementById('peer-id-input').value;
-    conn = peer.connect(remoteId);
-    setupConnection();
-};
-
-peer.on('connection', c => {
-    conn = c;
-    setupConnection();
+// 1. Mostra il tuo ID
+peer.on('open', id => {
+    document.getElementById('my-id').innerText = id;
 });
 
-function setupConnection() {
+// 2. COPIA ID
+document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(document.getElementById('my-id').innerText);
+    statusText.innerText = "✅ Codice Copiato!";
+};
+
+// 3. SE RICEVI UNA CONNESSIONE (Diventi il Master)
+peer.on('connection', c => {
+    conn = c;
+    iamMaster = true;
+    setupGame();
+});
+
+// 4. SE TI CONNETTI TU (Diventi lo Sfidante)
+document.getElementById('connect-btn').onclick = () => {
+    const remoteId = document.getElementById('peer-id-input').value;
+    if(!remoteId) return alert("Inserisci un codice!");
+    conn = peer.connect(remoteId);
+    iamMaster = false;
+    setupGame();
+};
+
+function setupGame() {
     conn.on('open', () => {
         document.getElementById('setup-screen').classList.add('hidden');
-        // Il primo che si connette/riceve decide se mostrare la scelta parola
-        document.getElementById('word-input-screen').classList.remove('hidden');
+        if(iamMaster) {
+            document.getElementById('host-screen').classList.remove('hidden');
+        } else {
+            statusText.innerText = "Connesso! Attendi la parola...";
+            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('my-id-container').classList.add('hidden');
+        }
     });
 
     conn.on('data', data => {
         if (data.type === 'START') {
             secretWord = data.word.toUpperCase();
-            isHost = false; // Io indovino
-            startUI("DEVI INDOVINARE");
-        } else if (data.type === 'GUESS') {
+            showPlayScreen("SFIDANTE (Indovina)");
+        } else if (data.type === 'MOVE') {
             handleMove(data.letter);
         }
     });
 }
 
-// Inizio Gioco
-document.getElementById('start-game-btn').onclick = () => {
+// 5. IL MASTER INVIA LA PAROLA
+document.getElementById('start-btn').onclick = () => {
     const word = document.getElementById('secret-word').value.trim();
-    if (word) {
-        secretWord = word.toUpperCase();
-        isHost = true; // Io ho messo la parola
-        conn.send({ type: 'START', word: secretWord });
-        startUI("STAI OSSERVANDO...");
-        document.getElementById('word-input-screen').classList.add('hidden');
-    }
+    if(word.length < 2) return alert("Parola troppo corta!");
+    secretWord = word.toUpperCase();
+    conn.send({ type: 'START', word: secretWord });
+    showPlayScreen("MASTER (Osserva)");
 };
 
-function startUI(roleText) {
+function showPlayScreen(role) {
+    document.getElementById('host-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
-    document.getElementById('role-indicator').innerText = roleText;
-    if (isHost) document.getElementById('keyboard').classList.add('hidden');
-    renderWord();
-}
-
-function renderWord() {
-    const display = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
-    document.getElementById('word-display').innerText = display;
-    if (!display.includes("_") && secretWord) {
-        document.getElementById('message').innerText = "PARTITA FINITA!";
+    document.getElementById('role-tag').innerText = role;
+    
+    if(iamMaster) {
+        document.getElementById('keyboard').classList.add('hidden');
     }
+    updateDisplay();
 }
-
-function renderKeyboard() {
-    const kb = document.getElementById('keyboard');
-    kb.innerHTML = '';
-    "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
-        const btn = document.createElement('div');
-        btn.className = 'key';
-        btn.innerText = l;
-        btn.onclick = () => {
-            btn.classList.add('used');
-            conn.send({ type: 'GUESS', letter: l });
-            handleMove(l);
-        };
-        kb.appendChild(btn);
-    });
-}
-renderKeyboard();
 
 function handleMove(letter) {
-    if (!guessedLetters.includes(letter)) {
+    if(!guessedLetters.includes(letter)) {
         guessedLetters.push(letter);
-        if (!secretWord.includes(letter)) {
+        if(!secretWord.includes(letter)) {
             mistakes++;
             drawHangman(mistakes);
         }
-        renderWord();
+        updateDisplay();
     }
 }
 
-function drawHangman(step) {
+function updateDisplay() {
+    const display = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
+    document.getElementById('word-display').innerText = display;
+    
+    if(!display.includes('_') && secretWord !== "") {
+        document.getElementById('message').innerText = "VITTORIA!";
+    }
+    if(mistakes >= 6) {
+        document.getElementById('message').innerText = "GAME OVER! Parola: " + secretWord;
+    }
+}
+
+// TASTIERA
+const kb = document.getElementById('keyboard');
+"QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
+    const b = document.createElement('div');
+    b.className = 'key';
+    b.innerText = l;
+    b.onclick = () => {
+        if(iamMaster) return;
+        b.classList.add('used');
+        conn.send({ type: 'MOVE', letter: l });
+        handleMove(l);
+    };
+    kb.appendChild(b);
+});
+
+function drawHangman(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
-    ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 3;
-    if (step === 1) ctx.strokeRect(90, 20, 20, 20); // Testa
-    if (step === 2) { ctx.moveTo(100, 40); ctx.lineTo(100, 100); } // Corpo
-    if (step === 3) { ctx.moveTo(100, 50); ctx.lineTo(70, 80); } // Braccio L
-    if (step === 4) { ctx.moveTo(100, 50); ctx.lineTo(130, 80); } // Braccio R
-    if (step === 5) { ctx.moveTo(100, 100); ctx.lineTo(70, 140); } // Gamba L
-    if (step === 6) { ctx.moveTo(100, 100); ctx.lineTo(130, 140); } // Gamba R
-    ctx.stroke();
+    ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    if(s==1){ctx.beginPath();ctx.arc(100,40,20,0,Math.PI*2);ctx.stroke();}
+    if(s==2){ctx.moveTo(100,60);ctx.lineTo(100,130);ctx.stroke();}
+    if(s==3){ctx.moveTo(100,80);ctx.lineTo(70,100);ctx.stroke();}
+    if(s==4){ctx.moveTo(100,80);ctx.lineTo(130,100);ctx.stroke();}
+    if(s==5){ctx.moveTo(100,130);ctx.lineTo(70,170);ctx.stroke();}
+    if(s==6){ctx.moveTo(100,130);ctx.lineTo(130,170);ctx.stroke();}
 }
