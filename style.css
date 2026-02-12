@@ -19,68 +19,56 @@ body {
 
 .panel { width: 90%; max-width: 400px; text-align: center; }
 
-.neon-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -1px; }
+.neon-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; }
 .neon-title span { color: var(--neon-blue); }
 
 .card {
     background: #15151c; border-radius: 24px; padding: 30px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    display: flex; flex-direction: column; align-items: center;
 }
 
-/* FIX CODICE AMICO: Centrato e senza bordi brutti */
+/* ETICHETTA BLU E ID ROSSO (Come richiesto) */
+.label { font-size: 0.8rem; font-weight: 700; color: var(--neon-blue); letter-spacing: 2px; }
 .id-display { 
-    font-size: 3.5rem; font-weight: 900; color: white;
-    letter-spacing: 8px; margin: 10px 0; text-align: center;
-    width: 100%; display: block;
+    font-size: 3.5rem; font-weight: 900; color: var(--neon-pink); /* Rosso/Pink */
+    letter-spacing: 8px; margin: 5px 0; text-align: center; width: 100%;
 }
 
-.label { font-size: 0.7rem; font-weight: 700; opacity: 0.5; letter-spacing: 2px; text-transform: uppercase; }
-.separator { font-size: 0.6rem; opacity: 0.3; margin: 25px 0 15px; letter-spacing: 4px; }
+.separator { font-size: 0.6rem; opacity: 0.3; margin: 20px 0 10px; letter-spacing: 4px; color: var(--neon-blue); }
 
-/* BOTTONI */
-button { border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
-.btn-copy { background: rgba(255,255,255,0.1); color: white; padding: 6px 15px; border-radius: 8px; font-size: 0.7rem; width: auto; margin-bottom: 10px; }
-.btn-connetti { background: var(--neon-blue); color: black; width: 100%; padding: 18px; border-radius: 12px; font-size: 1rem; }
-.btn-bot-pink { background: var(--neon-pink); color: white; width: 100%; padding: 18px; border-radius: 12px; margin-top: 12px; font-size: 1rem; }
+/* FIX DECENTRAMENTO: Contenitore forzato al 100% */
+.input-group { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
 input {
-    width: 100%; background: #000; border: none; padding: 16px;
-    border-radius: 12px; color: white; text-align: center; margin-bottom: 15px; font-size: 1rem;
+    width: 100%; box-sizing: border-box; /* Essenziale per la centratura */
+    background: #000; border: none; padding: 16px;
+    border-radius: 12px; color: white; text-align: center; margin-bottom: 12px; font-size: 1rem;
 }
+
+button { border: none; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+.btn-copy { background: rgba(255,255,255,0.1); color: white; padding: 6px 15px; border-radius: 8px; font-size: 0.7rem; width: auto; margin-bottom: 15px; }
+.btn-connetti { background: var(--neon-blue); color: black; padding: 18px; border-radius: 12px; }
+.btn-bot-pink { background: var(--neon-pink); color: white; padding: 18px; border-radius: 12px; margin-top: 10px; }
+
+/* OVERLAY E SCRITTE IMPONENTI PULSANTI */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+.imposing-text { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin: 0; text-align: center; }
+
+.win-glow { color: var(--neon-blue); animation: pulseBlue 0.8s infinite alternate; }
+.lose-glow { color: var(--neon-pink); animation: pulsePink 0.8s infinite alternate; }
+
+@keyframes pulseBlue { from { text-shadow: 0 0 20px var(--neon-blue); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-blue); transform: scale(1.1); } }
+@keyframes pulsePink { from { text-shadow: 0 0 20px var(--neon-pink); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-pink); transform: scale(1.1); } }
+
+.overlay-btns { display: flex; gap: 10px; margin-top: 40px; }
+.btn-small-rect { width: 110px; padding: 12px; border-radius: 8px; background: white; color: black; font-size: 0.8rem; }
+.btn-grey { background: #333 !important; color: white !important; }
 
 /* GIOCO */
 #word-display { display: flex; justify-content: center; gap: 8px; margin: 25px 0; }
 .letter-slot { width: 30px; border-bottom: 4px solid #333; font-size: 2rem; font-weight: 800; height: 45px; }
-
-#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 6px; }
-.key { background: #252530; padding: 12px 0; border-radius: 8px; color: white; font-weight: 700; }
+#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 6px; width: 100%; }
+.key { background: #252530; padding: 12px 0; border-radius: 8px; color: white; }
 .key.used { opacity: 0.1; }
-
-/* OVERLAY E SCRITTE IMPONENTI */
-.overlay { 
-    position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
-    display: flex; justify-content: center; align-items: center; z-index: 10000;
-}
-
-#result-title {
-    font-size: 3.5rem; font-weight: 900; line-height: 1; margin-bottom: 10px;
-    text-transform: uppercase; letter-spacing: -2px;
-}
-
-.win-glow { color: var(--neon-blue); animation: pulseBlue 1s infinite alternate; }
-.lose-glow { color: var(--neon-pink); animation: pulsePink 1s infinite alternate; }
-
-@keyframes pulseBlue { 
-    from { text-shadow: 0 0 20px var(--neon-blue); transform: scale(1); } 
-    to { text-shadow: 0 0 50px var(--neon-blue); transform: scale(1.05); } 
-}
-@keyframes pulsePink { 
-    from { text-shadow: 0 0 20px var(--neon-pink); transform: scale(1); } 
-    to { text-shadow: 0 0 50px var(--neon-pink); transform: scale(1.05); } 
-}
-
-.overlay-btns { display: flex; gap: 15px; margin-top: 30px; justify-content: center; }
-.btn-small-rect { width: 130px; padding: 14px; border-radius: 10px; background: white; color: black; }
-.btn-grey { background: #333; color: white; }
-
 .hidden { display: none !important; }
