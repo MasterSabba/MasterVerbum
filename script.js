@@ -6,17 +6,39 @@ let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 
-// --- MULTIPLAYER STABILE ---
+// --- DIZIONARIO ITALIANO (Difficoltà Media - No nomi propri) ---
+const dizionarioItaliano = [
+    "ABITUDINE", "BOTTIGLIA", "CARTOLINA", "DIZIONARIO", "ELEFANTE", "FORCHETTA", 
+    "GIORNALE", "IDROGENO", "LUMACA", "MONTAGNA", "NAUFRAGIO", "OMBRELLO", 
+    "QUADERNO", "RISTORANTE", "SCRITTURA", "TELEFONO", "UNIVERSO", "VALIGIA",
+    "ZUCCHERO", "ASTRONAVE", "BICICLETTA", "CALCIATORE", "DESIDERIO", "ESERCIZIO",
+    "FOTOGRAFO", "GENTILEZZA", "LABIRINTO", "MACCHINA", "ORIZZONTE", "PANTALONI",
+    "QUADRATO", "REPLICA", "SETTIMANA", "TAVOLETTA", "VELOCITA", "ZAFFERANO"
+];
+
 function startHeartbeat() {
     setInterval(() => { if (conn && conn.open) conn.send({ type: 'KEEP_ALIVE' }); }, 3000);
 }
 
-peer.on('open', id => { document.getElementById('my-id').innerText = id; });
-peer.on('connection', c => { conn = c; setupLogic(); });
+// Gestione ID e interfaccia iniziale
+peer.on('open', id => { 
+    document.getElementById('my-id').innerText = id;
+    document.getElementById('status-msg').innerText = "Pronto a giocare!";
+});
+
+peer.on('connection', c => { 
+    conn = c; 
+    document.getElementById('status-msg').innerText = "Amico connesso!";
+    setupLogic(); 
+});
 
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase();
-    if(target) { conn = peer.connect(target, { reliable: true }); setupLogic(); }
+    if(target) { 
+        document.getElementById('status-msg').innerText = "Connessione in corso...";
+        conn = peer.connect(target, { reliable: true }); 
+        setupLogic(); 
+    }
 };
 
 function setupLogic() {
@@ -29,7 +51,7 @@ function setupLogic() {
         } else {
             document.getElementById('play-screen').classList.remove('hidden');
             document.getElementById('role-badge').innerText = "SFIDANTE";
-            document.getElementById('word-display').innerText = "IL MASTER STA SCRIVENDO";
+            document.getElementById('word-display').innerText = "IL MASTER SCEGLIE...";
             document.getElementById('keyboard').classList.add('hidden');
         }
     });
@@ -42,35 +64,16 @@ function setupLogic() {
     });
 }
 
-// --- GENERATORE DI PAROLE VERO (NO NOMI PROPRI) ---
-async function ottieniParolaCasuale() {
-    try {
-        const url = "https://it.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=10&origin=*";
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        for (let item of data.query.random) {
-            let p = item.title.toUpperCase().split(' ')[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            // Filtro: solo lettere A-Z, no numeri, lunghezza 5-9, no nomi francesi/strani comuni su Wiki
-            const blacklist = ["PHILIPPE", "JEAN", "PIERRE", "LOUIS", "RENE", "HENRI", "MARC"];
-            if (p.length > 4 && p.length < 10 && /^[A-Z]+$/.test(p) && !blacklist.includes(p)) {
-                return p;
-            }
-        }
-    } catch(e) { console.log("Wiki Error, uso backup"); }
-    
-    const backup = ["PIZZA", "CALCIO", "DOMANI", "ESTATE", "LAVORO", "MUSICA", "STRADA", "VIAGGIO", "CUCINA", "ALBERO"];
-    return backup[Math.floor(Math.random()*backup.length)];
-}
-
-document.getElementById('bot-btn').onclick = async () => {
-    document.getElementById('status-msg').innerText = "🤖 IL BOT STA PENSANDO...";
-    secretWord = await ottieniParolaCasuale();
-    isBot = true; amIMaster = false;
-    startPlay("BOT CHALLENGE");
+// BOT con parole italiane medie
+document.getElementById('bot-btn').onclick = () => {
+    document.getElementById('status-msg').innerText = "🤖 Bot sta scegliendo...";
+    setTimeout(() => {
+        secretWord = dizionarioItaliano[Math.floor(Math.random() * dizionarioItaliano.length)];
+        isBot = true; amIMaster = false;
+        startPlay("BOT CHALLENGE");
+    }, 800);
 };
 
-// --- LOGICA DI GIOCO ---
 document.getElementById('start-btn').onclick = () => {
     secretWord = document.getElementById('secret-word').value.trim().toUpperCase();
     if(secretWord.length < 3) return;
@@ -83,13 +86,17 @@ function startPlay(role) {
     document.getElementById('host-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('role-badge').innerText = role;
+    
+    // Pulizia tastiera per nuova partita
+    document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
+    document.getElementById('wrong-letters').innerText = "";
+    
     if(role === "MASTER") {
         document.getElementById('keyboard').classList.add('hidden');
-        document.getElementById('word-display').innerText = "L'AMICO STA INDOVINANDO";
     } else {
         document.getElementById('keyboard').classList.remove('hidden');
-        render();
     }
+    render();
 }
 
 function processMove(l) {
@@ -105,20 +112,21 @@ function processMove(l) {
 }
 
 function render() {
-    if(!secretWord || (amIMaster && mistakes < 6)) {
-        // Il Master vede i progressi dell'amico
-        if(amIMaster) {
-            const progresso = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join('\u00A0');
-            document.getElementById('word-display').innerHTML = progresso;
-        }
-        if(!amIMaster) {
-            const resHTML = secretWord.split('').map(l => guessedLetters.includes(l) ? `<span>${l}</span>` : "_").join('\u00A0');
-            document.getElementById('word-display').innerHTML = resHTML;
-        }
-    }
+    if(!secretWord) return;
     
-    const check = secretWord.split('').every(l => guessedLetters.includes(l));
-    if(check && secretWord) end(true);
+    // Il Master vede cosa sta scrivendo l'amico
+    let content = "";
+    if (amIMaster) {
+        content = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join('\u00A0');
+    } else {
+        content = secretWord.split('').map(l => 
+            guessedLetters.includes(l) ? `<span>${l}</span>` : "_"
+        ).join('\u00A0');
+    }
+    document.getElementById('word-display').innerHTML = content;
+    
+    const win = secretWord.split('').every(l => guessedLetters.includes(l));
+    if(win) end(true);
     else if(mistakes >= 6) end(false);
 }
 
@@ -130,9 +138,9 @@ function end(wordGuessed) {
     document.getElementById('result-desc').innerText = "La parola era: " + secretWord;
 }
 
-// --- TASTIERA ---
+// Inizializzazione Tastiera
 const kb = document.getElementById('keyboard');
-kb.innerHTML = ""; // Pulisce per evitare doppioni
+kb.innerHTML = "";
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div'); b.className = 'key'; b.innerText = l;
     b.onclick = () => {
@@ -144,15 +152,16 @@ kb.innerHTML = ""; // Pulisce per evitare doppioni
     kb.appendChild(b);
 });
 
+// Canvas Disegno
 function draw(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.beginPath();
     if(s==1) ctx.arc(100, 40, 20, 0, Math.PI*2);
-    if(s==2) { ctx.moveTo(100, 60); ctx.lineTo(100, 120); }
-    if(s==3) { ctx.moveTo(100, 80); ctx.lineTo(70, 100); }
-    if(s==4) { ctx.moveTo(100, 80); ctx.lineTo(130, 100); }
-    if(s==5) { ctx.moveTo(100, 120); ctx.lineTo(70, 160); }
-    if(s==6) { ctx.moveTo(100, 120); ctx.lineTo(130, 160); }
+    if(s==2) { ctx.moveTo(100, 60); ctx.lineTo(100, 110); }
+    if(s==3) { ctx.moveTo(100, 75); ctx.lineTo(75, 95); }
+    if(s==4) { ctx.moveTo(100, 75); ctx.lineTo(125, 95); }
+    if(s==5) { ctx.moveTo(100, 110); ctx.lineTo(75, 150); }
+    if(s==6) { ctx.moveTo(100, 110); ctx.lineTo(125, 150); }
     ctx.stroke();
 }
 
