@@ -7,7 +7,6 @@ let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0, isMuted = false, la
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const dizionario = ["ABITUDINE", "ASTRONAVE", "BICICLETTA", "BOTTIGLIA", "BUSSOLA", "CHITARRA", "DIZIONARIO", "ELEFANTE", "EMOZIONE", "ESPERIENZA", "GENTILEZZA", "GIARDINO", "LABIRINTO", "MONTAGNA", "ORIZZONTE", "PANTALONI", "QUADERNO", "RISTORANTE", "SETTIMANA", "TELEFONO", "UNIVERSO", "VELOCITA", "ZAFFERANO", "ZUCCHERO", "PIRAMIDE", "ORCHESTRA", "VULCANO", "SATELLITE", "AVVENTURA", "MERAVIGLIA"];
 
-// --- SUONI E FEEDBACK ---
 function playSound(type) {
     if (isMuted) return;
     const osc = audioCtx.createOscillator();
@@ -26,7 +25,6 @@ function playSound(type) {
 function vibrate(ms = 50) { if ("vibrate" in navigator) navigator.vibrate(ms); }
 function toggleMute() { isMuted = !isMuted; document.getElementById('volume-toggle').innerText = isMuted ? "🔇" : "🔊"; }
 
-// --- LOGICA PEER ---
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
 document.getElementById('connect-btn').onclick = () => {
@@ -53,7 +51,6 @@ function setupLogic() {
     });
 }
 
-// --- GIOCO ---
 document.getElementById('bot-btn').onclick = () => {
     if (isProcessing) return; isProcessing = true;
     isBot = true; amIMaster = false;
@@ -120,17 +117,27 @@ function render() {
 function end(win) {
     clearInterval(timerInterval);
     const ov = document.getElementById('overlay');
+    const title = document.getElementById('result-title');
     ov.classList.remove('hidden');
-    let v = amIMaster ? !win : win;
-    if(v) { myScore++; spawnParticles(); vibrate([50, 50, 50]); } else { oppScore++; vibrate(200); }
+    
+    let ioHoVinto = amIMaster ? !win : win;
+    title.classList.remove('win-glow', 'lose-glow');
+
+    if(ioHoVinto) {
+        myScore++; spawnParticles(); vibrate([50, 50, 50]);
+        title.innerText = "MISSIONE COMPIUTA";
+        title.classList.add('win-glow');
+    } else {
+        oppScore++; vibrate(200);
+        title.innerText = "SISTEMA COMPROMESSO";
+        title.classList.add('lose-glow');
+    }
+    
     document.getElementById('my-score').innerText = myScore;
     document.getElementById('opp-score').innerText = oppScore;
-    document.getElementById('result-title').innerText = v ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
-    document.getElementById('result-title').style.color = v ? "var(--neon-blue)" : "var(--neon-pink)";
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
 }
 
-// --- UTILS ---
 function spawnParticles() {
     for(let i=0; i<30; i++) {
         const p = document.createElement('div'); p.className = 'particle';
@@ -143,9 +150,7 @@ function spawnParticles() {
 
 function sendEmoji(e) { if(conn) conn.send({ type: 'EMOJI', emoji: e }); showEmoji(e); }
 function showEmoji(e) {
-    const el = document.createElement('div'); 
-    el.className = `floating-emoji emoji-${lastSide}`;
-    el.innerText = e;
+    const el = document.createElement('div'); el.className = `floating-emoji emoji-${lastSide}`; el.innerText = e;
     document.getElementById('emoji-area').appendChild(el);
     lastSide = (lastSide === 'left') ? 'right' : 'left';
     setTimeout(() => el.remove(), 1500);
