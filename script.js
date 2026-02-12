@@ -1,4 +1,21 @@
-const dizionario = ["PIZZA", "CALCIO", "DOMANI", "VESUVIO", "TASTIERA", "BOTTIGLIA", "STADIO", "COMPUTER", "GIURASSICO", "ASTEROIDE", "COLOSSEO", "GELATO", "SPAGHETTI", "MELODIA", "QUADERNO", "PANDORO", "VENEZIA", "UNIVERSO"];
+// --- IL SUPER DIZIONARIO ITALIANO ---
+const dizionarioBase = [
+    // Facili
+    "CASA", "PANE", "SOLE", "MARE", "GATTO", "CANE", "ERBA", "LIBRO", "MELA",
+    // Medie
+    "PIZZA", "CALCIO", "DOMANI", "VESUVIO", "STADIO", "GELATO", "ZAINO", "PIRATA",
+    "CHITARRA", "BUSSOLA", "DELFINO", "SCACCHI", "VENEZIA", "QUADERNO", "CUCINA",
+    // Difficili
+    "TASTIERA", "BOTTIGLIA", "COMPUTER", "GIURASSICO", "ASTEROIDE", "COLOSSEO",
+    "SPAGHETTI", "MELODIA", "PANDORO", "UNIVERSO", "ORIZZONTE", "GIRASOLE",
+    "OROLOGIO", "ASTRONAVE", "DINOSAURO", "ESPLORATORE", "LABIRINTO", "SATELLITE",
+    // Molto Difficili
+    "ARCHITETTURA", "PSICOLOGIA", "PALEONTOLOGIA", "CRITTOGRAFIA", "EQUATORE",
+    "METAMORFOSI", "ZIGOGOLO", "PNEUMATICO", "OSTRACISMO", "IPOTENUSA", "OSMOSI"
+];
+
+// Questa funzione rimescola l'intero dizionario ogni volta che ricarichi la pagina
+let paroleDisponibili = dizionarioBase.sort(() => Math.random() - 0.5);
 
 function generaCodice() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -13,10 +30,26 @@ let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false,
 
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
-    document.getElementById('status-msg').innerText = "🌐 Sistema Pronto";
+    document.getElementById('status-msg').innerText = "🌐 Sistema Online";
 });
 
-// CONNESSIONE MULTIPLAYER
+// --- LOGICA GENERAZIONE CASUALE BOT ---
+document.getElementById('bot-btn').onclick = () => {
+    isBot = true;
+    
+    // Se le parole finiscono, ricarica e rimescola
+    if (paroleDisponibili.length === 0) {
+        paroleDisponibili = dizionarioBase.sort(() => Math.random() - 0.5);
+    }
+
+    // Estrae l'ultima parola del mazzo rimescolato
+    secretWord = paroleDisponibili.pop().toUpperCase();
+    
+    console.log("Parole ancora nascoste nel mazzo: " + paroleDisponibili.length);
+    startPlay("SOLO VS BOT");
+};
+
+// --- MULTIPLAYER ---
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase();
     if(target) {
@@ -42,7 +75,7 @@ function setupLogic() {
                 document.getElementById('host-screen').classList.remove('hidden');
             } else {
                 startPlay("SFIDANTE");
-                document.getElementById('word-display').innerText = "ATTENDI PAROLA...";
+                document.getElementById('word-display').innerText = "IL MASTER SCRIVE...";
                 document.getElementById('keyboard').classList.add('hidden');
             }
         }, 800);
@@ -58,9 +91,13 @@ function setupLogic() {
             showEmoji(data.emoji); 
         }
     });
+
+    conn.on('close', () => {
+        alert("Avversario disconnesso.");
+        location.reload();
+    });
 }
 
-// INIZIO GIOCO
 document.getElementById('start-btn').onclick = () => {
     const w = document.getElementById('secret-word').value.trim().toUpperCase();
     if(w.length < 3) return alert("Parola troppo corta!");
@@ -83,7 +120,6 @@ function startPlay(role) {
     render();
 }
 
-// TASTIERA
 const kb = document.getElementById('keyboard');
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div');
@@ -103,21 +139,22 @@ function processMove(l) {
         if(!secretWord.includes(l)) { 
             mistakes++; 
             draw(mistakes); 
-            document.getElementById('wrong-letters').innerText += l + " ";
+            const wrongSpan = document.createElement('span');
+            wrongSpan.innerText = l + " ";
+            document.getElementById('wrong-letters').appendChild(wrongSpan);
         }
         render();
     }
 }
 
 function render() {
-    if(!secretWord) return;
+    if(!secretWord || document.getElementById('word-display').innerText.includes("SCRIVE")) return;
     const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
     document.getElementById('word-display').innerText = res;
-    if(!res.includes('_')) end(true);
+    if(!res.includes('_') && secretWord) end(true);
     else if(mistakes >= 6) end(false);
 }
 
-// EMOJI E FEEDBACK
 function sendEmoji(e) {
     if(!isBot && conn && conn.open) conn.send({ type: 'EMOJI', emoji: e });
     showEmoji(e);
@@ -131,9 +168,12 @@ function showEmoji(e) {
 }
 
 function end(win) {
-    document.getElementById('overlay').classList.remove('hidden');
-    document.getElementById('result-title').innerText = win ? "VITTORIA" : "SCONFITTA";
-    document.getElementById('result-desc').innerText = "La parola era: " + secretWord;
+    setTimeout(() => {
+        document.getElementById('overlay').classList.remove('hidden');
+        document.getElementById('result-title').innerText = win ? "DOMINIO" : "SCONFITTA";
+        document.getElementById('result-title').style.color = win ? "var(--neon-blue)" : "var(--neon-pink)";
+        document.getElementById('result-desc').innerText = "La parola era: " + secretWord;
+    }, 500);
 }
 
 function draw(s) {
@@ -149,11 +189,6 @@ function draw(s) {
 
 document.getElementById('copy-btn').onclick = () => {
     navigator.clipboard.writeText(myId);
-    document.getElementById('status-msg').innerText = "📋 Codice Copiato!";
-};
-
-document.getElementById('bot-btn').onclick = () => {
-    isBot = true;
-    secretWord = dizionario[Math.floor(Math.random() * dizionario.length)];
-    startPlay("SOLO VS BOT");
+    document.getElementById('copy-btn').innerText = "COPIATO!";
+    setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA CODICE", 2000);
 };
