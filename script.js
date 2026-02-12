@@ -1,85 +1,77 @@
-// Configurazione per forzare la connessione tra iPad
-const config = {
-    config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }] }
-};
+// --- CONFIGURAZIONE E FILTRO ITALIANO ---
+const config = { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }] } };
+const sillabeITA = ["MA", "RE", "PA", "NE", "LI", "BRO", "CA", "SA", "SO", "LE", "GA", "TO", "VI", "TA", "MON", "TE", "FIO", "RE"];
 
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, config);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 
-peer.on('open', id => {
-    document.getElementById('my-id').innerText = id;
-    document.getElementById('status-msg').innerText = "🌐 Online";
-});
+// --- GENERATORE DI PAROLE SENZA NOMI ---
+async function ottieniParolaCasuale() {
+    try {
+        const response = await fetch('https://it.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=5&origin=*');
+        const data = await response.json();
+        
+        // Cerchiamo tra i 5 risultati quello che sembra più una parola italiana comune
+        for (let obj of data.query.random) {
+            let p = obj.title.toUpperCase().split(' ')[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            // Filtro: No nomi (spesso iniziano con lettere specifiche o sono lunghi), No simboli, No parole troppo corte
+            if (p.length > 3 && p.length < 9 && /^[A-Z]+$/.test(p)) {
+                // Evitiamo nomi comuni che Wikipedia pesca spesso (Philippe, ecc) 
+                // controllando se la parola non finisce in modo "strano" per l'italiano
+                const finaliStrane = ["EPE", "IKE", "IPE", "Y", "W", "K"]; 
+                if (!finaliStrane.some(f => p.endsWith(f))) return p;
+            }
+        }
+        return generaParolaSillabica();
+    } catch(e) { return generaParolaSillabica(); }
+}
 
-// --- RICEZIONE DATI ---
-peer.on('connection', c => {
-    conn = c;
-    setupLogic();
-});
+function generaParolaSillabica() {
+    let p = "";
+    for(let i=0; i<3; i++) p += sillabeITA[Math.floor(Math.random() * sillabeITA.length)];
+    return p;
+}
+
+// --- LOGICA CONNESSIONE ---
+peer.on('open', id => { document.getElementById('my-id').innerText = id; });
+peer.on('connection', c => { conn = c; setupLogic(); });
 
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase();
-    if(target) {
-        conn = peer.connect(target);
-        setupLogic();
-    }
+    if(target) { conn = peer.connect(target); setupLogic(); }
 };
 
 function setupLogic() {
     conn.on('open', () => {
         amIMaster = myId < conn.peer;
         document.getElementById('setup-screen').classList.add('hidden');
-        if(amIMaster) {
-            document.getElementById('host-screen').classList.remove('hidden');
-        } else {
+        if(amIMaster) document.getElementById('host-screen').classList.remove('hidden');
+        else {
             document.getElementById('play-screen').classList.remove('hidden');
-            document.getElementById('role-badge').innerText = "SFIDANTE";
-            document.getElementById('word-display').innerText = "IL MASTER STA SCRIVENDO...";
+            document.getElementById('word-display').innerText = "ATTESA MASTER...";
             document.getElementById('keyboard').classList.add('hidden');
         }
     });
-
     conn.on('data', data => {
-        if(data.type === 'START') {
-            // AZIONE CRUCIALE: Reset dello stato e della parola
-            secretWord = data.word;
-            isBot = false;
-            guessedLetters = [];
-            mistakes = 0;
-            
-            // Forza la pulizia del testo "IL MASTER STA SCRIVENDO"
-            document.getElementById('word-display').innerText = ""; 
-            startPlay("SFIDANTE");
-        } else if(data.type === 'GUESS') {
-            processMove(data.letter);
-        } else if(data.type === 'EMOJI') {
-            showEmoji(data.emoji);
-        }
+        if(data.type === 'START') { secretWord = data.word; startPlay("SFIDANTE"); }
+        else if(data.type === 'GUESS') processMove(data.letter);
+        else if(data.type === 'EMOJI') showEmoji(data.emoji);
     });
 }
 
-// --- LOGICA BOT (PAROLE INFINITE) ---
-async function ottieniParolaCasuale() {
-    try {
-        const response = await fetch('https://it.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=1&origin=*');
-        const data = await response.json();
-        let p = data.query.random[0].title.toUpperCase().split(' ')[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        return (p.length > 3 && p.length < 10 && /^[A-Z]+$/.test(p)) ? p : "GALASSIA";
-    } catch(e) { return "UNIVERSO"; }
-}
-
+// --- GESTIONE TURNI ---
 document.getElementById('bot-btn').onclick = async () => {
     isBot = true; amIMaster = false;
-    document.getElementById('status-msg').innerText = "🤖 Il Bot pensa...";
+    document.getElementById('status-msg').innerText = "🤖 Bot sta scegliendo...";
     secretWord = await ottieniParolaCasuale();
     startPlay("SOLO VS BOT");
 };
 
-// --- CORE GIOCO ---
 document.getElementById('start-btn').onclick = () => {
     const w = document.getElementById('secret-word').value.trim().toUpperCase();
-    if(w.length < 3) return alert("Minimo 3 lettere!");
+    if(w.length < 3) return;
     secretWord = w;
     if(conn) conn.send({ type: 'START', word: secretWord });
     startPlay("MASTER");
@@ -90,26 +82,24 @@ function startPlay(role) {
     document.getElementById('host-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('role-badge').innerText = role;
-    
+    guessedLetters = []; mistakes = 0;
     document.getElementById('wrong-letters').innerText = "";
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.clearRect(0,0,200,200);
-
-    if(role === "MASTER") {
-        document.getElementById('keyboard').classList.add('hidden');
-    } else {
+    
+    if(role === "MASTER") document.getElementById('keyboard').classList.add('hidden');
+    else {
         document.getElementById('keyboard').classList.remove('hidden');
         document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
     }
-    render(); // Forza i trattini
+    render();
 }
 
 function processMove(l) {
     if(!guessedLetters.includes(l)) {
         guessedLetters.push(l);
         if(!secretWord.includes(l)) { 
-            mistakes++; 
-            draw(mistakes); 
+            mistakes++; draw(mistakes); 
             document.getElementById('wrong-letters').innerText += l + " ";
         }
         render();
@@ -117,21 +107,17 @@ function processMove(l) {
 }
 
 function render() {
-    if(!secretWord) return;
-    
-    // Mostra la parola con i trattini
-    const display = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
-    document.getElementById('word-display').innerText = display;
-    
-    if(!display.includes('_') && secretWord !== "") end(true);
+    if(!secretWord || document.getElementById('word-display').innerText.includes("ATTESA")) return;
+    const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
+    document.getElementById('word-display').innerText = res;
+    if(!res.includes('_') && secretWord) end(true);
     else if(mistakes >= 6) end(false);
 }
 
 // TASTIERA
 const kb = document.getElementById('keyboard');
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
-    const b = document.createElement('div');
-    b.className = 'key'; b.innerText = l;
+    const b = document.createElement('div'); b.className = 'key'; b.innerText = l;
     b.onclick = () => {
         if(amIMaster || b.classList.contains('used')) return;
         b.classList.add('used');
@@ -143,8 +129,7 @@ const kb = document.getElementById('keyboard');
 
 function draw(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
-    ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.lineCap = "round";
-    ctx.beginPath();
+    ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.beginPath();
     if(s==1) ctx.arc(100, 40, 20, 0, Math.PI*2);
     if(s==2) { ctx.moveTo(100, 60); ctx.lineTo(100, 120); }
     if(s==3) { ctx.moveTo(100, 80); ctx.lineTo(70, 100); }
