@@ -3,65 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MasterVerbum Pro - Hacker Edition</title>
+    <title>MasterVerbum Pro</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
-    <div id="volume-toggle" onclick="toggleMute()">🔊</div>
+    <div class="scanlines"></div>
     <div id="particles-container"></div>
-    <div id="emoji-area"></div>
 
     <div class="panel">
         <div id="score-board" class="hidden">
-            <span style="color:var(--neon-blue)">IO: <b id="my-score">0</b></span>
-            <span style="margin: 0 15px; opacity: 0.2;">|</span>
-            <span style="color:var(--neon-pink)">AVV: <b id="opp-score">0</b></span>
+            <span class="score-text">IO: <b id="my-score">0</b></span>
+            <span class="score-divider">|</span>
+            <span class="score-text pink">AVV: <b id="opp-score">0</b></span>
         </div>
 
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
+        <div id="rank-badge" class="rank-display">SCRIPT KIDDIE</div>
 
         <div id="setup-screen" class="card">
-            <p>IL TUO ID HACKER:</p>
+            <p class="label">TUO CODICE:</p>
             <div id="my-id" class="id-display">----</div>
-            <button id="copy-btn">COPIA CODICE</button>
-            <div style="margin:20px 0; opacity:0.3; font-size:0.7rem; letter-spacing:2px;">SISTEMA MULTI-PLAYER</div>
-            <input type="text" id="peer-id-input" placeholder="CODICE BERSAGLIO">
-            <button id="connect-btn" class="btn-primary">CONNETTI</button>
-            <button id="bot-btn" class="btn-bot" style="margin-top:15px;">SFIDA IL BOT (A.I.)</button>
+            <button id="copy-btn" class="btn-copy">COPIA CODICE</button>
+            
+            <p class="system-text">SISTEMA MULTI-PLAYER</p>
+            
+            <input type="text" id="peer-id-input" placeholder="CODICE AMICO">
+            <button id="connect-btn" class="btn-connetti">CONNETTI</button>
+            <button id="bot-btn" class="btn-bot-pink">SFIDA IL BOT</button>
         </div>
 
         <div id="host-screen" class="card hidden">
-            <div class="role-badge">MASTER</div>
-            <p>SCEGLI LA PAROLA SEGRETA</p>
+            <div class="badge">MASTER MODE</div>
+            <p>INSERISCI PAROLA SEGRETA</p>
             <input type="password" id="secret-word" placeholder="SOLO LETTERE">
-            <button id="start-btn" class="btn-primary">INVIA SFIDA</button>
+            <button id="start-btn" class="btn-connetti">INVIA SFIDA</button>
         </div>
 
         <div id="play-screen" class="card hidden">
             <div id="timer-display">01:00</div>
-            <div id="role-badge" class="role-badge">...</div>
+            <div id="role-badge" class="badge">...</div>
             <canvas id="hangmanCanvas" width="200" height="180"></canvas>
             <div id="word-display"></div>
-            <div style="height:25px; margin-bottom:10px;">
-                <span id="wrong-letters" style="color:var(--neon-pink); text-decoration:line-through; letter-spacing:3px;"></span>
-            </div>
+            <div id="wrong-letters" class="wrong-letters"></div>
             <div id="keyboard"></div>
-            <div id="emoji-bar">
-                <button class="emoji-btn" onclick="sendEmoji('🤣')">🤣</button>
-                <button class="emoji-btn" onclick="sendEmoji('🤯')">🤯</button>
-                <button class="emoji-btn" onclick="sendEmoji('😈')">😈</button>
-            </div>
         </div>
     </div>
 
     <div id="overlay" class="overlay hidden">
         <h1 id="result-title"></h1>
         <p id="result-desc"></p>
-        <div style="display: flex; gap: 10px; width: 100%; max-width: 400px; padding: 0 20px;">
-            <button id="retry-btn" class="btn-primary">REBOOT</button>
-            <button id="exit-btn" class="btn-exit" style="background:#444;">ESCI</button>
-        </div>
+        <button id="retry-btn" class="btn-connetti">REBOOT</button>
+        <button id="exit-btn" class="btn-exit" onclick="location.reload()">ESCI</button>
     </div>
 
     <script src="script.js"></script>
