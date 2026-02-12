@@ -10,40 +10,40 @@
 <body>
 
     <div class="panel">
+        <div id="score-board" class="hidden">
+            <span style="color:var(--neon-blue)">IO: <b id="my-score">0</b></span>
+            <span style="margin: 0 15px; opacity: 0.3;">|</span>
+            <span style="color:var(--neon-pink)">AVV: <b id="opp-score">0</b></span>
+        </div>
+
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
 
         <div id="setup-screen" class="card">
             <p>TUO CODICE:</p>
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn">COPIA CODICE</button>
-            
-            <div style="margin:20px 0; opacity:0.4; font-size:0.8rem; letter-spacing:2px;">MULTI-PLAYER</div>
+            <div style="margin:20px 0; opacity:0.4; font-size:0.8rem; letter-spacing:2px;">SFIDA MULTIPLAYER</div>
             <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
             <button id="connect-btn" class="btn-primary">CONNETTI</button>
-            
             <button id="bot-btn" class="btn-bot" style="margin-top:15px;">SFIDA IL BOT</button>
         </div>
 
         <div id="host-screen" class="card hidden">
             <div class="role-badge">MASTER</div>
-            <p>SCEGLI LA PAROLA SEGRETA</p>
+            <p>INSERISCI LA PAROLA DA FAR INDOVINARE</p>
             <input type="password" id="secret-word" placeholder="PAROLA">
-            <button id="start-btn" class="btn-primary">INIZIA SFIDA</button>
+            <button id="start-btn" class="btn-primary">INVIA SFIDA</button>
         </div>
 
         <div id="play-screen" class="card hidden">
             <div id="timer-display">01:00</div>
             <div id="role-badge" class="role-badge">...</div>
             <canvas id="hangmanCanvas" width="200" height="180"></canvas>
-            
             <div id="word-display"></div>
-            
             <div style="height:25px; margin-bottom:10px;">
                 <span id="wrong-letters" style="color:var(--neon-pink); text-decoration:line-through; letter-spacing:3px;"></span>
             </div>
-
             <div id="keyboard"></div>
-
             <div id="emoji-bar">
                 <button onclick="sendEmoji('🤣')">🤣</button>
                 <button onclick="sendEmoji('🤯')">🤯</button>
