@@ -5,81 +5,82 @@
 }
 
 body {
-    margin: 0; padding: 0;
-    background: var(--bg-dark);
-    color: white;
-    font-family: 'Courier New', Courier, monospace;
-    display: flex; justify-content: center; align-items: center;
-    min-height: 100vh;
+    margin: 0; padding: 0; background: var(--bg-dark); color: white;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    display: flex; justify-content: center; align-items: center; min-height: 100vh;
     overflow: hidden;
 }
 
-/* FIX CLICK: pointer-events none permette di cliccare i tasti sotto */
 .scanlines {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-    background-size: 100% 3px;
-    z-index: 9999;
-    pointer-events: none;
-    opacity: 0.3;
+    position: fixed; inset: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+    background-size: 100% 4px; z-index: 999; pointer-events: none;
 }
 
-.panel { width: 90%; max-width: 400px; text-align: center; z-index: 10; }
+.panel { width: 90%; max-width: 400px; text-align: center; }
 
-.neon-title { font-size: 2.2rem; letter-spacing: 4px; margin: 0; text-shadow: 0 0 10px var(--neon-blue); }
+.neon-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -1px; }
 .neon-title span { color: var(--neon-blue); }
 
-.rank-display { color: var(--neon-blue); font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 20px; }
-
 .card {
-    background: rgba(20, 20, 25, 0.9);
-    border-radius: 20px;
-    padding: 30px;
-    border: 1px solid rgba(0, 242, 255, 0.2);
+    background: #15151c; border-radius: 24px; padding: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 
-/* FIX ID DISPLAY */
+/* FIX CODICE AMICO: Centrato e senza bordi brutti */
 .id-display { 
-    font-size: 2.5rem; 
-    font-weight: bold; 
-    color: var(--neon-blue); 
-    letter-spacing: 5px; 
-    margin: 10px 0;
-    text-align: center;
+    font-size: 3.5rem; font-weight: 900; color: white;
+    letter-spacing: 8px; margin: 10px 0; text-align: center;
+    width: 100%; display: block;
 }
 
-.label { font-size: 0.8rem; opacity: 0.8; }
-.system-text { font-size: 0.6rem; opacity: 0.4; letter-spacing: 3px; margin: 20px 0 10px; }
+.label { font-size: 0.7rem; font-weight: 700; opacity: 0.5; letter-spacing: 2px; text-transform: uppercase; }
+.separator { font-size: 0.6rem; opacity: 0.3; margin: 25px 0 15px; letter-spacing: 4px; }
 
-button { border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-
-.btn-copy { background: white; color: black; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; width: auto; }
-.btn-connetti { background: var(--neon-blue); color: black; width: 100%; padding: 15px; border-radius: 10px; }
-.btn-bot-pink { background: var(--neon-pink); color: white; width: 100%; padding: 15px; border-radius: 10px; margin-top: 10px; }
+/* BOTTONI */
+button { border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.btn-copy { background: rgba(255,255,255,0.1); color: white; padding: 6px 15px; border-radius: 8px; font-size: 0.7rem; width: auto; margin-bottom: 10px; }
+.btn-connetti { background: var(--neon-blue); color: black; width: 100%; padding: 18px; border-radius: 12px; font-size: 1rem; }
+.btn-bot-pink { background: var(--neon-pink); color: white; width: 100%; padding: 18px; border-radius: 12px; margin-top: 12px; font-size: 1rem; }
 
 input {
-    width: 100%; background: #000; border: 1px solid rgba(0,242,255,0.3); padding: 15px;
-    border-radius: 10px; color: white; text-align: center; margin-bottom: 15px; font-size: 1rem;
+    width: 100%; background: #000; border: none; padding: 16px;
+    border-radius: 12px; color: white; text-align: center; margin-bottom: 15px; font-size: 1rem;
 }
 
-#word-display { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }
-.letter-slot { width: 25px; border-bottom: 3px solid var(--neon-blue); font-size: 1.5rem; height: 35px; }
+/* GIOCO */
+#word-display { display: flex; justify-content: center; gap: 8px; margin: 25px 0; }
+.letter-slot { width: 30px; border-bottom: 4px solid #333; font-size: 2rem; font-weight: 800; height: 45px; }
 
-#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 5px; }
-.key { background: rgba(255,255,255,0.1); padding: 10px 0; border-radius: 5px; font-size: 0.8rem; color: white; }
-.key.used { opacity: 0.2; }
+#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 6px; }
+.key { background: #252530; padding: 12px 0; border-radius: 8px; color: white; font-weight: 700; }
+.key.used { opacity: 0.1; }
 
-/* ANIMAZIONE VITTORIA/SCONFITTA */
-.win-glow { color: var(--neon-blue); animation: neonBlue 1.5s infinite alternate; }
-.lose-glow { color: var(--neon-pink); animation: neonPink 1.5s infinite alternate; }
+/* OVERLAY E SCRITTE IMPONENTI */
+.overlay { 
+    position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
+    display: flex; justify-content: center; align-items: center; z-index: 10000;
+}
 
-@keyframes neonBlue { from { text-shadow: 0 0 10px var(--neon-blue); } to { text-shadow: 0 0 30px var(--neon-blue); } }
-@keyframes neonPink { from { text-shadow: 0 0 10px var(--neon-pink); } to { text-shadow: 0 0 30px var(--neon-pink); } }
+#result-title {
+    font-size: 3.5rem; font-weight: 900; line-height: 1; margin-bottom: 10px;
+    text-transform: uppercase; letter-spacing: -2px;
+}
 
-/* TASTI OVERLAY PICCOLI */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
-.overlay-btns { display: flex; gap: 10px; margin-top: 20px; }
-.btn-small-rect { width: 110px; padding: 10px; border-radius: 5px; background: var(--neon-blue); color: black; font-size: 0.8rem; }
+.win-glow { color: var(--neon-blue); animation: pulseBlue 1s infinite alternate; }
+.lose-glow { color: var(--neon-pink); animation: pulsePink 1s infinite alternate; }
+
+@keyframes pulseBlue { 
+    from { text-shadow: 0 0 20px var(--neon-blue); transform: scale(1); } 
+    to { text-shadow: 0 0 50px var(--neon-blue); transform: scale(1.05); } 
+}
+@keyframes pulsePink { 
+    from { text-shadow: 0 0 20px var(--neon-pink); transform: scale(1); } 
+    to { text-shadow: 0 0 50px var(--neon-pink); transform: scale(1.05); } 
+}
+
+.overlay-btns { display: flex; gap: 15px; margin-top: 30px; justify-content: center; }
+.btn-small-rect { width: 130px; padding: 14px; border-radius: 10px; background: white; color: black; }
 .btn-grey { background: #333; color: white; }
 
 .hidden { display: none !important; }
