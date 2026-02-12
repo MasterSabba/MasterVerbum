@@ -9,7 +9,6 @@
 </head>
 <body>
     <div class="scanlines"></div>
-    <div id="particles-container"></div>
 
     <div class="panel">
         <div id="score-board" class="hidden">
@@ -19,43 +18,35 @@
         </div>
 
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
-        <div id="rank-badge" class="rank-display">SCRIPT KIDDIE</div>
 
         <div id="setup-screen" class="card">
-            <p class="label">TUO CODICE:</p>
+            <p class="label">IL TUO CODICE</p>
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn" class="btn-copy">COPIA CODICE</button>
             
-            <p class="system-text">SISTEMA MULTI-PLAYER</p>
+            <div class="separator">SISTEMA MULTI-PLAYER</div>
             
-            <input type="text" id="peer-id-input" placeholder="CODICE AMICO">
+            <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
             <button id="connect-btn" class="btn-connetti">CONNETTI</button>
             <button id="bot-btn" class="btn-bot-pink">SFIDA IL BOT</button>
         </div>
 
-        <div id="host-screen" class="card hidden">
-            <div class="badge">MASTER MODE</div>
-            <p>INSERISCI PAROLA SEGRETA</p>
-            <input type="password" id="secret-word" placeholder="SOLO LETTERE">
-            <button id="start-btn" class="btn-connetti">INVIA SFIDA</button>
-        </div>
-
         <div id="play-screen" class="card hidden">
             <div id="timer-display">01:00</div>
-            <div id="role-badge" class="badge">...</div>
             <canvas id="hangmanCanvas" width="200" height="180"></canvas>
             <div id="word-display"></div>
-            <div id="wrong-letters" class="wrong-letters"></div>
             <div id="keyboard"></div>
         </div>
     </div>
 
     <div id="overlay" class="overlay hidden">
-        <h1 id="result-title"></h1>
-        <p id="result-desc"></p>
-        <div class="overlay-btns">
-            <button id="retry-btn" class="btn-small-rect">REBOOT</button>
-            <button id="exit-btn" class="btn-small-rect btn-grey" onclick="location.reload()">ESCI</button>
+        <div id="result-container">
+            <h1 id="result-title"></h1>
+            <p id="result-desc"></p>
+            <div class="overlay-btns">
+                <button id="retry-btn" class="btn-small-rect">REBOOT</button>
+                <button id="exit-btn" class="btn-small-rect btn-grey" onclick="location.reload()">ESCI</button>
+            </div>
         </div>
     </div>
 
