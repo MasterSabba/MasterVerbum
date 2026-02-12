@@ -3,44 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MasterVerbum P2P</title>
+    <title>MasterVerbum Pro</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
-    <div id="game-container">
-        <h1 class="logo">MASTER<span>VERBUM</span></h1>
+    <div id="app">
+        <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
         
-        <div id="setup-screen" class="glass">
-            <div id="my-id-container">
-                <p>Il tuo codice:</p>
-                <div class="id-row">
-                    <span id="my-id">...</span>
-                    <button id="copy-btn">Copia</button>
-                </div>
+        <div id="setup-screen" class="panel">
+            <div class="card">
+                <h3>IL TUO CODICE</h3>
+                <div class="id-display" id="my-id">...</div>
+                <button id="copy-btn" class="btn-secondary">COPIA CODICE</button>
             </div>
-            <hr>
-            <div class="input-group">
-                <input type="text" id="peer-id-input" placeholder="Incolla codice amico">
-                <button id="connect-btn">CONNETTI</button>
+            
+            <div class="card">
+                <input type="text" id="peer-id-input" placeholder="Codice Amico" maxlength="5">
+                <button id="connect-btn" class="btn-primary">SFIDA AMICO</button>
+                <div class="divider">OPPURE</div>
+                <button id="bot-btn" class="btn-bot">SFIDA IL BOT</button>
             </div>
-            <p id="status">🔵 Sistema Pronto</p>
+            <p id="status-msg">Pronto alla sfida</p>
         </div>
 
-        <div id="host-screen" class="hidden glass">
-            <h2>Sei il Master!</h2>
-            <p>Scegli la parola segreta:</p>
-            <input type="text" id="secret-word" placeholder="Esempio: MATRICE">
-            <button id="start-btn">LANCIA SFIDA</button>
+        <div id="host-screen" class="panel hidden">
+            <div class="card pulse">
+                <h2>SEI IL MASTER</h2>
+                <p>Inserisci la parola segreta</p>
+                <input type="password" id="secret-word" placeholder="Parola...">
+                <button id="start-btn" class="btn-primary">LANCIA SFIDA</button>
+            </div>
         </div>
 
-        <div id="play-screen" class="hidden glass">
-            <div id="role-tag"></div>
-            <canvas id="hangmanCanvas" width="200" height="200"></canvas>
-            <div id="word-display"></div>
+        <div id="play-screen" class="panel hidden">
+            <div id="role-badge"></div>
+            <div class="game-box">
+                <canvas id="hangmanCanvas" width="200" height="200"></canvas>
+                <div id="word-display"></div>
+            </div>
             <div id="keyboard"></div>
-            <p id="message"></p>
-            <button onclick="location.reload()" style="background:#444; color:white; margin-top:20px;">Nuova Partita</button>
+        </div>
+
+        <div id="overlay" class="overlay hidden">
+            <div class="overlay-content">
+                <h1 id="result-title"></h1>
+                <p id="result-desc"></p>
+                <button onclick="location.reload()" class="btn-primary">RIPROVA</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
