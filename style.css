@@ -1,25 +1,25 @@
 body {
-    margin: 0; font-family: sans-serif; background: #0a0e17; color: white;
+    margin: 0; font-family: 'Segoe UI', sans-serif;
+    background: #050505; color: white;
     display: flex; justify-content: center; align-items: center; height: 100vh;
 }
 .glass {
-    background: #1a2233; padding: 20px; border-radius: 20px; text-align: center;
-    width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: #111; padding: 25px; border-radius: 20px;
+    width: 350px; text-align: center; border: 1px solid #333;
 }
-.hidden { display: none; }
-.logo { font-size: 2rem; margin-bottom: 20px; }
+.hidden { display: none !important; }
+.logo { font-size: 2rem; letter-spacing: 2px; }
 .logo span { color: #00d4ff; }
-.copy-box {
-    background: #000; padding: 10px; border-radius: 10px; margin-bottom: 20px;
-    display: flex; justify-content: space-between; align-items: center;
+.id-row { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
+#my-id { background: #222; padding: 10px; border-radius: 5px; font-family: monospace; flex-grow: 1; }
+input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 1rem; }
+button { 
+    padding: 12px 20px; border-radius: 8px; border: none; 
+    background: #00d4ff; font-weight: bold; cursor: pointer;
 }
-input { padding: 10px; border-radius: 8px; border: none; width: 80%; margin: 10px 0; }
-button {
-    padding: 10px 20px; border-radius: 8px; border: none;
-    background: #00d4ff; color: #000; font-weight: bold; cursor: pointer;
-}
-#word-display { font-size: 2rem; letter-spacing: 8px; margin: 20px 0; min-height: 40px; }
-#keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-.key { background: #334155; padding: 10px 5px; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
-.key.used { opacity: 0.3; pointer-events: none; }
-.badge { background: #ff0055; padding: 5px 10px; border-radius: 5px; margin-bottom: 10px; font-size: 0.8rem; }
+#word-display { font-size: 2.2rem; letter-spacing: 5px; margin: 20px 0; color: #00d4ff; }
+#keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.key { background: #222; padding: 12px 5px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+.key.used { opacity: 0.2; }
+#role-tag { font-size: 0.8rem; background: #ff0055; display: inline-block; padding: 3px 10px; border-radius: 10px; margin-bottom: 10px; }
+canvas { filter: drop-shadow(0 0 5px #00d4ff); }
