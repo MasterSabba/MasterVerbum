@@ -4,7 +4,7 @@ const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0;
 
-const dizionario = ["ALGORITMO", "ASTRONAVE", "DATABASE", "SATELLITE", "SISTEMA", "PROGRAMMA", "INTERFACCIA", "DINOSAURO"];
+const dizionario = ["ALGORITMO", "ASTRONAVE", "DATABASE", "SATELLITE", "SISTEMA", "PROGRAMMA", "INTERFACCIA", "DINOSAURO", "EVOLUZIONE", "VULCANO"];
 
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
@@ -28,7 +28,10 @@ function setupLogic() {
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('score-board').classList.remove('hidden');
     if(amIMaster) document.getElementById('host-screen').classList.remove('hidden');
-    else { document.getElementById('play-screen').classList.remove('hidden'); document.getElementById('word-display').innerText = "ATTESA MASTER..."; }
+    else { 
+        document.getElementById('play-screen').classList.remove('hidden'); 
+        document.getElementById('word-display').innerText = "ATTESA MASTER..."; 
+    }
     
     conn.on('data', data => {
         if(data.type === 'START') { secretWord = data.word; startPlay("SFIDANTE"); }
@@ -44,21 +47,17 @@ function startPlay(role) {
     document.getElementById('role-badge').innerText = role;
     guessedLetters = []; mistakes = 0;
     document.getElementById('word-display').innerText = "";
-    document.getElementById('wrong-letters').innerText = "";
     document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.clearRect(0,0,200,200);
     if(role !== "MASTER") { startTimer(); render(); }
-    else { document.getElementById('word-display').innerText = "L'AVVERSARIO GIOCA..."; }
+    else { document.getElementById('word-display').innerText = "AVVERSARIO GIOCA..."; }
 }
 
 function processMove(l) {
     if(guessedLetters.includes(l)) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) { 
-        mistakes++; draw(mistakes); 
-        document.getElementById('wrong-letters').innerText += l + " ";
-    }
+    if(!secretWord.includes(l)) mistakes++;
     render();
 }
 
@@ -66,6 +65,7 @@ function render() {
     const container = document.getElementById('word-display');
     if(!secretWord || container.innerText.includes("GIOCA")) return;
     container.innerHTML = secretWord.split('').map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join('');
+    draw(mistakes);
     if(secretWord.split('').every(l => guessedLetters.includes(l))) end(true);
     else if(mistakes >= 6) end(false);
 }
@@ -73,15 +73,26 @@ function render() {
 function end(win, fromRemote = false) {
     clearInterval(timerInterval);
     if(!fromRemote && !isBot && conn) conn.send({ type: 'END', win: win });
-    document.getElementById('overlay').classList.remove('hidden');
+    
+    const ov = document.getElementById('overlay');
+    const title = document.getElementById('result-title');
+    ov.classList.remove('hidden');
+    
     let ioHoVinto = amIMaster ? !win : win;
-    document.getElementById('result-title').innerText = ioHoVinto ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
-    if(!fromRemote) {
-        if(ioHoVinto) myScore++; else oppScore++;
-        document.getElementById('my-score').innerText = myScore;
-        document.getElementById('opp-score').innerText = oppScore;
+    
+    if(ioHoVinto) {
+        title.innerText = "MISSIONE COMPIUTA";
+        title.className = "win-glow";
+        if(!fromRemote) myScore++;
+    } else {
+        title.innerText = "SISTEMA COMPROMESSO";
+        title.className = "lose-glow";
+        if(!fromRemote) oppScore++;
     }
-    document.getElementById('result-desc').innerText = "PAROLA: " + secretWord;
+
+    document.getElementById('my-score').innerText = myScore;
+    document.getElementById('opp-score').innerText = oppScore;
+    document.getElementById('result-desc').innerText = "LA CHIAVE ERA: " + secretWord;
 }
 
 function startTimer() {
@@ -96,6 +107,7 @@ function startTimer() {
 function draw(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.beginPath();
+    ctx.clearRect(0,0,200,200);
     if(s>=1) ctx.arc(100, 40, 20, 0, Math.PI*2);
     if(s>=2) { ctx.moveTo(100, 60); ctx.lineTo(100, 110); }
     if(s>=3) { ctx.moveTo(100, 75); ctx.lineTo(75, 95); }
@@ -131,5 +143,12 @@ function prepareNextRound() {
     document.getElementById('keyboard').appendChild(b);
 });
 
-document.getElementById('copy-btn').onclick = () => { navigator.clipboard.writeText(myId); };
-document.getElementById('secret-word').addEventListener('input', function(e) { this.value = this.value.toUpperCase().replace(/[^A-Z]/g, ''); });
+document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(myId);
+    document.getElementById('copy-btn').innerText = "COPIATO";
+    setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA CODICE", 2000);
+};
+
+document.getElementById('secret-word').addEventListener('input', function(e) { 
+    this.value = this.value.toUpperCase().replace(/[^A-Z]/g, ''); 
+});
