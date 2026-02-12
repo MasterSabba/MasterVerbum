@@ -4,8 +4,6 @@ const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0;
 
-const dizionario = ["ALGORITMO", "ASTRONAVE", "DATABASE", "SATELLITE", "SISTEMA", "PROGRAMMA", "INTERFACCIA", "DINOSAURO"];
-
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
 
@@ -18,23 +16,21 @@ document.getElementById('bot-btn').onclick = () => {
     isBot = true; amIMaster = false;
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('score-board').classList.remove('hidden');
-    secretWord = dizionario[Math.floor(Math.random()*dizionario.length)];
-    startPlay("BOT CHALLENGE");
+    const diz = ["ALGORITMO", "ASTRONAVE", "DATABASE", "SATELLITE", "SISTEMA", "PROGRAMMA"];
+    secretWord = diz[Math.floor(Math.random()*diz.length)];
+    startPlay("BOT");
 };
 
 function setupLogic() {
     isBot = false;
     amIMaster = myId < conn.peer;
     document.getElementById('setup-screen').classList.add('hidden');
-    document.getElementById('score-board').classList.remove('hidden');
     if(amIMaster) {
-        let p = prompt("INSERISCI PAROLA SEGRETA:").toUpperCase().replace(/[^A-Z]/g, '');
-        if(p.length < 3) p = "HANGMAN";
-        secretWord = p;
+        let p = prompt("PAROLA SEGRETA:").toUpperCase().replace(/[^A-Z]/g, '');
+        secretWord = p || "HANGMAN";
         conn.send({ type: 'START', word: secretWord });
         startPlay("MASTER");
     }
-    
     conn.on('data', data => {
         if(data.type === 'START') { secretWord = data.word; startPlay("SFIDANTE"); }
         else if(data.type === 'GUESS') processMove(data.letter);
@@ -46,9 +42,8 @@ function startPlay(role) {
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     guessedLetters = []; mistakes = 0;
-    document.getElementById('word-display').innerText = role === "MASTER" ? "L'AVVERSARIO GIOCA..." : "";
-    document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
     if(role !== "MASTER") { startTimer(); render(); }
+    else { document.getElementById('word-display').innerText = "AVVERSARIO IN AZIONE..."; }
 }
 
 function processMove(l) {
@@ -60,7 +55,7 @@ function processMove(l) {
 
 function render() {
     const container = document.getElementById('word-display');
-    if(!secretWord || container.innerText.includes("GIOCA")) return;
+    if(!secretWord || container.innerText.includes("AZIONE")) return;
     container.innerHTML = secretWord.split('').map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join('');
     draw(mistakes);
     if(secretWord.split('').every(l => guessedLetters.includes(l))) end(true);
@@ -70,22 +65,12 @@ function render() {
 function end(win, fromRemote = false) {
     clearInterval(timerInterval);
     if(!fromRemote && !isBot && conn) conn.send({ type: 'END', win: win });
-    
     const ov = document.getElementById('overlay');
     const title = document.getElementById('result-title');
     ov.classList.remove('hidden');
-    
     let ioHoVinto = amIMaster ? !win : win;
-    
-    if(ioHoVinto) {
-        title.innerText = "MISSIONE COMPIUTA";
-        title.className = "win-glow";
-        if(!fromRemote) myScore++;
-    } else {
-        title.innerText = "SISTEMA COMPROMESSO";
-        title.className = "lose-glow";
-        if(!fromRemote) oppScore++;
-    }
+    if(ioHoVinto) { title.innerText = "MISSIONE COMPIUTA"; title.className = "imposing-text win-glow"; }
+    else { title.innerText = "SISTEMA COMPROMESSO"; title.className = "imposing-text lose-glow"; }
     document.getElementById('result-desc').innerText = "LA CHIAVE ERA: " + secretWord;
 }
 
