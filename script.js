@@ -2,7 +2,7 @@ const peerConfig = { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:193
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
-let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0;
+let timerInterval, timeLeft = 60;
 
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
@@ -14,9 +14,7 @@ document.getElementById('connect-btn').onclick = () => {
 
 document.getElementById('bot-btn').onclick = () => {
     isBot = true; amIMaster = false;
-    document.getElementById('setup-screen').classList.add('hidden');
-    document.getElementById('score-board').classList.remove('hidden');
-    const diz = ["ALGORITMO", "ASTRONAVE", "DATABASE", "SATELLITE", "SISTEMA", "PROGRAMMA"];
+    const diz = ["ALGORITMO", "ASTRONAVE", "DATABASE", "SATELLITE", "SISTEMA", "PROGRAMMA", "DINOSAURO"];
     secretWord = diz[Math.floor(Math.random()*diz.length)];
     startPlay("BOT");
 };
@@ -24,9 +22,8 @@ document.getElementById('bot-btn').onclick = () => {
 function setupLogic() {
     isBot = false;
     amIMaster = myId < conn.peer;
-    document.getElementById('setup-screen').classList.add('hidden');
     if(amIMaster) {
-        let p = prompt("PAROLA SEGRETA:").toUpperCase().replace(/[^A-Z]/g, '');
+        let p = prompt("INSERISCI PAROLA SEGRETA:").toUpperCase().replace(/[^A-Z]/g, '');
         secretWord = p || "HANGMAN";
         conn.send({ type: 'START', word: secretWord });
         startPlay("MASTER");
@@ -65,12 +62,15 @@ function render() {
 function end(win, fromRemote = false) {
     clearInterval(timerInterval);
     if(!fromRemote && !isBot && conn) conn.send({ type: 'END', win: win });
+    
     const ov = document.getElementById('overlay');
     const title = document.getElementById('result-title');
     ov.classList.remove('hidden');
+    
     let ioHoVinto = amIMaster ? !win : win;
     if(ioHoVinto) { title.innerText = "MISSIONE COMPIUTA"; title.className = "imposing-text win-glow"; }
     else { title.innerText = "SISTEMA COMPROMESSO"; title.className = "imposing-text lose-glow"; }
+    
     document.getElementById('result-desc').innerText = "LA CHIAVE ERA: " + secretWord;
 }
 
