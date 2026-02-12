@@ -122,8 +122,7 @@ function processMove(l) {
 
 function render() {
     if(!secretWord || document.getElementById('word-display').innerText.includes("SCRIVE")) return;
-    // Uso \u00A0 (spazio unificatore) per evitare che i trattini vadano a capo
-    const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join('\u00A0');
+    const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
     document.getElementById('word-display').innerText = res;
     if(!res.includes('_') && secretWord) end(true);
     else if(mistakes >= 6) end(false);
@@ -172,5 +171,3 @@ document.getElementById('copy-btn').onclick = () => {
     document.getElementById('copy-btn').innerText = "COPIATO!";
     setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA CODICE", 2000);
 };
-// Aggiungi questo in fondo al JS
-document.getElementById('retry-btn').onclick = () => { location.reload(); };
