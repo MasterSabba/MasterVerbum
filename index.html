@@ -11,10 +11,10 @@
     <div class="scanlines"></div>
 
     <div class="panel">
-        <div id="score-board" class="hidden">
-            <span class="score-text">IO: <b id="my-score">0</b></span>
-            <span class="score-divider">|</span>
-            <span class="score-text pink">AVV: <b id="opp-score">0</b></span>
+        <div id="score-board">
+            <span style="color:var(--neon-blue)">IO: <b id="my-score">0</b></span>
+            <span style="margin:0 10px; opacity:0.3">|</span>
+            <span style="color:var(--neon-pink)">AVV: <b id="opp-score">0</b></span>
         </div>
 
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
@@ -23,9 +23,7 @@
             <p class="label">IL TUO CODICE</p>
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn" class="btn-copy">COPIA CODICE</button>
-            
             <div class="separator">SISTEMA MULTI-PLAYER</div>
-            
             <div class="input-group">
                 <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
                 <button id="connect-btn" class="btn-connetti">CONNETTI</button>
@@ -35,8 +33,20 @@
 
         <div id="play-screen" class="card hidden">
             <div id="timer-display">01:00</div>
-            <canvas id="hangmanCanvas" width="200" height="180"></canvas>
+            <div id="role-badge" class="badge">INIZIALIZZAZIONE...</div>
+            <canvas id="hangmanCanvas" width="200" height="160"></canvas>
             <div id="word-display"></div>
+            <div id="wrong-letters" class="wrong-text"></div>
+            
+            <div class="ability-bar">
+                <button id="power-btn" class="btn-power">ABILITÀ SPECIALE</button>
+                <div class="emoji-btns">
+                    <button onclick="sendEmoji('🤣')">🤣</button>
+                    <button onclick="sendEmoji('🤯')">🤯</button>
+                    <button onclick="sendEmoji('😈')">😈</button>
+                </div>
+            </div>
+            
             <div id="keyboard"></div>
         </div>
     </div>
