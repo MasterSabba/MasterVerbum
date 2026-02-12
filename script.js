@@ -6,7 +6,7 @@ let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0, isMuted = false, la
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// MEGA DIZIONARIO COMPLETO
+// --- MEGA DIZIONARIO ---
 const dizionario = [
     "ALGORITMO", "ASTRONAVE", "ANTIMATERIA", "AUTOMAZIONE", "BIOCHIMICA", "BIOSFERA", "BITCOIN", "CIRCUITO", "CRITTOGRAFIA", "CYBERNETICA", "DATABASE", "DIGITALE", "DOMOTICA", "ELETTRODO", "ENERGIA", "GALASSIA", "GENETICA", "GRAVITA", "INFORMATICA", "INTERFACCIA", "IPERSPAZIO", "MAGNETISMO", "MOLECOLA", "NANOTECNOLOGIA", "NEBULOSA", "OLOGRAMMA", "ORBITA", "PROCESSORE", "PROTOCOLLO", "QUANTISTICO", "ROBOTICA", "SATELLITE", "SOFTWARE", "TELESCOPIO", "TRANSISTOR", "UNIVERSO", "VIRTUALE", "ASTROFISICA", "BIOTECNOLOGIA", "COMBUSTIONE", "CONDUTTORE", "CRISTALLOGRAFIA", "DECODER", "DIODO", "ECOSISTEMA", "ELETTROMAGNETISMO", "ESOSCHELETRO", "FISSIONE", "FOTOSINTESI", "INFRAROSSO", "MICROCHIP", "NEUTRINO", "OSSIDAZIONE", "PARADOSSO", "RADIAZIONE", "SEMICONDUTTORE", "SINAPSI", "TELEMETRIA", "TERMODINAMICA", "ULTRASUONI", "VELOCITA", "XENON",
     "ARCIPELAGO", "AURORA", "BOSCO", "CANYON", "CASCATA", "DESERTO", "EQUATORE", "FORESTA", "GHIACCIAIO", "GIUNGLA", "GEYSER", "MONTAGNA", "OCEANO", "ORIZZONTE", "PENISOLA", "PIANURA", "VULCANO", "URAGANO", "TORNADO", "TUNDRA", "ALBATROS", "ARMADILLO", "AVVOLTOIO", "CAMALEONTE", "CAPODOGLIO", "COCCODRILLO", "DINOSAURO", "ELEFANTE", "FENICOTTERO", "GHEPARDO", "GIRAFFA", "IPPOPOTAMO", "ORNITORINCO", "RINOCERONTE", "SALAMANDRA", "TARTARUGA", "TRICHECO", "ANEMONE", "ANTILOPE", "BARACUDA", "BISONTE", "CALAMARO", "CANGURO", "CINCILLA", "CONDOR", "CORALLO", "COYOTE", "DRAGO", "FALCO", "GIAGUARO", "IGUANA", "INSETTO", "KOALA", "LONTRA", "MANATI", "MEDUSA", "NARVALO", "OSTREIDE", "PAPPAGALLO", "PAVONE", "PELLICANO", "PIRANHA", "POLPO", "QUARZO", "RETRATTILE", "SECCUIA", "TIGRE", "UPUPA", "VIPERA", "ZEBRA",
@@ -15,6 +15,7 @@ const dizionario = [
     "AMMUTINAMENTO", "ANNICHILIRE", "ANTROPOLOGIA", "APPROSSIMAZIONE", "ARCHETIPO", "ASCENSIONALE", "AVANGUARDIA", "AZZERAMENTO", "BALUGINIO", "BARBAGLIO", "BENEMERITO", "BIVACCO", "BUFFONATA", "CACCOLA", "CALAMITA", "CALIGINE", "CAPARBIETA", "CATACLISMA", "CIRCONLOCUZIONE", "COESISTENZA", "COMMOZIONE", "CONCESSIONARIO", "CONGIUNZIONE", "CONNOTAZIONE", "CONTRAPPUNTO", "DECADENZA", "DEFLAGRAZIONE", "DEMOCRAZIA", "DESOLAZIONE", "DIFFERENZIAZIONE", "DISILLUSIONE", "ECCENTRICITA", "ECCEZIONALE", "EFFERVESCENZA", "EFFIGIE", "EGEMONIA", "ELETTROMAGNETICO", "ELUCUBRAZIONE", "EMANCIPAZIONE", "ENIGMATICO", "EPICENTRO", "ESASPERAZIONE", "ESIBIZIONISMO", "ESORBITANTE", "ESPRESSIONISMO", "ESTEMPORANEO", "ESTETIZZANTE", "ESTRANEAZIONE", "EVANESCENZA", "EVOLUZIONISMO", "FALLIMENTARE", "FASCINAZIONE", "FLUTTUAZIONE", "FRENESIA", "FULGORE", "FUNAMBOLO", "GARGARISMO", "GORGOGLIO", "ILLUMINAZIONE", "IMMAGINARIO", "IMMEDESIMAZIONE", "IMPALCATURE", "IMPERFETTO", "IMPETUOSITA", "IMPLACABILE", "IMPROVVISAZIONE", "INACCETTABILE", "INADAGUATO", "INCANDESCENZA", "INCOERENZA", "INCOMMENSURABILE", "INCOMPRESIBILE", "INCONSAPEVOLE", "INCONTAMINATO", "INCREDULITA", "INDIPENDENZA", "INEFFABILE", "INESORABILE", "INFALLIBILE", "INGEGNOSITA", "INQUIETUDINE", "INSODDISFAZIONE", "INSORMONTABILE", "INTELLETTUALE", "INTEMPERIE", "INTERDIPENDENZA", "INTERPRETAZIONE", "INTRANSIGENTE", "INTROSPEZIONE", "INVULNERABILE", "IRRAGGIUNGIBILE", "IRRICONOSCIBILE", "IRRIPETIBILE", "ISTANTANEITA", "LABIRINTICO", "LACONICO", "LUNGIMIRANZA", "LUMINOSITA", "MAGNIFICENZA", "MANEGGIEVOLE", "MANIFESTAZIONE", "MANIPOLAZIONE", "MANSUETUDINE", "MARGINALITA", "MATERIALISMO", "MATEMATICAMENTE", "MELODRAMMATICO", "METAMORFOSI", "METICOLOSITA", "MITOLOGICO", "MOLTEPLICITA", "MONUMENTALE", "MULTICULTURALE", "MORMORIO", "NAVIGAZIONE", "NEGAZIONISMO", "NEOPLATONISMO", "NEUTRALIZZARE", "NICHILISMO", "NOBILTA", "NOTEVOLE", "NULLACENTESIMO", "OBBIETTIVITA", "OBREZIONE", "OCCULTAMENTO", "OLTRANZISMO", "OMOLOGAZIONE", "ONNIPOTENZA", "ONNISCIENZA", "OPPORTUNISMO", "OPPRESSIONE", "ORCHESTRAZIONE", "ORGOGLIO", "ORIENTAMENTO", "ORIGINALITA", "ORIZZONTALMENTE", "ORNAMENTAZIONE", "OTTUSITA", "OVVIAMENTE", "PALEONTOLOGIA", "PARALLELISMO", "PARTECIPAZIONE", "PARTICOLARITA", "PATERNALISMO", "PATRIMONIO", "PEDAGOGIA", "PERFEZIONISMO", "PERIFERICO", "PERMANENZA", "PERSPICACIA", "PERSONALIZZAZIONE", "PIANIFICAZIONE", "PLURALISMO", "POETICA", "POLITICAMENTE", "POLIZIOTTO", "POPOLAZIONE", "POSITIVISMO", "POTENZIALITA", "PREDESTINAZIONE", "PREDICATO", "PREGIUDIZIO", "PRESTIGIAZIONE", "PRESUMIBILMENTE", "PREVALENZA", "PRIMITIVISMO", "PRIVILEGIO", "PROBABILITA", "PRODUTTIVITA", "PROFESSIONALITA", "PROGRAMMAZIONE", "PROIBIZIONISMO", "PROLIFERAZIONE", "PRONUNCIA", "PROPAGANDA", "PROPORZIONALITA", "PROTAGONISMO", "PROTEZIONISMO", "PROTOCOLLO", "PROVOCAZIONE", "PUBBLICITA", "PUNTUALITA", "QUALSIASI", "QUESTIONARIO", "QUOTIDIANITA", "RADICALISMO", "RAGGIUNGIMENTO", "RAGIONEVOLEZZA", "RAPPRESENTAZIONE", "RAZIONALIZZAZIONE", "REALIZZAZIONE", "RECIPROCITA", "REGOLAMENTAZIONE", "RELATIVISMO", "RELIGIOSITA", "RESPONSABILITA", "RESTAURAZIONE", "RETRICA", "RIVOLUZIONARIO", "ROMANTICISMO", "SAGGIO", "SANGUIGNO", "SARCASMO", "SBALORDITIVO", "SCETTICISMO", "SCIENTIFICAMENTE", "SCOMPOSIZIONE", "SCORREVOLEZZA", "SECONDARIAMENTE", "SEDIMENTAZIONE", "SEMIOTICA", "SENSIBILIZZAZIONE", "SENTIMENTALISMO", "SETTENTRIONALE", "SFIDUCIA", "SIGNIFICATO", "SIMBOLISMO", "SIMMETRIA", "SIMULTANEITA", "SINCERITA", "SINCRONIZZAZIONE", "SINDACATO", "SINGOLARITA", "SISTEMATICAMENTE", "SOCIALISMO", "SOGGETTIVITA", "SOLIDARIETA", "SOPRAVVIVENZA", "SORPRENDENTE", "SOSTENIBILITA", "SOTTOVALUTARE", "SOVRANITA", "SPETTACOLO", "SPIRITUALITA", "SPOPOLAMENTO", "STABILIZZAZIONE", "STRABILIANTE", "STRATEGICAMENTE", "STRATIFICAZIONE", "STRAORDINARIO", "STRUTTURALISMO", "SUPERFICIALITA", "SUPERIORE", "SVILUPPO", "TABELLA", "TACHIMETRO", "TASTIERISTA", "TECNICISMO", "TECNOLOGICAMENTE", "TELECOMUNICAZIONI", "TEMPERAMENTO", "TEMPESTIVITA", "TENDENZIALMENTE", "TEOLOGICO", "TEORICAMENTE", "TERRITORIALITA", "TESTIMONIANZA", "TIPOLOGIA", "TOLLERANZA", "TRADIZIONALMENTE", "TRANQUILLITA", "TRASFERIMENTO", "TRASFORMAZIONE", "TRASGRESSIONE", "TRASMISSIONE", "TRASPARENZA", "TRASVERSALE", "TREMOLIO", "TRIANGOLAZIONE", "TRIBUTARIO", "TRIONFALISMO", "TURBOLENZA", "UBIQUIT_A", "UGUAGLIANZA", "ULTERIORMENTE", "UMANITARIO", "UMANIZZAZIONE", "UNANIMEMENTE", "UNIVERSALITA", "URBANIZZAZIONE", "USUALMENTE", "UTILIZZAZIONE", "UTOPISTICO", "VALUTAZIONE", "VANAGLORIA", "VARIAZIONE", "VATICINIO", "VEOCEMENTE", "VERIDICITA", "VEROSIMIGLIANZA", "VERTICALIZZAZIONE", "VIBRAZIONE", "VICINANZA", "VIGILANZA", "VINCITORE", "VIRTUALIZZAZIONE", "VISIBILITA", "VISUALIZZAZIONE", "VITALITA", "VITTORIOSAMENTE", "VIVACITA", "VOCABOLARIO", "VOLONTARIAMENTE", "VOLOTTA", "VULNERABILE", "XILOFONO", "ZEST", "ZIGZAGARE", "ZOOLATRICO", "ZOROASTRIANISMO"
 ];
 
+// --- FUNZIONI CORE ---
 function playSound(type) {
     if (isMuted) return;
     const osc = audioCtx.createOscillator();
@@ -34,6 +35,7 @@ function playSound(type) {
 function vibrate(ms = 50) { if ("vibrate" in navigator) navigator.vibrate(ms); }
 function toggleMute() { isMuted = !isMuted; document.getElementById('volume-toggle').innerText = isMuted ? "🔇" : "🔊"; }
 
+// --- PEERJS LOGIC ---
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
 
@@ -47,20 +49,29 @@ function setupLogic() {
         amIMaster = myId < conn.peer;
         document.getElementById('setup-screen').classList.add('hidden');
         document.getElementById('score-board').classList.remove('hidden');
-        if(amIMaster) document.getElementById('host-screen').classList.remove('hidden');
-        else {
+        if(amIMaster) {
+            document.getElementById('host-screen').classList.remove('hidden');
+        } else {
             document.getElementById('play-screen').classList.remove('hidden');
             document.getElementById('word-display').innerText = "IL MASTER SCEGLIE...";
+            document.getElementById('keyboard').classList.add('hidden');
         }
     });
+
     conn.on('data', data => {
-        if (data.type === 'START') { secretWord = data.word; isBot = false; startPlay("SFIDANTE"); }
+        if (data.type === 'START') { 
+            secretWord = data.word; 
+            isBot = false; 
+            document.getElementById('word-display').innerText = ""; // Pulisce il testo d'attesa
+            startPlay("SFIDANTE"); 
+        }
         else if (data.type === 'GUESS') processMove(data.letter);
         else if (data.type === 'EMOJI') showEmoji(data.emoji);
         else if (data.type === 'REMATCH') prepareNextRound();
     });
 }
 
+// --- LOGICA BOT (MODALITA' DIFFICILE ADATTIVA) ---
 document.getElementById('bot-btn').onclick = () => {
     if (isProcessing) return; isProcessing = true;
     isBot = true; amIMaster = false;
@@ -72,12 +83,13 @@ document.getElementById('bot-btn').onclick = () => {
     
     setTimeout(() => {
         let listaFiltrata = dizionario;
-        // LOGICA PRO: Parole lunghe se stai stravincendo
+        // Se stai vincendo di 3, il Bot pesca solo parole lunghe >= 10 lettere
         if (myScore >= oppScore + 3) {
             listaFiltrata = dizionario.filter(w => w.length >= 10);
         }
         secretWord = listaFiltrata[Math.floor(Math.random()*listaFiltrata.length)];
         isProcessing = false; 
+        document.getElementById('word-display').innerText = ""; 
         startPlay("BOT CHALLENGE");
     }, 1000);
 };
@@ -98,9 +110,14 @@ function startPlay(role) {
     document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.clearRect(0,0,200,200);
-    if(role !== "MASTER") { document.getElementById('keyboard').classList.remove('hidden'); startTimer(); }
-    else { document.getElementById('word-display').innerText = "L'AMICO GIOCA..."; clearInterval(timerInterval); }
-    render();
+    if(role !== "MASTER") { 
+        document.getElementById('keyboard').classList.remove('hidden'); 
+        startTimer();
+        render(); // Mostra subito i trattini
+    } else { 
+        document.getElementById('word-display').innerText = "L'AMICO GIOCA..."; 
+        clearInterval(timerInterval); 
+    }
 }
 
 function startTimer() {
@@ -125,7 +142,8 @@ function processMove(l) {
 
 function render() {
     const container = document.getElementById('word-display');
-    if(!secretWord || isProcessing || container.innerText.includes("GIOCA") || container.innerText.includes("SCEGLIE")) return;
+    // Impedisce di sovrascrivere i messaggi di stato
+    if(!secretWord || isProcessing || container.innerText.includes("GIOCA") || container.innerText.includes("SCEGLIE") || container.innerText.includes("CALCOLO")) return;
     container.innerHTML = secretWord.split('').map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join('');
     if(secretWord.split('').every(l => guessedLetters.includes(l))) end(true);
     else if(mistakes >= 6) end(false);
@@ -136,10 +154,8 @@ function end(win) {
     const ov = document.getElementById('overlay');
     const title = document.getElementById('result-title');
     ov.classList.remove('hidden');
-    
     let ioHoVinto = amIMaster ? !win : win;
     title.classList.remove('win-glow', 'lose-glow');
-
     if(ioHoVinto) {
         myScore++; spawnParticles(); vibrate([50, 50, 50]);
         title.innerText = "MISSIONE COMPIUTA";
@@ -149,7 +165,6 @@ function end(win) {
         title.innerText = "SISTEMA COMPROMESSO";
         title.classList.add('lose-glow');
     }
-    
     document.getElementById('my-score').innerText = myScore;
     document.getElementById('opp-score').innerText = oppScore;
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
@@ -188,14 +203,17 @@ document.getElementById('exit-btn').onclick = () => {
 function prepareNextRound() {
     amIMaster = !amIMaster;
     document.getElementById('play-screen').classList.add('hidden');
-    if(amIMaster) { document.getElementById('host-screen').classList.remove('hidden'); document.getElementById('secret-word').value = ""; }
-    else { 
+    if(amIMaster) { 
+        document.getElementById('host-screen').classList.remove('hidden'); 
+        document.getElementById('secret-word').value = ""; 
+    } else { 
         document.getElementById('play-screen').classList.remove('hidden');
         document.getElementById('word-display').innerText = "L'AMICO SCEGLIE...";
         document.getElementById('keyboard').classList.add('hidden');
     }
 }
 
+// Generazione Tastiera
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div'); b.className = 'key'; b.innerText = l;
     b.onclick = () => { if(!amIMaster && !b.classList.contains('used') && !isProcessing) { b.classList.add('used'); if(!isBot && conn) conn.send({type:'GUESS', letter:l}); processMove(l); } };
