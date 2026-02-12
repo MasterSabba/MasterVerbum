@@ -22,15 +22,15 @@
             <p>TUO CODICE:</p>
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn">COPIA CODICE</button>
-            <div style="margin:20px 0; opacity:0.4; font-size:0.8rem; letter-spacing:2px;">SFIDA MULTIPLAYER</div>
-            <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
+            <div style="margin:20px 0; opacity:0.4; font-size:0.8rem; letter-spacing:2px;">MULTI-PLAYER</div>
+            <input type="text" id="peer-id-input" placeholder="CODICE AMICO">
             <button id="connect-btn" class="btn-primary">CONNETTI</button>
             <button id="bot-btn" class="btn-bot" style="margin-top:15px;">SFIDA IL BOT</button>
         </div>
 
         <div id="host-screen" class="card hidden">
             <div class="role-badge">MASTER</div>
-            <p>INSERISCI LA PAROLA DA FAR INDOVINARE</p>
+            <p>SCEGLI LA PAROLA SEGRETA</p>
             <input type="password" id="secret-word" placeholder="PAROLA">
             <button id="start-btn" class="btn-primary">INVIA SFIDA</button>
         </div>
@@ -45,10 +45,10 @@
             </div>
             <div id="keyboard"></div>
             <div id="emoji-bar">
-                <button onclick="sendEmoji('🤣')">🤣</button>
-                <button onclick="sendEmoji('🤯')">🤯</button>
-                <button onclick="sendEmoji('😈')">😈</button>
-                <button onclick="sendEmoji('🤡')">🤡</button>
+                <button class="emoji-btn" onclick="sendEmoji('🤣')">🤣</button>
+                <button class="emoji-btn" onclick="sendEmoji('🤯')">🤯</button>
+                <button class="emoji-btn" onclick="sendEmoji('😈')">😈</button>
+                <button class="emoji-btn" onclick="sendEmoji('🤡')">🤡</button>
             </div>
         </div>
     </div>
@@ -58,7 +58,10 @@
     <div id="overlay" class="overlay hidden">
         <h1 id="result-title"></h1>
         <p id="result-desc"></p>
-        <button id="retry-btn" class="btn-primary" style="width:auto; padding:15px 40px;">GIOCA ANCORA</button>
+        <div style="display: flex; gap: 10px; width: 100%; max-width: 400px;">
+            <button id="retry-btn" class="btn-primary">GIOCA ANCORA</button>
+            <button id="exit-btn" class="btn-bot" style="background: #333; border: none; color: white;">ESCI</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
