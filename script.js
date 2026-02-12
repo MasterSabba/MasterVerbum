@@ -1,96 +1,72 @@
-// --- CONFIGURAZIONE CONNESSIONE STABILE ---
+// Configurazione per forzare la connessione tra iPad
 const config = {
-    config: {
-        'iceServers': [
-            { url: 'stun:stun.l.google.com:19302' },
-            { url: 'stun:stun1.l.google.com:19302' }
-        ]
-    },
-    debug: 2
+    config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }] }
 };
 
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, config);
-
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 
-// 1. Inizializzazione Peer
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
-    document.getElementById('status-msg').innerText = "✅ Sistema Pronto";
+    document.getElementById('status-msg').innerText = "🌐 Online";
 });
 
-peer.on('error', err => {
-    console.error(err);
-    document.getElementById('status-msg').innerText = "❌ Errore: " + err.type;
-});
-
-// 2. Ricezione Connessione (iPad B riceve chiamata da iPad A)
+// --- RICEZIONE DATI ---
 peer.on('connection', c => {
     conn = c;
     setupLogic();
 });
 
-// 3. Invio Connessione (iPad A chiama iPad B)
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase();
-    if (target) {
-        document.getElementById('status-msg').innerText = "📡 Tentativo di connessione...";
-        conn = peer.connect(target, { reliable: true });
+    if(target) {
+        conn = peer.connect(target);
         setupLogic();
     }
 };
 
 function setupLogic() {
     conn.on('open', () => {
-        document.getElementById('status-msg').innerText = "🔗 Connesso!";
-        
-        // Sincronizzazione automatica ruoli
         amIMaster = myId < conn.peer;
-        
-        setTimeout(() => {
-            document.getElementById('setup-screen').classList.add('hidden');
-            if (amIMaster) {
-                document.getElementById('host-screen').classList.remove('hidden');
-            } else {
-                document.getElementById('play-screen').classList.remove('hidden');
-                document.getElementById('role-badge').innerText = "SFIDANTE";
-                document.getElementById('word-display').innerText = "ATTESA PAROLA...";
-                document.getElementById('keyboard').classList.add('hidden');
-            }
-        }, 800);
-    });
-
-    conn.on('data', data => {
-        if (data.type === 'START') {
-            secretWord = data.word;
-            isBot = false;
-            startPlay("SFIDANTE");
-        } else if (data.type === 'GUESS') {
-            processMove(data.letter);
-        } else if (data.type === 'EMOJI') {
-            showEmoji(data.emoji);
+        document.getElementById('setup-screen').classList.add('hidden');
+        if(amIMaster) {
+            document.getElementById('host-screen').classList.remove('hidden');
+        } else {
+            document.getElementById('play-screen').classList.remove('hidden');
+            document.getElementById('role-badge').innerText = "SFIDANTE";
+            document.getElementById('word-display').innerText = "IL MASTER STA SCRIVENDO...";
+            document.getElementById('keyboard').classList.add('hidden');
         }
     });
 
-    conn.on('close', () => {
-        alert("Connessione persa.");
-        location.reload();
+    conn.on('data', data => {
+        if(data.type === 'START') {
+            // AZIONE CRUCIALE: Reset dello stato e della parola
+            secretWord = data.word;
+            isBot = false;
+            guessedLetters = [];
+            mistakes = 0;
+            
+            // Forza la pulizia del testo "IL MASTER STA SCRIVENDO"
+            document.getElementById('word-display').innerText = ""; 
+            startPlay("SFIDANTE");
+        } else if(data.type === 'GUESS') {
+            processMove(data.letter);
+        } else if(data.type === 'EMOJI') {
+            showEmoji(data.emoji);
+        }
     });
 }
 
-// --- GENERATORE BOT ---
+// --- LOGICA BOT (PAROLE INFINITE) ---
 async function ottieniParolaCasuale() {
     try {
         const response = await fetch('https://it.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=1&origin=*');
         const data = await response.json();
-        let parola = data.query.random[0].title.toUpperCase().split(' ')[0];
-        parola = parola.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        return (parola.length >= 4 && parola.length <= 10 && /^[A-Z]+$/.test(parola)) ? parola : "UNIVERSO";
-    } catch (e) {
-        const fallback = ["PIZZA", "CALCIO", "VESUVIO", "GELATO", "STADIO", "COMPUTER"];
-        return fallback[Math.floor(Math.random()*fallback.length)];
-    }
+        let p = data.query.random[0].title.toUpperCase().split(' ')[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return (p.length > 3 && p.length < 10 && /^[A-Z]+$/.test(p)) ? p : "GALASSIA";
+    } catch(e) { return "UNIVERSO"; }
 }
 
 document.getElementById('bot-btn').onclick = async () => {
@@ -100,12 +76,12 @@ document.getElementById('bot-btn').onclick = async () => {
     startPlay("SOLO VS BOT");
 };
 
-// --- LOGICA GIOCO ---
+// --- CORE GIOCO ---
 document.getElementById('start-btn').onclick = () => {
     const w = document.getElementById('secret-word').value.trim().toUpperCase();
-    if (w.length < 3) return alert("Parola troppo corta!");
+    if(w.length < 3) return alert("Minimo 3 lettere!");
     secretWord = w;
-    if (conn) conn.send({ type: 'START', word: secretWord });
+    if(conn) conn.send({ type: 'START', word: secretWord });
     startPlay("MASTER");
 };
 
@@ -115,24 +91,23 @@ function startPlay(role) {
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('role-badge').innerText = role;
     
-    guessedLetters = []; mistakes = 0;
     document.getElementById('wrong-letters').innerText = "";
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.clearRect(0,0,200,200);
 
-    if (role === "MASTER") {
+    if(role === "MASTER") {
         document.getElementById('keyboard').classList.add('hidden');
     } else {
         document.getElementById('keyboard').classList.remove('hidden');
         document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
     }
-    render();
+    render(); // Forza i trattini
 }
 
 function processMove(l) {
-    if (!guessedLetters.includes(l)) {
+    if(!guessedLetters.includes(l)) {
         guessedLetters.push(l);
-        if (!secretWord.includes(l)) { 
+        if(!secretWord.includes(l)) { 
             mistakes++; 
             draw(mistakes); 
             document.getElementById('wrong-letters').innerText += l + " ";
@@ -142,11 +117,14 @@ function processMove(l) {
 }
 
 function render() {
-    if (!secretWord || document.getElementById('word-display').innerText.includes("ATTESA")) return;
-    const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
-    document.getElementById('word-display').innerText = res;
-    if (!res.includes('_') && secretWord !== "") end(true);
-    else if (mistakes >= 6) end(false);
+    if(!secretWord) return;
+    
+    // Mostra la parola con i trattini
+    const display = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
+    document.getElementById('word-display').innerText = display;
+    
+    if(!display.includes('_') && secretWord !== "") end(true);
+    else if(mistakes >= 6) end(false);
 }
 
 // TASTIERA
@@ -155,9 +133,9 @@ const kb = document.getElementById('keyboard');
     const b = document.createElement('div');
     b.className = 'key'; b.innerText = l;
     b.onclick = () => {
-        if (amIMaster || b.classList.contains('used')) return;
+        if(amIMaster || b.classList.contains('used')) return;
         b.classList.add('used');
-        if (!isBot && conn) conn.send({ type: 'GUESS', letter: l });
+        if(!isBot && conn) conn.send({ type: 'GUESS', letter: l });
         processMove(l);
     };
     kb.appendChild(b);
@@ -179,11 +157,10 @@ function draw(s) {
 function end(win) {
     document.getElementById('overlay').classList.remove('hidden');
     document.getElementById('result-title').innerText = win ? "VITTORIA" : "SCONFITTA";
-    document.getElementById('result-title').style.color = win ? "var(--neon-blue)" : "var(--neon-pink)";
     document.getElementById('result-desc').innerText = "La parola era: " + secretWord;
 }
 
-function sendEmoji(e) { if (conn && conn.open) conn.send({ type: 'EMOJI', emoji: e }); showEmoji(e); }
+function sendEmoji(e) { if(conn && conn.open) conn.send({ type: 'EMOJI', emoji: e }); showEmoji(e); }
 function showEmoji(e) {
     const el = document.createElement('div'); el.className = 'floating-emoji'; el.innerText = e;
     document.getElementById('emoji-area').appendChild(el);
