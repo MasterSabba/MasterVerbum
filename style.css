@@ -28,22 +28,21 @@ body {
     display: flex; flex-direction: column; align-items: center;
 }
 
-/* ETICHETTA BLU E ID ROSSO (Come richiesto) */
+/* COLORI RICHIESTI: Etichetta Blu, ID Rosso */
 .label { font-size: 0.8rem; font-weight: 700; color: var(--neon-blue); letter-spacing: 2px; }
 .id-display { 
-    font-size: 3.5rem; font-weight: 900; color: var(--neon-pink); /* Rosso/Pink */
+    font-size: 3.5rem; font-weight: 900; color: var(--neon-pink); 
     letter-spacing: 8px; margin: 5px 0; text-align: center; width: 100%;
 }
 
 .separator { font-size: 0.6rem; opacity: 0.3; margin: 20px 0 10px; letter-spacing: 4px; color: var(--neon-blue); }
 
-/* FIX DECENTRAMENTO: Contenitore forzato al 100% */
+/* FIX DECENTRAMENTO INPUT */
 .input-group { width: 100%; display: flex; flex-direction: column; align-items: center; }
-
 input {
-    width: 100%; box-sizing: border-box; /* Essenziale per la centratura */
-    background: #000; border: none; padding: 16px;
-    border-radius: 12px; color: white; text-align: center; margin-bottom: 12px; font-size: 1rem;
+    width: 100%; box-sizing: border-box; background: #000; border: none; 
+    padding: 16px; border-radius: 12px; color: white; text-align: center; 
+    margin-bottom: 12px; font-size: 1rem;
 }
 
 button { border: none; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
@@ -51,18 +50,31 @@ button { border: none; font-weight: 700; cursor: pointer; transition: 0.2s; widt
 .btn-connetti { background: var(--neon-blue); color: black; padding: 18px; border-radius: 12px; }
 .btn-bot-pink { background: var(--neon-pink); color: white; padding: 18px; border-radius: 12px; margin-top: 10px; }
 
-/* OVERLAY E SCRITTE IMPONENTI PULSANTI */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000; }
-.imposing-text { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin: 0; text-align: center; }
+/* OVERLAY FINALE - TUTTO AL CENTRO */
+.overlay { 
+    position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
+    display: flex; justify-content: center; align-items: center; z-index: 10000; 
+}
+.result-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+.imposing-text { 
+    font-size: 3.5rem; font-weight: 900; text-transform: uppercase; 
+    margin: 0; line-height: 1;
+}
 
 .win-glow { color: var(--neon-blue); animation: pulseBlue 0.8s infinite alternate; }
 .lose-glow { color: var(--neon-pink); animation: pulsePink 0.8s infinite alternate; }
 
-@keyframes pulseBlue { from { text-shadow: 0 0 20px var(--neon-blue); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-blue); transform: scale(1.1); } }
-@keyframes pulsePink { from { text-shadow: 0 0 20px var(--neon-pink); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-pink); transform: scale(1.1); } }
+@keyframes pulseBlue { from { text-shadow: 0 0 20px var(--neon-blue); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-blue); transform: scale(1.08); } }
+@keyframes pulsePink { from { text-shadow: 0 0 20px var(--neon-pink); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-pink); transform: scale(1.08); } }
 
-.overlay-btns { display: flex; gap: 10px; margin-top: 40px; }
-.btn-small-rect { width: 110px; padding: 12px; border-radius: 8px; background: white; color: black; font-size: 0.8rem; }
+#result-desc { font-size: 1.2rem; margin-top: 15px; opacity: 0.8; }
+
+.overlay-btns { 
+    display: flex; flex-direction: column; align-items: center; 
+    gap: 12px; margin-top: 40px; width: 220px; 
+}
+.btn-final { padding: 16px; border-radius: 10px; background: white; color: black; font-size: 0.9rem; }
 .btn-grey { background: #333 !important; color: white !important; }
 
 /* GIOCO */
