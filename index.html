@@ -53,8 +53,10 @@
     <div id="overlay" class="overlay hidden">
         <h1 id="result-title"></h1>
         <p id="result-desc"></p>
-        <button id="retry-btn" class="btn-connetti">REBOOT</button>
-        <button id="exit-btn" class="btn-exit" onclick="location.reload()">ESCI</button>
+        <div class="overlay-btns">
+            <button id="retry-btn" class="btn-small-rect">REBOOT</button>
+            <button id="exit-btn" class="btn-small-rect btn-grey" onclick="location.reload()">ESCI</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
