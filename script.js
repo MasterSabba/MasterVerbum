@@ -1,127 +1,119 @@
-const peer = new Peer();
-let conn;
-let secretWord = "";
-let guessedLetters = [];
-let mistakes = 0;
-let iamMaster = false;
+const dictionary = ["GALAXY", "PYTHON", "MATRIX", "ROBOT", "IPAD", "CODING", "MASTER", "ZENITH", "VIRTUAL", "PHANTOM"];
 
-const statusText = document.getElementById('status');
+function generateShortId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let res = '';
+    for (let i = 0; i < 5; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+    return res;
+}
 
-// 1. Mostra il tuo ID
-peer.on('open', id => {
-    document.getElementById('my-id').innerText = id;
-});
+const myId = generateShortId();
+const peer = new Peer(myId);
+let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 
-// 2. COPIA ID
-document.getElementById('copy-btn').onclick = () => {
-    navigator.clipboard.writeText(document.getElementById('my-id').innerText);
-    statusText.innerText = "✅ Codice Copiato!";
+peer.on('open', id => document.getElementById('my-id').innerText = id);
+
+// BOT MODE
+document.getElementById('bot-btn').onclick = () => {
+    isBot = true;
+    secretWord = dictionary[Math.floor(Math.random() * dictionary.length)];
+    startPlay("MODALITÀ BOT");
 };
 
-// 3. SE RICEVI UNA CONNESSIONE (Diventi il Master)
+// MULTIPLAYER
+document.getElementById('connect-btn').onclick = () => {
+    const target = document.getElementById('peer-id-input').value.toUpperCase();
+    if(target) {
+        conn = peer.connect(target);
+        setupLogic();
+    }
+};
+
 peer.on('connection', c => {
     conn = c;
-    iamMaster = true;
-    setupGame();
+    setupLogic();
 });
 
-// 4. SE TI CONNETTI TU (Diventi lo Sfidante)
-document.getElementById('connect-btn').onclick = () => {
-    const remoteId = document.getElementById('peer-id-input').value;
-    if(!remoteId) return alert("Inserisci un codice!");
-    conn = peer.connect(remoteId);
-    iamMaster = false;
-    setupGame();
-};
-
-function setupGame() {
+function setupLogic() {
     conn.on('open', () => {
+        amIMaster = myId < conn.peer; // Chi ha l'ID "minore" inizia come Master
         document.getElementById('setup-screen').classList.add('hidden');
-        if(iamMaster) {
-            document.getElementById('host-screen').classList.remove('hidden');
-        } else {
-            statusText.innerText = "Connesso! Attendi la parola...";
-            document.getElementById('setup-screen').classList.remove('hidden');
-            document.getElementById('my-id-container').classList.add('hidden');
-        }
+        if(amIMaster) document.getElementById('host-screen').classList.remove('hidden');
+        else document.getElementById('status-msg').innerText = "L'avversario sta scegliendo...";
     });
 
     conn.on('data', data => {
-        if (data.type === 'START') {
-            secretWord = data.word.toUpperCase();
-            showPlayScreen("SFIDANTE (Indovina)");
-        } else if (data.type === 'MOVE') {
-            handleMove(data.letter);
-        }
+        if(data.type === 'START') { secretWord = data.word; startPlay("SFIDANTE"); }
+        else if(data.type === 'GUESS') { processMove(data.letter); }
     });
 }
 
-// 5. IL MASTER INVIA LA PAROLA
 document.getElementById('start-btn').onclick = () => {
-    const word = document.getElementById('secret-word').value.trim();
-    if(word.length < 2) return alert("Parola troppo corta!");
-    secretWord = word.toUpperCase();
+    const w = document.getElementById('secret-word').value.trim().toUpperCase();
+    if(w.length < 3) return alert("Troppo corta!");
+    secretWord = w;
     conn.send({ type: 'START', word: secretWord });
-    showPlayScreen("MASTER (Osserva)");
+    startPlay("MASTER");
 };
 
-function showPlayScreen(role) {
-    document.getElementById('host-screen').classList.add('hidden');
+function startPlay(role) {
     document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('host-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
-    document.getElementById('role-tag').innerText = role;
-    
-    if(iamMaster) {
-        document.getElementById('keyboard').classList.add('hidden');
-    }
-    updateDisplay();
+    document.getElementById('role-badge').innerText = role;
+    if(amIMaster) document.getElementById('keyboard').classList.add('hidden');
+    render();
 }
 
-function handleMove(letter) {
-    if(!guessedLetters.includes(letter)) {
-        guessedLetters.push(letter);
-        if(!secretWord.includes(letter)) {
-            mistakes++;
-            drawHangman(mistakes);
-        }
-        updateDisplay();
-    }
-}
-
-function updateDisplay() {
-    const display = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
-    document.getElementById('word-display').innerText = display;
-    
-    if(!display.includes('_') && secretWord !== "") {
-        document.getElementById('message').innerText = "VITTORIA!";
-    }
-    if(mistakes >= 6) {
-        document.getElementById('message').innerText = "GAME OVER! Parola: " + secretWord;
-    }
-}
-
-// TASTIERA
 const kb = document.getElementById('keyboard');
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
     const b = document.createElement('div');
-    b.className = 'key';
-    b.innerText = l;
+    b.className = 'key'; b.innerText = l;
     b.onclick = () => {
-        if(iamMaster) return;
+        if(amIMaster) return;
         b.classList.add('used');
-        conn.send({ type: 'MOVE', letter: l });
-        handleMove(l);
+        if(!isBot) conn.send({ type: 'GUESS', letter: l });
+        processMove(l);
     };
     kb.appendChild(b);
 });
 
-function drawHangman(s) {
-    const ctx = document.getElementById('hangmanCanvas').getContext('2d');
-    ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 4; ctx.lineCap = "round";
-    if(s==1){ctx.beginPath();ctx.arc(100,40,20,0,Math.PI*2);ctx.stroke();}
-    if(s==2){ctx.moveTo(100,60);ctx.lineTo(100,130);ctx.stroke();}
-    if(s==3){ctx.moveTo(100,80);ctx.lineTo(70,100);ctx.stroke();}
-    if(s==4){ctx.moveTo(100,80);ctx.lineTo(130,100);ctx.stroke();}
-    if(s==5){ctx.moveTo(100,130);ctx.lineTo(70,170);ctx.stroke();}
-    if(s==6){ctx.moveTo(100,130);ctx.lineTo(130,170);ctx.stroke();}
+function processMove(l) {
+    if(!guessedLetters.includes(l)) {
+        guessedLetters.push(l);
+        if(!secretWord.includes(l)) { mistakes++; draw(mistakes); }
+        render();
+    }
 }
+
+function render() {
+    const res = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join(' ');
+    document.getElementById('word-display').innerText = res;
+    if(!res.includes('_') && secretWord) end(true);
+    else if(mistakes >= 6) end(false);
+}
+
+function end(win) {
+    const o = document.getElementById('overlay');
+    o.classList.remove('hidden');
+    document.getElementById('result-title').innerText = win ? "VITTORIA" : "SCONFITTA";
+    document.getElementById('result-desc').innerText = win ? "Hai dominato il Verbum!" : "La parola era: " + secretWord;
+}
+
+function draw(s) {
+    const ctx = document.getElementById('hangmanCanvas').getContext('2d');
+    ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    ctx.beginPath();
+    if(s==1) ctx.arc(100, 40, 20, 0, Math.PI*2);
+    if(s==2) { ctx.moveTo(100, 60); ctx.lineTo(100, 120); }
+    if(s==3) { ctx.moveTo(100, 70); ctx.lineTo(70, 90); }
+    if(s==4) { ctx.moveTo(100, 70); ctx.lineTo(130, 90); }
+    if(s==5) { ctx.moveTo(100, 120); ctx.lineTo(70, 160); }
+    if(s==6) { ctx.moveTo(100, 120); ctx.lineTo(130, 160); }
+    ctx.stroke();
+}
+
+document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(myId);
+    alert("Codice Copiato!");
+};
