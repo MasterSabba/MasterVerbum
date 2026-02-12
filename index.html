@@ -26,9 +26,11 @@
             
             <div class="separator">SISTEMA MULTI-PLAYER</div>
             
-            <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
-            <button id="connect-btn" class="btn-connetti">CONNETTI</button>
-            <button id="bot-btn" class="btn-bot-pink">SFIDA IL BOT</button>
+            <div class="input-group">
+                <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
+                <button id="connect-btn" class="btn-connetti">CONNETTI</button>
+                <button id="bot-btn" class="btn-bot-pink">SFIDA IL BOT</button>
+            </div>
         </div>
 
         <div id="play-screen" class="card hidden">
@@ -41,7 +43,7 @@
 
     <div id="overlay" class="overlay hidden">
         <div id="result-container">
-            <h1 id="result-title"></h1>
+            <h1 id="result-title" class="imposing-text"></h1>
             <p id="result-desc"></p>
             <div class="overlay-btns">
                 <button id="retry-btn" class="btn-small-rect">REBOOT</button>
