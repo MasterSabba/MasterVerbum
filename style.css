@@ -81,3 +81,51 @@ button { padding: 16px; border: none; border-radius: 12px; font-weight: 900; cur
 @keyframes losePulse { 0%, 100% { text-shadow: 0 0 20px var(--neon-pink); } 50% { text-shadow: 0 0 40px var(--neon-pink), 0 0 60px var(--neon-pink); } }
 
 .hidden { display: none !important; }
+/* Effetto CRT Scanlines */
+body::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 9999;
+    pointer-events: none;
+    background-size: 100% 4px, 3px 100%;
+}
+
+/* Animazione Glitch */
+.glitch-error {
+    animation: glitch 0.2s steps(2) infinite;
+    color: #ff0055 !important;
+}
+
+@keyframes glitch {
+    0% { transform: translate(2px, 0); }
+    50% { transform: translate(-2px, -1px); }
+    100% { transform: translate(0, 1px); }
+}
+
+/* Badge Ranghi */
+.rank-display {
+    font-size: 0.7rem;
+    color: var(--neon-blue);
+    letter-spacing: 2px;
+    margin-top: 5px;
+    text-shadow: 0 0 5px var(--neon-blue);
+}
+
+/* Bottoni Poteri */
+.power-btn {
+    background: rgba(0, 242, 255, 0.1);
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 5px 10px;
+    font-size: 0.6rem;
+    cursor: pointer;
+    margin: 5px;
+    transition: 0.3s;
+}
+
+.power-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.power-btn:hover:not(:disabled) { background: var(--neon-blue); color: black; }
