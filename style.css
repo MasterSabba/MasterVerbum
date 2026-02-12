@@ -17,70 +17,58 @@ body {
     background-size: 100% 4px; z-index: 999; pointer-events: none;
 }
 
-.panel { width: 90%; max-width: 400px; text-align: center; }
-
-.neon-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; }
+.panel { width: 95%; max-width: 400px; text-align: center; }
+.neon-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 15px; }
 .neon-title span { color: var(--neon-blue); }
 
 .card {
-    background: #15151c; border-radius: 24px; padding: 30px;
+    background: #15151c; border-radius: 24px; padding: 25px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     display: flex; flex-direction: column; align-items: center;
 }
 
-/* COLORI RICHIESTI: Etichetta Blu, ID Rosso */
-.label { font-size: 0.8rem; font-weight: 700; color: var(--neon-blue); letter-spacing: 2px; }
-.id-display { 
-    font-size: 3.5rem; font-weight: 900; color: var(--neon-pink); 
-    letter-spacing: 8px; margin: 5px 0; text-align: center; width: 100%;
-}
+#score-board { margin-bottom: 10px; font-weight: bold; font-family: monospace; }
 
-.separator { font-size: 0.6rem; opacity: 0.3; margin: 20px 0 10px; letter-spacing: 4px; color: var(--neon-blue); }
+.label { font-size: 0.8rem; font-weight: 700; color: var(--neon-blue); }
+.id-display { font-size: 3rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 5px 0; }
+.separator { font-size: 0.6rem; opacity: 0.3; margin: 15px 0; letter-spacing: 3px; color: var(--neon-blue); }
 
-/* FIX DECENTRAMENTO INPUT */
-.input-group { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.input-group { width: 100%; box-sizing: border-box; }
 input {
-    width: 100%; box-sizing: border-box; background: #000; border: none; 
-    padding: 16px; border-radius: 12px; color: white; text-align: center; 
-    margin-bottom: 12px; font-size: 1rem;
+    width: 100%; box-sizing: border-box; background: #000; border: 1px solid #333; 
+    padding: 14px; border-radius: 12px; color: white; text-align: center; margin-bottom: 10px;
 }
 
-button { border: none; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
-.btn-copy { background: rgba(255,255,255,0.1); color: white; padding: 6px 15px; border-radius: 8px; font-size: 0.7rem; width: auto; margin-bottom: 15px; }
-.btn-connetti { background: var(--neon-blue); color: black; padding: 18px; border-radius: 12px; }
-.btn-bot-pink { background: var(--neon-pink); color: white; padding: 18px; border-radius: 12px; margin-top: 10px; }
+button { border: none; font-weight: 700; cursor: pointer; width: 100%; }
+.btn-copy { background: rgba(255,255,255,0.1); color: white; padding: 6px; border-radius: 8px; font-size: 0.7rem; width: auto; margin-bottom: 10px; }
+.btn-connetti { background: var(--neon-blue); color: black; padding: 16px; border-radius: 12px; }
+.btn-bot-pink { background: var(--neon-pink); color: white; padding: 16px; border-radius: 12px; margin-top: 8px; }
 
-/* OVERLAY FINALE - TUTTO AL CENTRO */
-.overlay { 
-    position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
-    display: flex; justify-content: center; align-items: center; z-index: 10000; 
-}
-.result-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.badge { font-size: 0.7rem; background: #252530; padding: 4px 12px; border-radius: 20px; color: var(--neon-blue); margin-bottom: 10px; }
+#timer-display { font-size: 1.8rem; font-weight: 900; color: var(--neon-pink); }
+.wrong-text { color: var(--neon-pink); text-decoration: line-through; height: 20px; margin-bottom: 10px; letter-spacing: 2px; }
 
-.imposing-text { 
-    font-size: 3.5rem; font-weight: 900; text-transform: uppercase; 
-    margin: 0; line-height: 1;
-}
+.ability-bar { display: flex; gap: 10px; width: 100%; margin-bottom: 15px; }
+.btn-power { background: #222; color: var(--neon-blue); border: 1px solid var(--neon-blue); font-size: 0.7rem; border-radius: 8px; padding: 8px; }
+.emoji-btns { display: flex; gap: 5px; }
+.emoji-btns button { width: 35px; background: transparent; font-size: 1.2rem; }
 
+#word-display { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
+.letter-slot { width: 22px; border-bottom: 3px solid #333; font-size: 1.5rem; font-weight: 800; height: 35px; }
+
+#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 4px; width: 100%; }
+.key { background: #252530; padding: 10px 0; border-radius: 6px; color: white; font-size: 0.8rem; }
+.key.used { opacity: 0.1; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+.imposing-text { font-size: 3rem; font-weight: 900; text-align: center; }
 .win-glow { color: var(--neon-blue); animation: pulseBlue 0.8s infinite alternate; }
 .lose-glow { color: var(--neon-pink); animation: pulsePink 0.8s infinite alternate; }
 
-@keyframes pulseBlue { from { text-shadow: 0 0 20px var(--neon-blue); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-blue); transform: scale(1.08); } }
-@keyframes pulsePink { from { text-shadow: 0 0 20px var(--neon-pink); transform: scale(1); } to { text-shadow: 0 0 60px var(--neon-pink); transform: scale(1.08); } }
+@keyframes pulseBlue { from { text-shadow: 0 0 20px var(--neon-blue); transform: scale(1); } to { text-shadow: 0 0 50px var(--neon-blue); transform: scale(1.05); } }
+@keyframes pulsePink { from { text-shadow: 0 0 20px var(--neon-pink); transform: scale(1); } to { text-shadow: 0 0 50px var(--neon-pink); transform: scale(1.05); } }
 
-#result-desc { font-size: 1.2rem; margin-top: 15px; opacity: 0.8; }
-
-.overlay-btns { 
-    display: flex; flex-direction: column; align-items: center; 
-    gap: 12px; margin-top: 40px; width: 220px; 
-}
-.btn-final { padding: 16px; border-radius: 10px; background: white; color: black; font-size: 0.9rem; }
+.overlay-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 30px; width: 200px; }
+.btn-final { padding: 14px; border-radius: 10px; background: white; color: black; }
 .btn-grey { background: #333 !important; color: white !important; }
-
-/* GIOCO */
-#word-display { display: flex; justify-content: center; gap: 8px; margin: 25px 0; }
-.letter-slot { width: 30px; border-bottom: 4px solid #333; font-size: 2rem; font-weight: 800; height: 45px; }
-#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 6px; width: 100%; }
-.key { background: #252530; padding: 12px 0; border-radius: 8px; color: white; }
-.key.used { opacity: 0.1; }
 .hidden { display: none !important; }
