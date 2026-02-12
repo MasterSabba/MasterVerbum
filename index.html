@@ -1,25 +1,48 @@
-body {
-    margin: 0; font-family: sans-serif; background: #0a0e17; color: white;
-    display: flex; justify-content: center; align-items: center; height: 100vh;
-}
-.glass {
-    background: #1a2233; padding: 20px; border-radius: 20px; text-align: center;
-    width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-.hidden { display: none; }
-.logo { font-size: 2rem; margin-bottom: 20px; }
-.logo span { color: #00d4ff; }
-.copy-box {
-    background: #000; padding: 10px; border-radius: 10px; margin-bottom: 20px;
-    display: flex; justify-content: space-between; align-items: center;
-}
-input { padding: 10px; border-radius: 8px; border: none; width: 80%; margin: 10px 0; }
-button {
-    padding: 10px 20px; border-radius: 8px; border: none;
-    background: #00d4ff; color: #000; font-weight: bold; cursor: pointer;
-}
-#word-display { font-size: 2rem; letter-spacing: 8px; margin: 20px 0; min-height: 40px; }
-#keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-.key { background: #334155; padding: 10px 5px; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
-.key.used { opacity: 0.3; pointer-events: none; }
-.badge { background: #ff0055; padding: 5px 10px; border-radius: 5px; margin-bottom: 10px; font-size: 0.8rem; }
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MasterVerbum P2P</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <h1 class="logo">MASTER<span>VERBUM</span></h1>
+        
+        <div id="setup-screen" class="glass">
+            <div id="my-id-container">
+                <p>Il tuo codice:</p>
+                <div class="id-row">
+                    <span id="my-id">...</span>
+                    <button id="copy-btn">Copia</button>
+                </div>
+            </div>
+            <hr>
+            <div class="input-group">
+                <input type="text" id="peer-id-input" placeholder="Incolla codice amico">
+                <button id="connect-btn">CONNETTI</button>
+            </div>
+            <p id="status">🔵 Sistema Pronto</p>
+        </div>
+
+        <div id="host-screen" class="hidden glass">
+            <h2>Sei il Master!</h2>
+            <p>Scegli la parola segreta:</p>
+            <input type="text" id="secret-word" placeholder="Esempio: MATRICE">
+            <button id="start-btn">LANCIA SFIDA</button>
+        </div>
+
+        <div id="play-screen" class="hidden glass">
+            <div id="role-tag"></div>
+            <canvas id="hangmanCanvas" width="200" height="200"></canvas>
+            <div id="word-display"></div>
+            <div id="keyboard"></div>
+            <p id="message"></p>
+            <button onclick="location.reload()" style="background:#444; color:white; margin-top:20px;">Nuova Partita</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
