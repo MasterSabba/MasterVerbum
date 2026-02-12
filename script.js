@@ -6,39 +6,16 @@ let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 
-// --- DIZIONARIO ITALIANO (Difficoltà Media - No nomi propri) ---
-const dizionarioItaliano = [
-    "ABITUDINE", "BOTTIGLIA", "CARTOLINA", "DIZIONARIO", "ELEFANTE", "FORCHETTA", 
-    "GIORNALE", "IDROGENO", "LUMACA", "MONTAGNA", "NAUFRAGIO", "OMBRELLO", 
-    "QUADERNO", "RISTORANTE", "SCRITTURA", "TELEFONO", "UNIVERSO", "VALIGIA",
-    "ZUCCHERO", "ASTRONAVE", "BICICLETTA", "CALCIATORE", "DESIDERIO", "ESERCIZIO",
-    "FOTOGRAFO", "GENTILEZZA", "LABIRINTO", "MACCHINA", "ORIZZONTE", "PANTALONI",
-    "QUADRATO", "REPLICA", "SETTIMANA", "TAVOLETTA", "VELOCITA", "ZAFFERANO"
-];
-
 function startHeartbeat() {
     setInterval(() => { if (conn && conn.open) conn.send({ type: 'KEEP_ALIVE' }); }, 3000);
 }
 
-// Gestione ID e interfaccia iniziale
-peer.on('open', id => { 
-    document.getElementById('my-id').innerText = id;
-    document.getElementById('status-msg').innerText = "Pronto a giocare!";
-});
-
-peer.on('connection', c => { 
-    conn = c; 
-    document.getElementById('status-msg').innerText = "Amico connesso!";
-    setupLogic(); 
-});
+peer.on('open', id => { document.getElementById('my-id').innerText = id; });
+peer.on('connection', c => { conn = c; setupLogic(); });
 
 document.getElementById('connect-btn').onclick = () => {
     const target = document.getElementById('peer-id-input').value.toUpperCase();
-    if(target) { 
-        document.getElementById('status-msg').innerText = "Connessione in corso...";
-        conn = peer.connect(target, { reliable: true }); 
-        setupLogic(); 
-    }
+    if(target) { conn = peer.connect(target, { reliable: true }); setupLogic(); }
 };
 
 function setupLogic() {
@@ -51,7 +28,7 @@ function setupLogic() {
         } else {
             document.getElementById('play-screen').classList.remove('hidden');
             document.getElementById('role-badge').innerText = "SFIDANTE";
-            document.getElementById('word-display').innerText = "IL MASTER SCEGLIE...";
+            document.getElementById('word-display').innerText = "IL MASTER SCRIVE";
             document.getElementById('keyboard').classList.add('hidden');
         }
     });
@@ -64,14 +41,36 @@ function setupLogic() {
     });
 }
 
-// BOT con parole italiane medie
-document.getElementById('bot-btn').onclick = () => {
-    document.getElementById('status-msg').innerText = "🤖 Bot sta scegliendo...";
-    setTimeout(() => {
-        secretWord = dizionarioItaliano[Math.floor(Math.random() * dizionarioItaliano.length)];
-        isBot = true; amIMaster = false;
-        startPlay("BOT CHALLENGE");
-    }, 800);
+// --- EFFETTO HACKER E API PAROLE ---
+async function fetchParola() {
+    try {
+        const lunghezza = Math.floor(Math.random() * 3) + 6; // 6, 7 o 8 lettere
+        const pattern = "?".repeat(lunghezza);
+        const res = await fetch(`https://api.datamuse.com/words?sp=${pattern}&v=it&max=50`);
+        const data = await res.json();
+        const filtrate = data.filter(w => !w.word.includes(" ") && !w.word.includes("-"));
+        let scelta = filtrate[Math.floor(Math.random() * filtrate.length)].word.toUpperCase();
+        return scelta.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    } catch(e) { return "UNIVERSO"; }
+}
+
+document.getElementById('bot-btn').onclick = async () => {
+    const display = document.getElementById('word-display');
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('play-screen').classList.remove('hidden');
+    document.getElementById('role-badge').innerText = "BOT CHALLENGE";
+    document.getElementById('keyboard').classList.add('hidden');
+
+    // Effetto caricamento hacker
+    let loader = setInterval(() => {
+        display.innerText = Math.random().toString(36).substring(2, 9).toUpperCase();
+    }, 50);
+
+    secretWord = await fetchParola();
+    clearInterval(loader);
+    
+    isBot = true; amIMaster = false;
+    startPlay("BOT CHALLENGE");
 };
 
 document.getElementById('start-btn').onclick = () => {
@@ -86,16 +85,12 @@ function startPlay(role) {
     document.getElementById('host-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('role-badge').innerText = role;
-    
-    // Pulizia tastiera per nuova partita
-    document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
+    guessedLetters = []; mistakes = 0;
     document.getElementById('wrong-letters').innerText = "";
-    
-    if(role === "MASTER") {
-        document.getElementById('keyboard').classList.add('hidden');
-    } else {
-        document.getElementById('keyboard').classList.remove('hidden');
-    }
+    const ctx = document.getElementById('hangmanCanvas').getContext('2d');
+    ctx.clearRect(0,0,200,200);
+
+    if(role !== "MASTER") document.getElementById('keyboard').classList.remove('hidden');
     render();
 }
 
@@ -103,8 +98,7 @@ function processMove(l) {
     if(!guessedLetters.includes(l)) {
         guessedLetters.push(l);
         if(!secretWord.includes(l)) { 
-            mistakes++; 
-            draw(mistakes); 
+            mistakes++; draw(mistakes); 
             document.getElementById('wrong-letters').innerText += l + " "; 
         }
         render();
@@ -112,19 +106,15 @@ function processMove(l) {
 }
 
 function render() {
-    if(!secretWord) return;
+    if(!secretWord || document.getElementById('word-display').innerText.includes("SCRIVE")) return;
     
-    // Il Master vede cosa sta scrivendo l'amico
-    let content = "";
-    if (amIMaster) {
-        content = secretWord.split('').map(l => guessedLetters.includes(l) ? l : "_").join('\u00A0');
-    } else {
-        content = secretWord.split('').map(l => 
-            guessedLetters.includes(l) ? `<span>${l}</span>` : "_"
-        ).join('\u00A0');
-    }
-    document.getElementById('word-display').innerHTML = content;
+    // Retroilluminazione neon per le lettere indovinate
+    const resHTML = secretWord.split('').map(l => 
+        guessedLetters.includes(l) ? `<span>${l}</span>` : "_"
+    ).join('\u00A0');
     
+    document.getElementById('word-display').innerHTML = resHTML;
+
     const win = secretWord.split('').every(l => guessedLetters.includes(l));
     if(win) end(true);
     else if(mistakes >= 6) end(false);
@@ -136,9 +126,10 @@ function end(wordGuessed) {
     if (amIMaster) title.innerText = wordGuessed ? "HAI PERSO!" : "HAI VINTO!";
     else title.innerText = wordGuessed ? "HAI VINTO!" : "HAI PERSO!";
     document.getElementById('result-desc').innerText = "La parola era: " + secretWord;
+    title.style.color = title.innerText.includes("VINTO") ? "var(--neon-blue)" : "var(--neon-pink)";
 }
 
-// Inizializzazione Tastiera
+// --- TASTIERA ---
 const kb = document.getElementById('keyboard');
 kb.innerHTML = "";
 "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(l => {
@@ -152,7 +143,6 @@ kb.innerHTML = "";
     kb.appendChild(b);
 });
 
-// Canvas Disegno
 function draw(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
     ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.beginPath();
