@@ -3,67 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MasterVerbum Pro</title>
+    <title>MasterVerbum</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
-    <div id="app">
+
+    <div class="panel">
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
-        
-        <div id="setup-screen" class="panel">
-            <div class="card">
-                <h3>IL TUO CODICE</h3>
-                <div class="id-display" id="my-id">...</div>
-                <button id="copy-btn" class="btn-secondary">COPIA CODICE</button>
-            </div>
-            
-            <div class="card">
-                <input type="text" id="peer-id-input" placeholder="Codice Amico" maxlength="5">
-                <button id="connect-btn" class="btn-primary">SFIDA AMICO</button>
-                <div class="divider">OPPURE</div>
-                <button id="bot-btn" class="btn-bot">SFIDA IL BOT (ITA)</button>
-            </div>
-            <p id="status-msg">Inizializzazione sistema...</p>
+
+        <div id="setup-screen" class="card">
+            <p>TUO CODICE: <span id="my-id" style="color:var(--neon-blue); font-weight:bold;">...</span></p>
+            <input type="text" id="peer-id-input" placeholder="CODICE AMICO">
+            <button id="connect-btn" class="btn-primary">CONNETTI AMICO</button>
+            <div style="margin:10px 0; opacity:0.5;">oppure</div>
+            <button id="bot-btn" class="btn-bot">GIOCA CONTRO BOT</button>
         </div>
 
-        <div id="host-screen" class="panel hidden">
-            <div class="card pulse">
-                <h2>SEI IL MASTER</h2>
-                <p>Inserisci il Verbum Segreto</p>
-                <input type="password" id="secret-word" placeholder="Parola...">
-                <button id="start-btn" class="btn-primary">LANCIA SFIDA</button>
-            </div>
+        <div id="host-screen" class="card hidden">
+            <p>SCEGLI PAROLA</p>
+            <input type="password" id="secret-word">
+            <button id="start-btn" class="btn-primary">INIZIA SFIDA</button>
         </div>
 
-        <div id="play-screen" class="panel hidden">
-            <div id="role-badge"></div>
-            <div class="game-box">
-                <canvas id="hangmanCanvas" width="200" height="200"></canvas>
-                <div id="word-display"></div>
-                <div class="wrong-letters-container">
-                    <span>Errori: </span><span id="wrong-letters"></span>
-                </div>
-            </div>
+        <div id="play-screen" class="card hidden">
+            <div id="role-badge">...</div>
+            <canvas id="hangmanCanvas" width="200" height="180"></canvas>
+            <div id="word-display"></div>
+            <div id="wrong-letters" style="color:var(--neon-pink); text-decoration:line-through; height:20px;"></div>
             <div id="keyboard"></div>
-            
-            <div id="emoji-bar">
-                <button onclick="sendEmoji('🔥')">🔥</button>
-                <button onclick="sendEmoji('😂')">😂</button>
-                <button onclick="sendEmoji('💀')">💀</button>
-                <button onclick="sendEmoji('🤡')">🤡</button>
-            </div>
         </div>
-
-        <div id="emoji-area"></div>
-
-      <div id="overlay" class="overlay hidden">
-    <h1 id="result-title">VITTORIA</h1>
-    <p id="result-desc">La parola era: ...</p>
-    
-    <button id="retry-btn" class="btn-primary" style="width: auto; padding: 15px 40px;">GIOCA ANCORA</button>
-</div>
     </div>
+
+    <div id="overlay" class="overlay hidden">
+        <h1 id="result-title"></h1>
+        <p id="result-desc"></p>
+        <button onclick="location.reload()" class="btn-primary">RIPROVA</button>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
