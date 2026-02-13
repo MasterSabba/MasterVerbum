@@ -15,44 +15,47 @@
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn" class="btn-copy" onclick="copyId()">COPIA CODICE</button>
             
-            <div class="rank-container" style="width: 100%; margin-bottom: 20px;">
-                <div class="rank-bar-bg">
-                    <div id="rank-bar-fill-setup" class="rank-bar-fill"></div>
-                </div>
+            <div class="rank-container">
+                <div class="rank-bar-bg"><div id="rank-bar-fill-setup" class="rank-bar-fill"></div></div>
                 <div id="rank-label-setup" class="rank-label">RECLUTA (0/20)</div>
             </div>
 
-            <div id="connect-section" class="input-container" style="width: 100%;">
-                <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
-                <button class="btn-connetti" onclick="connectToPeer()">CONNETTI ALL'AMICO</button>
+            <div id="connect-section" class="input-container">
+                <input type="text" id="peer-id-input" placeholder="CODICE AMICO">
+                <button class="btn-connetti" onclick="connectToPeer()">CONNETTI</button>
             </div>
 
-            <div id="master-section" class="input-container hidden" style="width: 100%;">
-                <p style="color: var(--neon-blue); font-size: 0.8rem; margin-bottom: 10px;">CONNESSO! SCEGLI LA PAROLA:</p>
+            <div id="master-section" class="input-container hidden">
+                <p style="color: var(--neon-blue); font-size: 0.8rem; margin-bottom:10px;">SCEGLI LA PAROLA:</p>
                 <input type="text" id="secret-word-input" placeholder="ES: HACKER">
-                <button class="btn-connetti" onclick="sendWord()">INVIA PAROLA E INIZIA</button>
+                <button class="btn-connetti" onclick="sendWord()">INIZIA PARTITA</button>
             </div>
             
-            <button class="btn-bot-pink" onclick="startBotGame()">SFIDA IL BOT (SINGLE PLAYER)</button>
+            <button class="btn-bot-pink" onclick="startBotGame()">SFIDA IL BOT</button>
             <button class="btn-reset-small" onclick="resetAccount()">RESETTA ACCOUNT</button>
         </div>
 
         <div id="play-screen" class="card hidden">
-            <div class="rank-container" style="width: 100%; margin-bottom: 15px;">
-                <div class="rank-bar-bg">
-                    <div id="rank-bar-fill" class="rank-bar-fill"></div>
-                </div>
+            <div class="rank-container">
+                <div class="rank-bar-bg"><div id="rank-bar-fill" class="rank-bar-fill"></div></div>
                 <div id="rank-label-ingame" class="rank-label">RECLUTA (0/20)</div>
             </div>
 
             <div id="timer-display">01:00</div>
             <canvas id="hangmanCanvas" width="160" height="120"></canvas>
-            
             <div id="word-display"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
-            <button id="power-btn" class="btn-power" onclick="usePower()">DECRYPTER (-10s)</button>
-            
+            <div id="powers-sfidante" class="powers-grid">
+                <button id="p-decrypter" class="btn-power" onclick="useDecrypter()">DECRYPTER (-10s)</button>
+                <button id="p-shield" class="btn-power" onclick="useShield()">SHIELD (-1 ERRORE)</button>
+            </div>
+
+            <div id="powers-master" class="powers-grid hidden">
+                <button id="p-glitch" class="btn-power master" onclick="useGlitch()">GLITCH (7s)</button>
+                <button id="p-overload" class="btn-power master" onclick="useOverload()">OVERLOAD (+1 ERR)</button>
+            </div>
+
             <div id="keyboard"></div>
         </div>
     </div>
