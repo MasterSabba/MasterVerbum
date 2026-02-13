@@ -15,11 +15,11 @@
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn" class="btn-copy" onclick="copyId()">COPIA CODICE</button>
             
-            <div class="rank-container" style="width: 100%; margin-bottom: 25px;">
+            <div class="rank-container" style="width: 100%; margin-bottom: 20px;">
                 <div class="rank-bar-bg">
                     <div id="rank-bar-fill-setup" class="rank-bar-fill"></div>
                 </div>
-                <div id="rank-label-setup" style="font-size: 0.7rem; font-weight: 800; margin-top: 5px; color: var(--neon-blue);">RECLUTA (0/20)</div>
+                <div id="rank-label-setup" class="rank-label">RECLUTA (0/20)</div>
             </div>
 
             <div class="input-container" style="width: 100%;">
@@ -36,7 +36,7 @@
                 <div class="rank-bar-bg">
                     <div id="rank-bar-fill" class="rank-bar-fill"></div>
                 </div>
-                <div id="rank-label-ingame" style="font-size: 0.7rem; font-weight: 800; margin-top: 5px; color: var(--neon-blue);">RECLUTA (0/20)</div>
+                <div id="rank-label-ingame" class="rank-label">RECLUTA (0/20)</div>
             </div>
 
             <div id="timer-display">01:00</div>
@@ -45,9 +45,7 @@
             <div id="word-display"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
-            <div class="ability-bar" style="width: 100%;">
-                <button id="power-btn" class="btn-power" onclick="usePower()">DECRYPTER (-10s)</button>
-            </div>
+            <button id="power-btn" class="btn-power" onclick="usePower()">DECRYPTER (-10s)</button>
             
             <div id="keyboard"></div>
         </div>
@@ -55,12 +53,12 @@
 
     <div id="overlay" class="overlay hidden">
         <div class="overlay-card">
-            <h1 id="result-title" class="imposing-text"></h1>
+            <h1 id="result-title"></h1>
             <div id="rank-display" class="rank-badge-final"></div>
             <p id="result-desc"></p>
             <div class="overlay-btns">
-                <button class="btn-final" onclick="retry()">GIOCA ANCORA</button>
-                <button class="btn-final btn-grey" onclick="location.reload()">ESCI</button>
+                <button class="btn-final btn-primary" onclick="retry()">GIOCA ANCORA</button>
+                <button class="btn-final btn-secondary" onclick="location.reload()">ESCI</button>
             </div>
         </div>
     </div>
