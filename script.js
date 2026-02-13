@@ -17,7 +17,7 @@ const dizionario = [
     "TRENO", "UOMO", "VALLE", "VENTO", "VETRO", "VIA", "VINO", "VITA", "VOCE", "VUOTO", "ZAINO"
 ];
 
-// Caricamento Punteggio
+// Caricamento Punteggio da LocalStorage
 const saved = localStorage.getItem('mv_stats');
 if(saved) { myScore = JSON.parse(saved).score || 0; }
 
@@ -32,22 +32,21 @@ function getRank(s) {
     return "RECLUTA";
 }
 
-// --- FUNZIONE BARRA RANK AGGIORNATA ---
-function updateRankBar() {
+function updateRankUI() {
     const perc = Math.min((myScore / 20) * 100, 100);
     const rankLabel = getRank(myScore) + " (" + myScore + "/20)";
 
-    // Aggiorna la barra in Gioco
-    const fillGame = document.getElementById('rank-bar-fill');
-    const labelGame = document.getElementById('rank-label-ingame');
-    if(fillGame) fillGame.style.width = perc + "%";
-    if(labelGame) labelGame.innerText = rankLabel;
+    // Homepage
+    const fSetup = document.getElementById('rank-bar-fill-setup');
+    const lSetup = document.getElementById('rank-label-setup');
+    if(fSetup) fSetup.style.width = perc + "%";
+    if(lSetup) lSetup.innerText = rankLabel;
 
-    // Aggiorna la barra in Homepage (Setup)
-    const fillSetup = document.getElementById('rank-bar-fill-setup');
-    const labelSetup = document.getElementById('rank-label-setup');
-    if(fillSetup) fillSetup.style.width = perc + "%";
-    if(labelSetup) labelSetup.innerText = rankLabel;
+    // In-game
+    const fGame = document.getElementById('rank-bar-fill');
+    const lGame = document.getElementById('rank-label-ingame');
+    if(fGame) fGame.style.width = perc + "%";
+    if(lGame) lGame.innerText = rankLabel;
 }
 
 function copyId() {
@@ -86,7 +85,7 @@ function setupRemote() {
 function initGame() {
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
-    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('overlay').classList.add('hidden');
     
     powerUsed = false;
     const pBtn = document.getElementById('power-btn');
@@ -97,7 +96,7 @@ function initGame() {
     document.getElementById('wrong-letters').innerText = "";
     
     guessedLetters = []; mistakes = 0;
-    updateRankBar();
+    updateRankUI();
     createKeyboard();
     renderWord();
     if(!amIMaster) startTimer();
@@ -119,8 +118,13 @@ function createKeyboard() {
 }
 
 function handleMove(l) {
+    // Blocca se il gioco è già finito
+    const won = secretWord.split("").every(char => guessedLetters.includes(char));
+    if(mistakes >= 6 || won) return;
+
     if(guessedLetters.includes(l)) return;
     guessedLetters.push(l);
+    
     if(!secretWord.includes(l)) {
         mistakes++;
         document.getElementById('wrong-letters').innerText += l + " ";
@@ -138,7 +142,8 @@ function renderWord() {
     drawHangman();
 
     if(!amIMaster) {
-        if(secretWord.split("").every(l => guessedLetters.includes(l))) endGame(true);
+        const isWin = secretWord.split("").every(l => guessedLetters.includes(l));
+        if(isWin) endGame(true);
         else if(mistakes >= 6) endGame(false);
     }
 }
@@ -159,6 +164,10 @@ function startTimer() {
     clearInterval(timerInterval);
     timeLeft = 60;
     timerInterval = setInterval(() => {
+        // Ferma timer se gioco finito
+        const isWin = secretWord.split("").every(l => guessedLetters.includes(l));
+        if(isWin || mistakes >= 6) { clearInterval(timerInterval); return; }
+
         timeLeft--;
         document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
         if(timeLeft <= 0) endGame(false);
@@ -168,17 +177,24 @@ function startTimer() {
 function endGame(win) {
     clearInterval(timerInterval);
     const won = amIMaster ? !win : win;
-    if(won) myScore++; else myScore = Math.max(0, myScore - 1);
+    
+    // Aggiorna punteggio
+    if(won) myScore++; 
+    else myScore = Math.max(0, myScore - 1);
+    
     localStorage.setItem('mv_stats', JSON.stringify({score: myScore}));
+    updateRankUI();
 
-    document.getElementById('overlay').style.display = 'flex';
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+
     const title = document.getElementById('result-title');
     title.innerText = won ? "VITTORIA" : "SCONFITTA";
     title.className = "imposing-text " + (won ? "win-glow" : "lose-glow");
+    
     document.getElementById('rank-display').innerText = "GRADO: " + getRank(myScore);
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
-    
-    updateRankBar(); // Aggiorna barra post-partita
 }
 
 function retry() { if(isBot) startBotGame(); else location.reload(); }
@@ -198,5 +214,5 @@ function drawHangman() {
     ctx.stroke();
 }
 
-// --- AVVIO BARRA ALL'APERTURA ---
-updateRankBar();
+// Inizializza barre al caricamento
+updateRankUI();
