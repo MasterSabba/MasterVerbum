@@ -22,12 +22,18 @@
                 <div id="rank-label-setup" class="rank-label">RECLUTA (0/20)</div>
             </div>
 
-            <div class="input-container" style="width: 100%;">
+            <div id="connect-section" class="input-container" style="width: 100%;">
                 <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
-                <button class="btn-connetti" onclick="connectToPeer()">CONNETTI</button>
+                <button class="btn-connetti" onclick="connectToPeer()">CONNETTI ALL'AMICO</button>
+            </div>
+
+            <div id="master-section" class="input-container hidden" style="width: 100%;">
+                <p style="color: var(--neon-blue); font-size: 0.8rem; margin-bottom: 10px;">CONNESSO! SCEGLI LA PAROLA:</p>
+                <input type="text" id="secret-word-input" placeholder="ES: HACKER">
+                <button class="btn-connetti" onclick="sendWord()">INVIA PAROLA E INIZIA</button>
             </div>
             
-            <button class="btn-bot-pink" onclick="startBotGame()">SFIDA IL BOT</button>
+            <button class="btn-bot-pink" onclick="startBotGame()">SFIDA IL BOT (SINGLE PLAYER)</button>
             <button class="btn-reset-small" onclick="resetAccount()">RESETTA ACCOUNT</button>
         </div>
 
