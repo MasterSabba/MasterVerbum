@@ -1,76 +1,75 @@
-:root {
-    --neon-blue: #00f2ff;
-    --neon-pink: #ff0055;
-    --bg-dark: #0a0a0c;
-}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MasterVerbum Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <div id="emoji-left" class="emoji-side left"></div>
+    <div id="emoji-right" class="emoji-side right"></div>
 
-body {
-    margin: 0; padding: 0; background: var(--bg-dark); color: white;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    display: flex; justify-content: center; align-items: center; min-height: 100vh;
-    overflow: hidden;
-}
+    <div class="panel">
+        <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
 
-.scanlines { position: fixed; inset: 0; background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.1) 50%); background-size: 100% 4px; z-index: 999; pointer-events: none; }
+        <div id="setup-screen" class="card">
+            <p class="label">IL TUO CODICE</p>
+            <div id="my-id" class="id-display">----</div>
+            <button id="copy-btn" class="btn-copy">COPIA CODICE</button>
+            <div class="separator">SISTEMA MULTI-PLAYER</div>
+            <div class="input-group">
+                <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
+                <button id="connect-btn" class="btn-connetti">CONNETTI</button>
+                <button id="bot-btn" class="btn-bot-pink">SFIDA IL BOT</button>
+            </div>
+            <div class="danger-zone">
+                <button id="reset-data-btn" class="btn-reset">RESETTA ACCOUNT</button>
+            </div>
+        </div>
 
-/* EMOJI */
-.emoji-side { position: fixed; top: 50%; transform: translateY(-50%); font-size: 6rem; z-index: 2000; pointer-events: none; }
-.left { left: 5%; } .right { right: 5%; }
-.float-anim { animation: floatUpEmoji 1.2s ease-out forwards; display: block; }
+        <div id="play-screen" class="card hidden">
+            <div id="score-board-ingame">
+                <span class="blue">IO: <b id="my-score">0</b></span> | <span class="pink">AVV: <b id="opp-score">0</b></span>
+            </div>
+            <div id="timer-display">01:00</div>
+            <div id="role-badge" class="badge">---</div>
+            
+            <canvas id="hangmanCanvas" width="200" height="150"></canvas>
+            
+            <div id="master-controls" class="hidden">
+                <button id="toggle-word-btn" class="btn-eye">👁️ MOSTRA PAROLA</button>
+            </div>
 
-@keyframes floatUpEmoji {
-    0% { opacity: 0; transform: scale(0.5) translateY(20px); }
-    30% { opacity: 1; transform: scale(1.2) translateY(0); }
-    100% { opacity: 0; transform: scale(1) translateY(-100px); }
-}
+            <div id="word-display"></div>
+            <div id="wrong-letters" class="wrong-text"></div>
+            
+            <div id="ability-section" class="ability-bar">
+                <button id="power-btn" class="btn-power">DECRYPTER (-10s)</button>
+                <div class="emoji-btns">
+                    <button onclick="triggerEmoji('🤣')">🤣</button>
+                    <button onclick="triggerEmoji('😈')">😈</button>
+                    <button onclick="triggerEmoji('🤯')">🤯</button>
+                </div>
+            </div>
+            
+            <div id="keyboard"></div>
+        </div>
+    </div>
 
-/* TIMER */
-#timer-display { font-size: 2.2rem; font-weight: 900; color: var(--neon-pink); }
-.timer-panic { color: #ff0000 !important; animation: panicShake 0.2s infinite; text-shadow: 0 0 20px #ff0000; }
-@keyframes panicShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+    <div id="overlay" class="overlay hidden">
+        <div class="result-content">
+            <h1 id="result-title" class="imposing-text"></h1>
+            <div id="rank-display" class="rank-badge">GRADO: RECLUTA</div>
+            <p id="result-desc"></p>
+            <div class="overlay-btns">
+                <button id="retry-btn" class="btn-final">GIOCA ANCORA</button>
+                <button id="exit-btn" class="btn-final btn-grey" onclick="location.reload()">ESCI</button>
+            </div>
+        </div>
+    </div>
 
-/* UI CARD */
-.panel { width: 95%; max-width: 400px; text-align: center; position: relative; z-index: 10; }
-.neon-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 20px; }
-.neon-title span { color: var(--neon-blue); }
-.card { background: #15151c; border-radius: 24px; padding: 25px; display: flex; flex-direction: column; align-items: center; }
-
-/* BOTTONI & INPUT */
-.id-display { font-size: 3.2rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 6px; }
-input { width: 100%; box-sizing: border-box; background: #000; border: 1px solid #333; padding: 16px; border-radius: 12px; color: white; text-align: center; margin-bottom: 12px; }
-button { border: none; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-.btn-connetti { background: var(--neon-blue); color: black; padding: 18px; border-radius: 12px; width: 100%; }
-.btn-bot-pink { background: var(--neon-pink); color: white; padding: 18px; border-radius: 12px; width: 100%; margin-top: 10px; }
-
-/* RANKING */
-.rank-badge { background: rgba(255, 255, 255, 0.1); padding: 6px 20px; border-radius: 50px; font-size: 0.9rem; margin: 10px 0; border: 1px solid rgba(255,255,255,0.2); }
-.rank-win { color: var(--neon-blue); border-color: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); }
-.rank-lose { color: var(--neon-pink); border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
-
-/* RESET AREA */
-.danger-zone { margin-top: 25px; opacity: 0.3; }
-.danger-zone:hover { opacity: 1; }
-.btn-reset { background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 6px 12px; border-radius: 6px; font-size: 0.6rem; }
-
-/* GAME ELEMENTS */
-.btn-eye { background: rgba(0,242,255,0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 5px 12px; border-radius: 20px; font-size: 0.6rem; margin-bottom: 10px; }
-.word-masked .letter-slot { filter: blur(8px); }
-#word-display { display: flex; justify-content: center; gap: 6px; margin: 20px 0; flex-wrap: wrap; }
-.letter-slot { width: 25px; border-bottom: 4px solid #333; font-size: 1.8rem; font-weight: 800; height: 40px; }
-.ability-bar { display: flex; gap: 10px; margin: 15px 0; width: 100%; }
-.btn-power { background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); border-radius: 10px; font-size: 0.7rem; flex: 2; height: 45px; }
-.emoji-btns { display: flex; gap: 5px; flex: 1; }
-.emoji-btns button { background: #222; border-radius: 10px; width: 45px; font-size: 1.4rem; }
-#keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 5px; width: 100%; }
-.key { background: #252530; padding: 12px 0; border-radius: 8px; color: white; font-size: 0.8rem; }
-.key.used { opacity: 0.1; pointer-events: none; }
-
-/* OVERLAY */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000; }
-.imposing-text { font-size: 3.5rem; font-weight: 900; line-height: 1; }
-.win-glow { color: var(--neon-blue); text-shadow: 0 0 30px var(--neon-blue); }
-.lose-glow { color: var(--neon-pink); text-shadow: 0 0 30px var(--neon-pink); }
-.overlay-btns { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; width: 240px; }
-.btn-final { padding: 18px; border-radius: 14px; background: white; color: black; }
-.btn-grey { background: #333 !important; color: white !important; }
-.hidden { display: none !important; }
+    <script src="script.js"></script>
+</body>
+</html>
