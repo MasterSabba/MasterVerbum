@@ -10,13 +10,10 @@
 <body>
     <div class="scanlines"></div>
 
-    <div class="panel">
-        <div id="score-board">
-            <span style="color:var(--neon-blue)">IO: <b id="my-score">0</b></span>
-            <span style="margin:0 10px; opacity:0.3">|</span>
-            <span style="color:var(--neon-pink)">AVV: <b id="opp-score">0</b></span>
-        </div>
+    <div id="emoji-left" class="emoji-side left"></div>
+    <div id="emoji-right" class="emoji-side right"></div>
 
+    <div class="panel">
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
 
         <div id="setup-screen" class="card">
@@ -29,21 +26,33 @@
                 <button id="connect-btn" class="btn-connetti">CONNETTI</button>
                 <button id="bot-btn" class="btn-bot-pink">SFIDA IL BOT</button>
             </div>
+            <div class="danger-zone">
+                <button id="reset-data-btn" class="btn-reset">RESETTA ACCOUNT</button>
+            </div>
         </div>
 
         <div id="play-screen" class="card hidden">
+            <div id="score-board-ingame">
+                <span class="blue">IO: <b id="my-score">0</b></span> | <span class="pink">AVV: <b id="opp-score">0</b></span>
+            </div>
             <div id="timer-display">01:00</div>
-            <div id="role-badge" class="badge">INIZIALIZZAZIONE...</div>
-            <canvas id="hangmanCanvas" width="200" height="160"></canvas>
+            <div id="role-badge" class="badge">---</div>
+            
+            <canvas id="hangmanCanvas" width="200" height="150"></canvas>
+            
+            <div id="master-controls" class="hidden">
+                <button id="toggle-word-btn" class="btn-eye">👁️ MOSTRA PAROLA</button>
+            </div>
+
             <div id="word-display"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
-            <div class="ability-bar">
-                <button id="power-btn" class="btn-power">ABILITÀ SPECIALE</button>
+            <div id="ability-section" class="ability-bar">
+                <button id="power-btn" class="btn-power">DECRYPTER (-10s)</button>
                 <div class="emoji-btns">
-                    <button onclick="sendEmoji('🤣')">🤣</button>
-                    <button onclick="sendEmoji('🤯')">🤯</button>
-                    <button onclick="sendEmoji('😈')">😈</button>
+                    <button onclick="triggerEmoji('🤣')">🤣</button>
+                    <button onclick="triggerEmoji('😈')">😈</button>
+                    <button onclick="triggerEmoji('🤯')">🤯</button>
                 </div>
             </div>
             
@@ -54,6 +63,7 @@
     <div id="overlay" class="overlay hidden">
         <div class="result-content">
             <h1 id="result-title" class="imposing-text"></h1>
+            <div id="rank-display" class="rank-badge">GRADO: RECLUTA</div>
             <p id="result-desc"></p>
             <div class="overlay-btns">
                 <button id="retry-btn" class="btn-final">GIOCA ANCORA</button>
