@@ -5,11 +5,19 @@ let timerInterval, timeLeft = 60, myScore = 0;
 
 const dizionario = ["ACQUA", "ALBERO", "AMICO", "ANIMA", "BACIO", "BARCA", "BENE", "BOSCO", "CALCIO", "CUORE", "DIARIO", "DRAGO", "ESTATE", "FIORE", "FIUME", "GATTO", "GIOCO", "ISOLA", "LIBRO", "LUCE", "LUNA", "MARE", "MONDO", "NOTTE", "OCCHIO", "PANE", "PAROLA", "SOLE", "SOGNO", "TERRA", "TRENO", "UOMO", "VITA", "VOCE", "ZAINO"];
 
-// Caricamento Punti Automatico
+// Caricamento Punteggio (Automatico)
 const saved = localStorage.getItem('mv_stats');
 if(saved) myScore = JSON.parse(saved).score || 0;
 
-peer.on('open', id => document.getElementById('my-id').innerText = id);
+// LED Connessione e Peer ID
+peer.on('open', id => {
+    document.getElementById('my-id').innerText = id;
+    const led = document.getElementById('connection-led');
+    led.classList.replace('led-off', 'led-on');
+    document.getElementById('status-text').innerText = "SYSTEM ONLINE";
+    document.getElementById('status-text').style.color = "#39ff14";
+});
+
 peer.on('connection', c => { conn = c; setupRemote(); });
 
 function connectToPeer() {
@@ -26,9 +34,8 @@ function setupRemote() {
         document.getElementById('connect-section').classList.add('hidden');
         document.getElementById('master-section').classList.remove('hidden');
     } else {
-        document.getElementById('setup-screen').innerHTML = "<h2>In attesa della parola...</h2>";
+        document.getElementById('setup-screen').innerHTML = "<h2>IN ATTESA DELLA PAROLA...</h2>";
     }
-
     conn.on('data', d => {
         if(d.type === 'START') { secretWord = d.word; amIMaster = false; initGame(); }
         if(d.type === 'GUESS') handleMove(d.letter, true);
@@ -40,8 +47,8 @@ function setupRemote() {
 }
 
 function sendWord() {
-    const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
-    if(val.length < 3) return;
+    const val = document.getElementById('secret-word-input').value.toUpperCase().trim().replace(/[^A-Z]/g, '');
+    if(val.length < 3) return alert("Minimo 3 lettere!");
     secretWord = val;
     conn.send({ type: 'START', word: secretWord });
     initGame();
@@ -58,12 +65,12 @@ function initGame() {
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('overlay').style.display = 'none';
     
-    // UI Poteri
     document.getElementById('powers-sfidante').classList.toggle('hidden', amIMaster);
     document.getElementById('powers-master').classList.toggle('hidden', !amIMaster);
     
     guessedLetters = []; mistakes = 0; timeLeft = 60;
     document.getElementById('wrong-letters').innerText = "";
+    document.querySelectorAll('.btn-power').forEach(b => b.disabled = false);
     
     updateRankUI();
     createKeyboard();
@@ -71,7 +78,6 @@ function initGame() {
     startTimer();
 }
 
-// --- TIMER SINCRONIZZATO ---
 function startTimer() {
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -88,15 +94,15 @@ function updateTimerUI() {
     document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
 }
 
-// --- POTERI ---
+// --- LOGICA POTERI ---
 function useDecrypter() {
     if(timeLeft < 15) return;
-    const hidden = secretWord.split("").filter(l => !guessedLetters.includes(l));
-    if(hidden.length) {
+    const h = secretWord.split("").filter(l => !guessedLetters.includes(l));
+    if(h.length) {
         timeLeft -= 10;
         document.getElementById('p-decrypter').disabled = true;
-        handleMove(hidden[0], false);
-        if(conn && !isBot) conn.send({type:'GUESS', letter:hidden[0]});
+        handleMove(h[0], false);
+        if(conn && !isBot) conn.send({type:'GUESS', letter:h[0]});
     }
 }
 
@@ -124,7 +130,20 @@ function useOverload() {
     if(conn) conn.send({ type: 'P_OVERLOAD' });
 }
 
-// --- CORE ---
+// --- GIOCO ---
+function createKeyboard() {
+    const kb = document.getElementById('keyboard'); kb.innerHTML = "";
+    "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
+        const btn = document.createElement('button'); btn.className = "key"; btn.innerText = l;
+        btn.onclick = () => { 
+            if(amIMaster) return;
+            btn.classList.add('used'); handleMove(l, false); 
+            if(conn && !isBot) conn.send({type:'GUESS', letter:l}); 
+        };
+        kb.appendChild(btn);
+    });
+}
+
 function handleMove(l, fromRemote) {
     if(guessedLetters.includes(l)) return;
     guessedLetters.push(l);
@@ -156,25 +175,13 @@ function showEndScreen(win) {
     }
     const overlay = document.getElementById('overlay');
     overlay.style.display = 'flex';
-    overlay.classList.remove('hidden');
-    document.getElementById('result-title').innerText = win ? (amIMaster ? "L'AMICO HA VINTO" : "VITTORIA") : (amIMaster ? "L'AMICO HA PERSO" : "SCONFITTA");
-    document.getElementById('result-desc').innerText = "PAROLA: " + secretWord;
+    const title = document.getElementById('result-title');
+    title.innerText = win ? (amIMaster ? "HAI PERSO" : "VITTORIA") : (amIMaster ? "HAI VINTO" : "SCONFITTA");
+    title.className = win ? (amIMaster ? "lose-glow" : "win-glow") : (amIMaster ? "win-glow" : "lose-glow");
+    document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
 }
 
 function retry() { if(isBot) startBotGame(); else location.reload(); }
-
-function createKeyboard() {
-    const kb = document.getElementById('keyboard'); kb.innerHTML = "";
-    "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
-        const btn = document.createElement('button'); btn.className = "key"; btn.innerText = l;
-        btn.onclick = () => { 
-            if(amIMaster) return;
-            btn.classList.add('used'); handleMove(l, false); 
-            if(conn && !isBot) conn.send({type:'GUESS', letter:l}); 
-        };
-        kb.appendChild(btn);
-    });
-}
 
 function drawHangman() {
     const canvas = document.getElementById('hangmanCanvas');
