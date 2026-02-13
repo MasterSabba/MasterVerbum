@@ -1,11 +1,11 @@
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
-let timerInterval, timeLeft = 60, myScore = 0, powerUsed = false;
+let timerInterval, timeLeft = 60, myScore = 0;
 
 const dizionario = ["ACQUA", "ALBERO", "AMICO", "ANIMA", "BACIO", "BARCA", "BENE", "BOSCO", "CALCIO", "CUORE", "DIARIO", "DRAGO", "ESTATE", "FIORE", "FIUME", "GATTO", "GIOCO", "ISOLA", "LIBRO", "LUCE", "LUNA", "MARE", "MONDO", "NOTTE", "OCCHIO", "PANE", "PAROLA", "SOLE", "SOGNO", "TERRA", "TRENO", "UOMO", "VITA", "VOCE", "ZAINO"];
 
-// Recupero punti salvati
+// Caricamento Punti Automatico
 const saved = localStorage.getItem('mv_stats');
 if(saved) myScore = JSON.parse(saved).score || 0;
 
@@ -14,7 +14,7 @@ peer.on('connection', c => { conn = c; setupRemote(); });
 
 function connectToPeer() {
     const rId = document.getElementById('peer-id-input').value.toUpperCase().trim();
-    if(!rId) return alert("Inserisci il codice!");
+    if(!rId) return;
     conn = peer.connect(rId);
     conn.on('open', () => setupRemote());
 }
@@ -26,98 +26,118 @@ function setupRemote() {
         document.getElementById('connect-section').classList.add('hidden');
         document.getElementById('master-section').classList.remove('hidden');
     } else {
-        document.getElementById('setup-screen').innerHTML = "<h2 style='color:var(--neon-blue)'>In attesa della parola...</h2>";
+        document.getElementById('setup-screen').innerHTML = "<h2>In attesa della parola...</h2>";
     }
+
     conn.on('data', d => {
         if(d.type === 'START') { secretWord = d.word; amIMaster = false; initGame(); }
         if(d.type === 'GUESS') handleMove(d.letter, true);
         if(d.type === 'FINISH') showEndScreen(d.win);
+        if(d.type === 'TIMER_SYNC') { timeLeft = d.time; updateTimerUI(); }
+        if(d.type === 'P_GLITCH') triggerGlitch();
+        if(d.type === 'P_OVERLOAD') { mistakes = Math.min(5, mistakes + 1); renderWord(); }
     });
 }
 
 function sendWord() {
-    const word = document.getElementById('secret-word-input').value.toUpperCase().trim().replace(/[^A-Z]/g, '');
-    if(word.length < 3) return alert("Parola troppo corta!");
-    secretWord = word;
+    const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
+    if(val.length < 3) return;
+    secretWord = val;
     conn.send({ type: 'START', word: secretWord });
     initGame();
 }
 
-// FIX: Funzione Bot corretta
 function startBotGame() {
-    isBot = true;
-    amIMaster = false; // Contro il bot sei sempre tu a indovinare
-    secretWord = dizionario[Math.floor(Math.random() * dizionario.length)];
+    isBot = true; amIMaster = false;
+    secretWord = dizionario[Math.floor(Math.random()*dizionario.length)];
     initGame();
 }
 
 function initGame() {
-    // Nascondi setup e mostra gioco
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('overlay').style.display = 'none';
     
-    // Reset variabili
-    guessedLetters = [];
-    mistakes = 0;
-    powerUsed = false;
-    timeLeft = 60;
+    // UI Poteri
+    document.getElementById('powers-sfidante').classList.toggle('hidden', amIMaster);
+    document.getElementById('powers-master').classList.toggle('hidden', !amIMaster);
     
-    // UI Setup
-    const pBtn = document.getElementById('power-btn');
-    if(pBtn) {
-        pBtn.disabled = false;
-        pBtn.style.display = amIMaster ? "none" : "block";
-    }
-    
+    guessedLetters = []; mistakes = 0; timeLeft = 60;
     document.getElementById('wrong-letters').innerText = "";
-    document.getElementById('keyboard').style.opacity = amIMaster ? "0.3" : "1";
-    document.getElementById('keyboard').style.pointerEvents = amIMaster ? "none" : "auto";
     
     updateRankUI();
     createKeyboard();
     renderWord();
-    if(!amIMaster) startTimer();
+    startTimer();
 }
 
-function createKeyboard() {
+// --- TIMER SINCRONIZZATO ---
+function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if(!amIMaster) {
+            timeLeft--;
+            if(conn && !isBot) conn.send({ type: 'TIMER_SYNC', time: timeLeft });
+            if(timeLeft <= 0) triggerEnd(false);
+        }
+        updateTimerUI();
+    }, 1000);
+}
+
+function updateTimerUI() {
+    document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+}
+
+// --- POTERI ---
+function useDecrypter() {
+    if(timeLeft < 15) return;
+    const hidden = secretWord.split("").filter(l => !guessedLetters.includes(l));
+    if(hidden.length) {
+        timeLeft -= 10;
+        document.getElementById('p-decrypter').disabled = true;
+        handleMove(hidden[0], false);
+        if(conn && !isBot) conn.send({type:'GUESS', letter:hidden[0]});
+    }
+}
+
+function useShield() {
+    if(mistakes > 0) {
+        mistakes--;
+        document.getElementById('p-shield').disabled = true;
+        renderWord();
+    }
+}
+
+function useGlitch() {
+    document.getElementById('p-glitch').disabled = true;
+    if(conn) conn.send({ type: 'P_GLITCH' });
+}
+
+function triggerGlitch() {
     const kb = document.getElementById('keyboard');
-    kb.innerHTML = "";
-    "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
-        const btn = document.createElement('button');
-        btn.className = "key";
-        btn.innerText = l;
-        btn.onclick = () => {
-            if(btn.classList.contains('used')) return;
-            btn.classList.add('used');
-            handleMove(l, false);
-            if(conn && !isBot) conn.send({type:'GUESS', letter:l});
-        };
-        kb.appendChild(btn);
-    });
+    kb.classList.add('glitch-active');
+    setTimeout(() => kb.classList.remove('glitch-active'), 7000);
 }
 
+function useOverload() {
+    document.getElementById('p-overload').disabled = true;
+    if(conn) conn.send({ type: 'P_OVERLOAD' });
+}
+
+// --- CORE ---
 function handleMove(l, fromRemote) {
     if(guessedLetters.includes(l)) return;
     guessedLetters.push(l);
-    
-    if(!secretWord.includes(l)) {
-        mistakes++;
-        document.getElementById('wrong-letters').innerText += l + " ";
-    }
+    if(!secretWord.includes(l)) mistakes++;
     renderWord();
 }
 
 function renderWord() {
     const display = document.getElementById('word-display');
-    const wordArr = secretWord.split("");
-    display.innerHTML = wordArr.map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join("");
-    
+    display.innerHTML = secretWord.split("").map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join("");
     drawHangman();
-
     if(!amIMaster) {
-        const win = wordArr.every(l => guessedLetters.includes(l));
-        if(win) triggerEnd(true);
+        if(secretWord.split("").every(l => guessedLetters.includes(l))) triggerEnd(true);
         else if(mistakes >= 6) triggerEnd(false);
     }
 }
@@ -129,69 +149,31 @@ function triggerEnd(win) {
 
 function showEndScreen(win) {
     clearInterval(timerInterval);
-    
-    // Gestione punti (Solo se non sei Master)
     if(!amIMaster) {
         if(win) myScore++; else myScore = Math.max(0, myScore - 1);
         localStorage.setItem('mv_stats', JSON.stringify({score: myScore}));
         updateRankUI();
     }
-
     const overlay = document.getElementById('overlay');
     overlay.style.display = 'flex';
     overlay.classList.remove('hidden');
-
-    const title = document.getElementById('result-title');
-    if(amIMaster) {
-        title.innerText = win ? "AMICO HA VINTO" : "AMICO HA PERSO";
-        title.className = win ? "lose-glow" : "win-glow";
-    } else {
-        title.innerText = win ? "VITTORIA" : "SCONFITTA";
-        title.className = win ? "win-glow" : "lose-glow";
-    }
-    
-    document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
-    document.getElementById('rank-display').innerText = amIMaster ? "MODALITÀ MASTER" : "GRADO: " + getRank(myScore);
+    document.getElementById('result-title').innerText = win ? (amIMaster ? "L'AMICO HA VINTO" : "VITTORIA") : (amIMaster ? "L'AMICO HA PERSO" : "SCONFITTA");
+    document.getElementById('result-desc').innerText = "PAROLA: " + secretWord;
 }
 
-function startTimer() {
-    clearInterval(timerInterval);
-    timeLeft = 60;
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
-        if(timeLeft <= 0) triggerEnd(false);
-    }, 1000);
-}
+function retry() { if(isBot) startBotGame(); else location.reload(); }
 
-function usePower() {
-    if(powerUsed || timeLeft < 15 || amIMaster) return;
-    const hidden = secretWord.split("").filter(l => !guessedLetters.includes(l));
-    if(hidden.length) {
-        powerUsed = true;
-        document.getElementById('power-btn').disabled = true;
-        timeLeft -= 10;
-        handleMove(hidden[0], false);
-        if(conn && !isBot) conn.send({type:'GUESS', letter:hidden[0]});
-    }
-}
-
-function updateRankUI() {
-    const perc = Math.min((myScore / 20) * 100, 100);
-    const text = getRank(myScore) + " (" + myScore + "/20)";
-    ["rank-bar-fill-setup", "rank-bar-fill"].forEach(id => {
-        const el = document.getElementById(id); if(el) el.style.width = perc + "%";
+function createKeyboard() {
+    const kb = document.getElementById('keyboard'); kb.innerHTML = "";
+    "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
+        const btn = document.createElement('button'); btn.className = "key"; btn.innerText = l;
+        btn.onclick = () => { 
+            if(amIMaster) return;
+            btn.classList.add('used'); handleMove(l, false); 
+            if(conn && !isBot) conn.send({type:'GUESS', letter:l}); 
+        };
+        kb.appendChild(btn);
     });
-    ["rank-label-setup", "rank-label-ingame"].forEach(id => {
-        const el = document.getElementById(id); if(el) el.innerText = text;
-    });
-}
-
-function getRank(s) {
-    if (s >= 20) return "DIO DEL CODICE";
-    if (s >= 10) return "HACKER ELITE";
-    if (s >= 5) return "ESPERTO";
-    return "RECLUTA";
 }
 
 function drawHangman() {
@@ -207,8 +189,19 @@ function drawHangman() {
     ctx.stroke();
 }
 
+function updateRankUI() {
+    const perc = Math.min((myScore/20)*100, 100);
+    const label = getRank(myScore) + " (" + myScore + "/20)";
+    ["rank-bar-fill-setup", "rank-bar-fill"].forEach(id => {
+        let el = document.getElementById(id); if(el) el.style.width = perc + "%";
+    });
+    ["rank-label-setup", "rank-label-ingame"].forEach(id => {
+        let el = document.getElementById(id); if(el) el.innerText = label;
+    });
+}
+
+function getRank(s) { if(s >= 20) return "DIO DEL CODICE"; if(s >= 10) return "HACKER ELITE"; return "RECLUTA"; }
 function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO!"; }
-function retry() { location.reload(); }
-function resetAccount() { if(confirm("Resettare tutto?")) { localStorage.clear(); location.reload(); } }
+function resetAccount() { if(confirm("Resettare?")) { localStorage.clear(); location.reload(); } }
 
 updateRankUI();
