@@ -2,69 +2,112 @@ const peerConfig = { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:193
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
-let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0, powerUsed = false;
+let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0;
+let dizionarioCompleto = [], wordVisible = false;
 
+// Helpers
+const vibrate = (ms) => { if(navigator.vibrate) navigator.vibrate(ms); };
+const salvaDati = () => localStorage.setItem('masterverbum_stats', JSON.stringify({ score: myScore }));
+const caricaDati = () => {
+    const s = localStorage.getItem('masterverbum_stats');
+    if(s) { myScore = JSON.parse(s).score || 0; }
+    document.getElementById('my-score').innerText = myScore;
+};
+
+// Dizionario
+async function caricaDizionario() {
+    try {
+        const r = await fetch('https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane.txt');
+        const t = await r.text();
+        dizionarioCompleto = t.split('\n').map(p => p.trim().toUpperCase()).filter(p => p.length >= 5 && p.length <= 10 && /^[A-Z]+$/.test(p));
+    } catch (e) { dizionarioCompleto = ["SISTEMA", "HACKER", "LOGICA"]; }
+}
+
+// Inizializzazione
+caricaDati(); caricaDizionario();
+
+function getRank(s) {
+    if (s >= 20) return "DIO DEL CODICE";
+    if (s >= 15) return "ARCHITETTO";
+    if (s >= 10) return "HACKER ELITE";
+    if (s >= 5)  return "DECRYPTATORE";
+    if (s >= 2)  return "ESPERTO";
+    return "RECLUTA";
+}
+
+// Peer Events
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
 
 document.getElementById('connect-btn').onclick = () => {
-    const target = document.getElementById('peer-id-input').value.toUpperCase().trim();
-    if(target) { conn = peer.connect(target); conn.on('open', () => setupLogic()); }
+    const t = document.getElementById('peer-id-input').value.toUpperCase().trim();
+    if(t) { conn = peer.connect(t); conn.on('open', () => setupLogic()); }
 };
 
 document.getElementById('bot-btn').onclick = () => {
     isBot = true; amIMaster = false;
-    const diz = ["ALGORITMO", "ASTRONAVE", "DATABASE", "SATELLITE", "SISTEMA", "PROGRAMMA", "DINOSAURO"];
-    secretWord = diz[Math.floor(Math.random()*diz.length)];
+    if (!dizionarioCompleto.length) return alert("Caricamento...");
+    secretWord = dizionarioCompleto[Math.floor(Math.random() * dizionarioCompleto.length)];
     startPlay("BOT CHALLENGE");
 };
 
+// Reset Totale
+document.getElementById('reset-data-btn').onclick = () => {
+    if(confirm("Cancellare per sempre il tuo Rank e i tuoi punti?")) {
+        localStorage.removeItem('masterverbum_stats');
+        location.reload();
+    }
+};
+
 function setupLogic() {
-    isBot = false;
-    amIMaster = myId < conn.peer;
+    isBot = false; amIMaster = myId < conn.peer;
     if(amIMaster) {
-        secretWord = prompt("PAROLA SEGRETA:").toUpperCase().replace(/[^A-Z]/g, '') || "HANGMAN";
+        secretWord = prompt("PAROLA:").toUpperCase().replace(/[^A-Z]/g, '') || "HANGMAN";
         conn.send({ type: 'START', word: secretWord });
         startPlay("MASTER");
     }
-    conn.on('data', data => {
-        if(data.type === 'START') { secretWord = data.word; startPlay("SFIDANTE"); }
-        else if(data.type === 'GUESS') { processMove(data.letter); }
-        else if(data.type === 'END') end(data.win, true);
-        else if(data.type === 'SYNC_TIME') { timeLeft = data.time; updateTimerUI(); }
-        else if(data.type === 'EMOJI') { showFloatingEmoji(data.emoji); }
-        else if(data.type === 'POWER_HIT') { timeLeft = Math.max(0, timeLeft - 10); }
+    conn.on('data', d => {
+        if(d.type === 'START') { secretWord = d.word; startPlay("SFIDANTE"); }
+        else if(d.type === 'GUESS') processMove(d.letter);
+        else if(d.type === 'END') end(d.win, true);
+        else if(d.type === 'SYNC') { timeLeft = d.time; updateTimerUI(); }
+        else if(d.type === 'SYNC_SCORE') { oppScore = d.score; document.getElementById('opp-score').innerText = oppScore; }
     });
 }
 
-function startPlay(role) {
+function startPlay(r) {
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('overlay').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
-    document.getElementById('role-badge').innerText = role;
-    guessedLetters = []; mistakes = 0; powerUsed = false;
+    document.getElementById('role-badge').innerText = r;
+    const isM = (r === "MASTER");
+    document.getElementById('power-btn').style.display = isM ? "none" : "block";
+    document.getElementById('master-controls').classList.toggle('hidden', !isM);
+    wordVisible = false;
+    document.getElementById('word-display').classList.add('word-masked');
+    document.getElementById('toggle-word-btn').innerText = "👁️ MOSTRA PAROLA";
+    guessedLetters = []; mistakes = 0;
     document.getElementById('wrong-letters').innerText = "";
-    document.getElementById('power-btn').disabled = false;
-    document.getElementById('power-btn').innerText = amIMaster ? "FIREWALL (-10s)" : "DECRYPTER (Lente)";
     document.querySelectorAll('.key').forEach(k => k.classList.remove('used'));
-    
-    if(role !== "MASTER") { startTimer(); render(); }
-    else { render(); }
+    if(!isM) { startTimer(); render(); } else { render(); }
 }
+
+document.getElementById('toggle-word-btn').onclick = () => {
+    wordVisible = !wordVisible;
+    document.getElementById('word-display').classList.toggle('word-masked', !wordVisible);
+    document.getElementById('toggle-word-btn').innerText = wordVisible ? "🕵️ NASCONDI" : "👁️ MOSTRA";
+};
 
 function processMove(l) {
     if(guessedLetters.includes(l)) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) {
-        mistakes++;
-        document.getElementById('wrong-letters').innerText += l + " ";
-    }
+    if(!secretWord.includes(l)) { mistakes++; document.getElementById('wrong-letters').innerText += l + " "; vibrate([100,50,100]); }
     render();
 }
 
 function render() {
-    const container = document.getElementById('word-display');
-    container.innerHTML = secretWord.split('').map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join('');
+    const c = document.getElementById('word-display');
+    c.innerHTML = secretWord.split('').map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join('');
     draw(mistakes);
     if(!amIMaster) {
         if(secretWord.split('').every(l => guessedLetters.includes(l))) end(true);
@@ -72,66 +115,68 @@ function render() {
     }
 }
 
-function end(win, fromRemote = false) {
-    clearInterval(timerInterval);
-    if(!fromRemote && !isBot && conn) conn.send({ type: 'END', win: win });
-    
-    let ioHoVinto = amIMaster ? !win : win;
-    if(!fromRemote) { if(ioHoVinto) myScore++; else oppScore++; }
-    
-    document.getElementById('my-score').innerText = myScore;
-    document.getElementById('opp-score').innerText = oppScore;
-    document.getElementById('overlay').classList.remove('hidden');
-    const title = document.getElementById('result-title');
-    title.innerText = ioHoVinto ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
-    title.className = "imposing-text " + (ioHoVinto ? "win-glow" : "lose-glow");
-    document.getElementById('result-desc').innerText = "LA CHIAVE ERA: " + secretWord;
+document.getElementById('power-btn').onclick = () => {
+    if(timeLeft <= 10) return;
+    vibrate(200); timeLeft -= 10; updateTimerUI();
+    const remain = secretWord.split('').filter(l => !guessedLetters.includes(l));
+    if(remain.length) {
+        const p = remain[Math.floor(Math.random()*remain.length)];
+        processMove(p); if(conn && !isBot) conn.send({type:'GUESS', letter:p});
+    }
+};
+
+function triggerEmoji(e) {
+    vibrate(30); const side = lastSide === 'left' ? 'emoji-left' : 'emoji-right';
+    const c = document.getElementById(side); c.innerHTML = `<span class="float-anim">${e}</span>`;
+    lastSide = lastSide === 'left' ? 'right' : 'left';
+    setTimeout(() => c.innerHTML = '', 1200);
 }
+let lastSide = 'left';
 
 function startTimer() {
     clearInterval(timerInterval); timeLeft = 60;
     timerInterval = setInterval(() => {
-        timeLeft--;
-        updateTimerUI();
-        if(conn && !isBot) conn.send({ type: 'SYNC_TIME', time: timeLeft });
+        timeLeft--; updateTimerUI();
+        if(conn && !isBot) conn.send({ type: 'SYNC', time: timeLeft });
         if(timeLeft <= 0) end(false);
     }, 1000);
 }
 
 function updateTimerUI() {
-    document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0' : ''}${timeLeft}`;
+    const tEl = document.getElementById('timer-display');
+    tEl.innerText = `00:${timeLeft < 10 ? '0' : ''}${timeLeft}`;
+    if(timeLeft <= 10) { tEl.classList.add('timer-panic'); if(timeLeft > 0) vibrate(50); }
+    else tEl.classList.remove('timer-panic');
 }
 
-document.getElementById('power-btn').onclick = () => {
-    if(powerUsed) return;
-    powerUsed = true;
-    document.getElementById('power-btn').disabled = true;
-    if(amIMaster) { if(conn) conn.send({type:'POWER_HIT'}); }
-    else {
-        const remaining = secretWord.split('').filter(l => !guessedLetters.includes(l));
-        if(remaining.length > 0) {
-            const pick = remaining[Math.floor(Math.random()*remaining.length)];
-            if(conn && !isBot) conn.send({type:'GUESS', letter:pick});
-            processMove(pick);
-        }
+function end(win, fromRemote = false) {
+    clearInterval(timerInterval); vibrate(500);
+    if(!fromRemote && !isBot && conn) conn.send({ type: 'END', win: win });
+    let ioHoVinto = amIMaster ? !win : win;
+    if(!fromRemote) {
+        if(ioHoVinto) myScore++; else myScore = Math.max(0, myScore - 1);
+        salvaDati();
+        if(conn && !isBot) conn.send({ type: 'SYNC_SCORE', score: myScore });
     }
-};
-
-function sendEmoji(e) { if(conn) conn.send({type:'EMOJI', emoji:e}); showFloatingEmoji(e); }
-
-function showFloatingEmoji(e) {
-    const div = document.createElement('div');
-    div.innerText = e; div.style.cssText = `position:fixed; bottom:20px; left:${Math.random()*80}%; font-size:3rem; animation: floatUp 2s forwards; z-index:10000; pointer-events:none;`;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 2000);
+    document.getElementById('my-score').innerText = myScore;
+    document.getElementById('overlay').classList.remove('hidden');
+    const title = document.getElementById('result-title');
+    const rankEl = document.getElementById('rank-display');
+    title.innerText = ioHoVinto ? "MISSIONE COMPIUTA" : "SISTEMA COMPROMESSO";
+    title.className = "imposing-text " + (ioHoVinto ? "win-glow" : "lose-glow");
+    rankEl.innerText = "GRADO: " + getRank(myScore);
+    rankEl.className = "rank-badge " + (ioHoVinto ? "rank-win" : "rank-lose");
+    document.getElementById('result-desc').innerText = "LA CHIAVE ERA: " + secretWord;
 }
 
 document.getElementById('retry-btn').onclick = () => {
-    if(isBot) { document.getElementById('bot-btn').click(); }
-    else if(conn) {
-        amIMaster = !amIMaster; // Inverte i ruoli
+    if(isBot) {
+        secretWord = dizionarioCompleto[Math.floor(Math.random()*dizionarioCompleto.length)];
+        startPlay("BOT CHALLENGE");
+    } else if(conn) {
+        amIMaster = !amIMaster;
         if(amIMaster) {
-            secretWord = prompt("NUOVA PAROLA SEGRETA:").toUpperCase().replace(/[^A-Z]/g, '') || "HANGMAN";
+            secretWord = prompt("NUOVA PAROLA:").toUpperCase().replace(/[^A-Z]/g, '') || "HANGMAN";
             conn.send({ type: 'START', word: secretWord });
             startPlay("MASTER");
         } else {
@@ -144,14 +189,13 @@ document.getElementById('retry-btn').onclick = () => {
 
 function draw(s) {
     const ctx = document.getElementById('hangmanCanvas').getContext('2d');
-    ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 5; ctx.beginPath();
-    ctx.clearRect(0,0,200,200);
-    if(s>=1) ctx.arc(100, 40, 20, 0, Math.PI*2);
-    if(s>=2) { ctx.moveTo(100, 60); ctx.lineTo(100, 110); }
-    if(s>=3) { ctx.moveTo(100, 75); ctx.lineTo(75, 95); }
-    if(s>=4) { ctx.moveTo(100, 75); ctx.lineTo(125, 95); }
-    if(s>=5) { ctx.moveTo(100, 110); ctx.lineTo(75, 140); }
-    if(s>=6) { ctx.moveTo(100, 110); ctx.lineTo(125, 140); }
+    ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 5; ctx.beginPath(); ctx.clearRect(0,0,200,200);
+    if(s>=1) ctx.arc(100, 35, 15, 0, Math.PI*2);
+    if(s>=2) { ctx.moveTo(100, 50); ctx.lineTo(100, 90); }
+    if(s>=3) { ctx.moveTo(100, 60); ctx.lineTo(75, 80); }
+    if(s>=4) { ctx.moveTo(100, 60); ctx.lineTo(125, 80); }
+    if(s>=5) { ctx.moveTo(100, 90); ctx.lineTo(80, 120); }
+    if(s>=6) { ctx.moveTo(100, 90); ctx.lineTo(120, 120); }
     ctx.stroke();
 }
 
@@ -162,7 +206,6 @@ function draw(s) {
 });
 
 document.getElementById('copy-btn').onclick = () => {
-    navigator.clipboard.writeText(myId);
-    document.getElementById('copy-btn').innerText = "COPIATO";
+    navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO";
     setTimeout(() => document.getElementById('copy-btn').innerText = "COPIA CODICE", 2000);
 };
