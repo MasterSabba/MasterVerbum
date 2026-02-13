@@ -12,6 +12,11 @@
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
 
         <div id="setup-screen" class="card">
+            <div class="status-bar">
+                <span id="connection-led" class="led led-off"></span>
+                <span id="status-text">DISCONNESSO</span>
+            </div>
+            
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn" class="btn-copy" onclick="copyId()">COPIA CODICE</button>
             
@@ -26,7 +31,7 @@
             </div>
 
             <div id="master-section" class="input-container hidden">
-                <p style="color: var(--neon-blue); font-size: 0.8rem; margin-bottom:10px;">SCEGLI LA PAROLA:</p>
+                <p style="color: var(--neon-blue); font-size: 0.7rem; margin-bottom:10px;">SCEGLI LA PAROLA:</p>
                 <input type="text" id="secret-word-input" placeholder="ES: HACKER">
                 <button class="btn-connetti" onclick="sendWord()">INIZIA PARTITA</button>
             </div>
@@ -47,13 +52,21 @@
             <div id="wrong-letters" class="wrong-text"></div>
             
             <div id="powers-sfidante" class="powers-grid">
-                <button id="p-decrypter" class="btn-power" onclick="useDecrypter()">DECRYPTER (-10s)</button>
-                <button id="p-shield" class="btn-power" onclick="useShield()">SHIELD (-1 ERRORE)</button>
+                <button id="p-decrypter" class="btn-power" onclick="useDecrypter()">
+                    <span class="led led-blue"></span> DECRYPTER
+                </button>
+                <button id="p-shield" class="btn-power" onclick="useShield()">
+                    <span class="led led-blue"></span> SHIELD
+                </button>
             </div>
 
             <div id="powers-master" class="powers-grid hidden">
-                <button id="p-glitch" class="btn-power master" onclick="useGlitch()">GLITCH (7s)</button>
-                <button id="p-overload" class="btn-power master" onclick="useOverload()">OVERLOAD (+1 ERR)</button>
+                <button id="p-glitch" class="btn-power master" onclick="useGlitch()">
+                    <span class="led led-pink"></span> GLITCH
+                </button>
+                <button id="p-overload" class="btn-power master" onclick="useOverload()">
+                    <span class="led led-pink"></span> OVERLOAD
+                </button>
             </div>
 
             <div id="keyboard"></div>
