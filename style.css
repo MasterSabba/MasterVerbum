@@ -46,3 +46,18 @@ input { width: 100%; box-sizing: border-box; background: #000; border: 1px solid
 .btn-secondary { background: #333; color: white; }
 
 .hidden { display: none !important; }
+/* ... il tuo css esistente ... */
+.powers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin: 15px 0; }
+.btn-power { font-size: 0.7rem; padding: 10px; border: 1px solid var(--neon-blue); background: rgba(0,242,255,0.1); color: var(--neon-blue); border-radius: 5px; cursor: pointer; transition: 0.3s; }
+.btn-power.master { border-color: var(--neon-pink); color: var(--neon-pink); background: rgba(255,0,135,0.1); }
+.btn-power:disabled { opacity: 0.2; pointer-events: none; }
+
+.hidden { display: none !important; }
+
+@keyframes glitch {
+    0% { transform: translate(0); color: #fff; }
+    25% { transform: translate(-3px, 3px); color: var(--neon-pink); }
+    50% { transform: translate(3px, -3px); color: var(--neon-blue); }
+    100% { transform: translate(0); }
+}
+.glitch-active { animation: glitch 0.15s infinite; pointer-events: none; opacity: 0.6; }
