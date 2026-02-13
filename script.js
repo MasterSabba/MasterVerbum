@@ -32,12 +32,22 @@ function getRank(s) {
     return "RECLUTA";
 }
 
+// --- FUNZIONE BARRA RANK AGGIORNATA ---
 function updateRankBar() {
-    const fill = document.getElementById('rank-bar-fill');
-    const label = document.getElementById('rank-label-ingame');
     const perc = Math.min((myScore / 20) * 100, 100);
-    fill.style.width = perc + "%";
-    label.innerText = getRank(myScore) + " (" + myScore + "/20)";
+    const rankLabel = getRank(myScore) + " (" + myScore + "/20)";
+
+    // Aggiorna la barra in Gioco
+    const fillGame = document.getElementById('rank-bar-fill');
+    const labelGame = document.getElementById('rank-label-ingame');
+    if(fillGame) fillGame.style.width = perc + "%";
+    if(labelGame) labelGame.innerText = rankLabel;
+
+    // Aggiorna la barra in Homepage (Setup)
+    const fillSetup = document.getElementById('rank-bar-fill-setup');
+    const labelSetup = document.getElementById('rank-label-setup');
+    if(fillSetup) fillSetup.style.width = perc + "%";
+    if(labelSetup) labelSetup.innerText = rankLabel;
 }
 
 function copyId() {
@@ -167,6 +177,8 @@ function endGame(win) {
     title.className = "imposing-text " + (won ? "win-glow" : "lose-glow");
     document.getElementById('rank-display').innerText = "GRADO: " + getRank(myScore);
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
+    
+    updateRankBar(); // Aggiorna barra post-partita
 }
 
 function retry() { if(isBot) startBotGame(); else location.reload(); }
@@ -185,3 +197,6 @@ function drawHangman() {
     if(mistakes > 5) { ctx.moveTo(80, 75); ctx.lineTo(95, 100); }
     ctx.stroke();
 }
+
+// --- AVVIO BARRA ALL'APERTURA ---
+updateRankBar();
