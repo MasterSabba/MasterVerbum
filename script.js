@@ -3,9 +3,8 @@ let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId, peerConfig);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 let timerInterval, timeLeft = 60, myScore = 0, oppScore = 0;
-let dizionarioCompleto = [], wordVisible = false;
+let dizionarioCompleto = [], wordVisible = false, lastSide = 'left';
 
-// Helpers
 const vibrate = (ms) => { if(navigator.vibrate) navigator.vibrate(ms); };
 const salvaDati = () => localStorage.setItem('masterverbum_stats', JSON.stringify({ score: myScore }));
 const caricaDati = () => {
@@ -14,16 +13,22 @@ const caricaDati = () => {
     document.getElementById('my-score').innerText = myScore;
 };
 
-// Dizionario
+// Caricamento Vocabolario con Fallback Istantaneo
 async function caricaDizionario() {
+    const backup = ["COMPUTER", "TASTIERA", "CONNESSIONE", "HACKER", "SCHERMO", "CODICE", "INTERNET", "GIOCO", "SISTEMA", "CIRCUITO"];
     try {
-        const r = await fetch('https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane.txt');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500); // Se dopo 1.5s non risponde, vai di backup
+        
+        const r = await fetch('https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane.txt', { signal: controller.signal });
         const t = await r.text();
         dizionarioCompleto = t.split('\n').map(p => p.trim().toUpperCase()).filter(p => p.length >= 5 && p.length <= 10 && /^[A-Z]+$/.test(p));
-    } catch (e) { dizionarioCompleto = ["SISTEMA", "HACKER", "LOGICA"]; }
+        if(dizionarioCompleto.length === 0) dizionarioCompleto = backup;
+    } catch (e) { 
+        dizionarioCompleto = backup; 
+    }
 }
 
-// Inizializzazione
 caricaDati(); caricaDizionario();
 
 function getRank(s) {
@@ -35,7 +40,6 @@ function getRank(s) {
     return "RECLUTA";
 }
 
-// Peer Events
 peer.on('open', id => document.getElementById('my-id').innerText = id);
 peer.on('connection', c => { conn = c; setupLogic(); });
 
@@ -46,14 +50,14 @@ document.getElementById('connect-btn').onclick = () => {
 
 document.getElementById('bot-btn').onclick = () => {
     isBot = true; amIMaster = false;
-    if (!dizionarioCompleto.length) return alert("Caricamento...");
+    // Se il dizionario non è ancora pronto, usa il backup subito
+    if (!dizionarioCompleto.length) dizionarioCompleto = ["SISTEMA", "RETE", "LOGICA"]; 
     secretWord = dizionarioCompleto[Math.floor(Math.random() * dizionarioCompleto.length)];
     startPlay("BOT CHALLENGE");
 };
 
-// Reset Totale
 document.getElementById('reset-data-btn').onclick = () => {
-    if(confirm("Cancellare per sempre il tuo Rank e i tuoi punti?")) {
+    if(confirm("Cancellare per sempre il tuo Rank?")) {
         localStorage.removeItem('masterverbum_stats');
         location.reload();
     }
@@ -62,7 +66,7 @@ document.getElementById('reset-data-btn').onclick = () => {
 function setupLogic() {
     isBot = false; amIMaster = myId < conn.peer;
     if(amIMaster) {
-        secretWord = prompt("PAROLA:").toUpperCase().replace(/[^A-Z]/g, '') || "HANGMAN";
+        secretWord = (prompt("INSERISCI PAROLA:") || "HANGMAN").toUpperCase().replace(/[^A-Z]/g, '');
         conn.send({ type: 'START', word: secretWord });
         startPlay("MASTER");
     }
@@ -101,7 +105,7 @@ document.getElementById('toggle-word-btn').onclick = () => {
 function processMove(l) {
     if(guessedLetters.includes(l)) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) { mistakes++; document.getElementById('wrong-letters').innerText += l + " "; vibrate([100,50,100]); }
+    if(!secretWord.includes(l)) { mistakes++; document.getElementById('wrong-letters').innerText += l + " "; vibrate([80,40,80]); }
     render();
 }
 
@@ -131,7 +135,6 @@ function triggerEmoji(e) {
     lastSide = lastSide === 'left' ? 'right' : 'left';
     setTimeout(() => c.innerHTML = '', 1200);
 }
-let lastSide = 'left';
 
 function startTimer() {
     clearInterval(timerInterval); timeLeft = 60;
@@ -176,7 +179,7 @@ document.getElementById('retry-btn').onclick = () => {
     } else if(conn) {
         amIMaster = !amIMaster;
         if(amIMaster) {
-            secretWord = prompt("NUOVA PAROLA:").toUpperCase().replace(/[^A-Z]/g, '') || "HANGMAN";
+            secretWord = (prompt("NUOVA PAROLA:") || "HANGMAN").toUpperCase().replace(/[^A-Z]/g, '');
             conn.send({ type: 'START', word: secretWord });
             startPlay("MASTER");
         } else {
