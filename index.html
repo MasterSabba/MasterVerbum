@@ -8,70 +8,46 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
-    <div id="emoji-left" class="emoji-side left"></div>
-    <div id="emoji-right" class="emoji-side right"></div>
-
     <div class="panel">
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
 
         <div id="setup-screen" class="card">
-            <p class="label">IL TUO CODICE</p>
             <div id="my-id" class="id-display">----</div>
-            <button id="copy-btn" class="btn-copy">COPIA CODICE</button>
-            <div class="separator">SISTEMA MULTI-PLAYER</div>
-            <div class="input-group">
-                <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
-                <button id="connect-btn" class="btn-connetti">CONNETTI</button>
-                <button id="bot-btn" class="btn-bot-pink">SFIDA IL BOT</button>
-            </div>
-            <div class="danger-zone">
-                <button id="reset-data-btn" class="btn-reset">RESETTA ACCOUNT</button>
-            </div>
+            <button id="copy-btn" class="btn-copy" onclick="copyId()">COPIA CODICE</button>
+            <input type="text" id="peer-id-input" placeholder="INSERISCI CODICE AMICO">
+            <button class="btn-connetti" onclick="connectToPeer()">CONNETTI</button>
+            <button class="btn-bot-pink" onclick="startBotGame()">SFIDA IL BOT</button>
+            <button class="btn-reset-small" onclick="resetAccount()">RESETTA ACCOUNT</button>
         </div>
 
         <div id="play-screen" class="card hidden">
-            <div id="score-board-ingame">
-                <span class="blue">IO: <b id="my-score">0</b></span> | <span class="pink">AVV: <b id="opp-score">0</b></span>
-            </div>
-            
             <div class="rank-progress-container">
                 <div id="rank-bar-fill" class="rank-bar-fill"></div>
                 <div id="rank-label-ingame">RECLUTA</div>
             </div>
-
             <div id="timer-display">01:00</div>
-            <div id="role-badge" class="badge">---</div>
             
-            <canvas id="hangmanCanvas" width="200" height="150"></canvas>
+            <canvas id="hangmanCanvas" width="160" height="120"></canvas>
             
-            <div id="master-controls" class="hidden">
-                <button id="toggle-word-btn" class="btn-eye">👁️ MOSTRA PAROLA</button>
-            </div>
-
             <div id="word-display"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
             <div id="ability-section" class="ability-bar">
-                <button id="power-btn" class="btn-power">DECRYPTER (-10s)</button>
-                <div class="emoji-btns">
-                    <button onclick="triggerEmoji('🤣')">🤣</button>
-                    <button onclick="triggerEmoji('😈')">😈</button>
-                    <button onclick="triggerEmoji('🤯')">🤯</button>
-                </div>
+                <button id="power-btn" class="btn-power" onclick="usePower()">DECRYPTER (-10s)</button>
             </div>
             
             <div id="keyboard"></div>
         </div>
     </div>
 
-    <div id="overlay" class="overlay hidden">
+    <div id="overlay" class="overlay">
         <div class="overlay-card">
             <h1 id="result-title" class="imposing-text"></h1>
-            <div id="rank-display" class="rank-badge">GRADO: RECLUTA</div>
+            <div id="rank-display" class="rank-badge-final"></div>
             <p id="result-desc"></p>
             <div class="overlay-btns">
-                <button id="retry-btn" class="btn-final">GIOCA ANCORA</button>
-                <button id="exit-btn" class="btn-final btn-grey" onclick="location.reload()">ESCI</button>
+                <button class="btn-final" onclick="retry()">GIOCA ANCORA</button>
+                <button class="btn-final btn-grey" onclick="location.reload()">ESCI</button>
             </div>
         </div>
     </div>
