@@ -1,61 +1,64 @@
 :root { --neon-blue: #00f2ff; --neon-pink: #ff0055; --bg-dark: #0a0a0c; --led-green: #39ff14; }
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 body { margin: 0; background: var(--bg-dark); color: white; font-family: monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
 
 .panel { width: 95%; max-width: 380px; }
-.card { background: #0f0f13; border-radius: 15px; padding: 15px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; position: relative; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.card { background: #0f0f13; border-radius: 15px; padding: 25px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
 
-.led { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 5px; background: #333; transition: 0.3s; }
-.led-on { background: var(--led-green); box-shadow: 0 0 8px var(--led-green); }
-.led-blue { background: var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue); }
-.led-pink { background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
+/* Contatore TU/AVV */
+.match-score { position: absolute; top: 10px; left: 15px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); padding: 2px 10px; border-radius: 4px; border-left: 2px solid var(--neon-blue); }
+.score-box { display: flex; flex-direction: column; align-items: center; }
+.score-label { font-size: 0.5rem; color: #444; font-weight: bold; }
+#score-me, #score-remote { font-size: 1rem; font-weight: 900; color: var(--neon-blue); line-height: 1; }
+.score-divider { color: #222; font-size: 0.8rem; margin-top: 5px; }
 
-.status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #222; }
-.status-left { display: flex; align-items: center; gap: 5px; }
-#action-log { font-size: 0.6rem; color: var(--led-green); text-transform: uppercase; }
-#timer-display { font-size: 1.2rem; color: var(--neon-pink); font-weight: bold; }
+/* LED e Stato */
+.led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #333; transition: 0.3s; cursor: pointer; }
+.led-on { background: var(--led-green); box-shadow: 0 0 10px var(--led-green); }
+.led-blue { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
+.led-pink { background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
 
-.manual { background: #000; border: 1px solid #222; width: 100%; padding: 8px; border-radius: 5px; font-size: 0.55rem; color: #666; }
-.manual-tag { color: #444; margin-bottom: 3px; font-weight: bold; font-size: 0.5rem; }
+.status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 10px; margin-top: 15px; }
+#status-text { font-size: 0.7rem; color: #444; }
+#timer-display { font-size: 1.3rem; color: var(--neon-pink); font-weight: bold; }
 
-.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; }
-.btn-copy { background: none; border: 1px solid #222; color: #444; font-size: 0.6rem; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-.btn-copy:active { background: #222; }
+.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 10px 0; }
+.btn-copy { background: none; border: 1px solid #222; color: #333; font-size: 0.6rem; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
 
+/* Rank */
 .rank-container { width: 100%; }
 .rank-bar-bg { width: 100%; height: 4px; background: #000; }
-.rank-bar-fill { height: 100%; width: 0%; background: var(--neon-blue); transition: 0.5s; }
-.rank-label { font-size: 0.6rem; color: var(--neon-blue); margin-top: 4px; font-weight: bold; }
+.rank-bar-fill { height: 100%; width: 0%; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); transition: width 1.5s ease; }
+.rank-label { font-size: 0.6rem; color: var(--neon-blue); margin-top: 5px; text-align: center; }
 
-.btn-main { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+/* Bottoni */
+.btn-main { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
 .blue { background: var(--neon-blue); color: #000; }
 .pink { background: var(--neon-pink); color: #fff; }
 .gray { background: #222; color: #555; }
-.btn-main:active { transform: scale(0.98); }
 
-#word-display { display: flex; gap: 5px; justify-content: center; min-height: 40px; }
-.letter-slot { width: 22px; border-bottom: 2px solid #333; font-size: 1.8rem; text-align: center; color: var(--neon-blue); font-weight: bold; transition: 0.3s; }
-.wrong-text { color: var(--neon-pink); text-decoration: line-through; font-size: 0.75rem; height: 15px; margin-bottom: 5px; letter-spacing: 2px; }
-
-.powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
-.btn-pwr { height: 42px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+.powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+.btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .btn-pwr:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
 .btn-pwr.master:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); }
 
 #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; }
-.key { aspect-ratio: 1/1; background: #15151a; border: none; border-radius: 5px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.1s; }
-.key:active { background: var(--neon-blue); color: #000; }
+.key { aspect-ratio: 1/1; background: #1a1a1f; border: none; border-radius: 6px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; }
 .key.used { opacity: 0.05; pointer-events: none; }
 
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-.overlay-card { text-align: center; padding: 30px; border: 1px solid #222; border-radius: 20px; background: #000; }
+#word-display { display: flex; gap: 6px; min-height: 40px; }
+.letter-slot { width: 22px; border-bottom: 2px solid #333; font-size: 1.8rem; text-align: center; color: var(--neon-blue); font-weight: bold; }
+.wrong-text { color: var(--neon-pink); text-decoration: line-through; font-size: 0.8rem; height: 15px; letter-spacing: 2px; }
 
-/* EFFETTI MASTER */
+/* Effetti */
 .blackout-mode::after { content: ''; position: absolute; inset: 0; z-index: 999; background: radial-gradient(circle 75px at var(--x) var(--y), transparent, #000 90%); }
 .blackout-mode * { opacity: 0 !important; }
 .distort-active { animation: distort 0.25s infinite; }
-@keyframes distort { 0%, 100% { filter: invert(0) hue-rotate(0deg); } 50% { filter: invert(1) hue-rotate(180deg); } }
-/* FOG: Lettere completamente trasparenti */
-.cyberfog-active .letter-slot { color: transparent !important; border-bottom-color: #111; }
+@keyframes distort { 0%, 100% { filter: invert(0); } 50% { filter: invert(1) hue-rotate(180deg); } }
+.cyberfog-active .letter-slot { color: transparent !important; }
 
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+.overlay-card { background: #000; padding: 30px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 85%; }
+.win-glow { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
+.lose-glow { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
 .hidden { display: none !important; }
