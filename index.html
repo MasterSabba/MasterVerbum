@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MasterVerbum 2026</title>
+    <title>MasterVerbum Pro</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -14,7 +14,7 @@
         <div id="setup-screen" class="card">
             <div class="status-bar">
                 <span id="connection-led" class="led led-off"></span>
-                <span id="status-text">SISTEMA_OFFLINE</span>
+                <span id="status-text">OFFLINE</span>
             </div>
             
             <div id="my-id" class="id-display">----</div>
@@ -23,8 +23,8 @@
             <div class="manual">
                 <div class="manual-tag">DATABASE POTERI</div>
                 <div class="manual-grid">
-                    <div><strong>SFIDANTE:</strong> Overclock (5s stop), Re-Scan (-10s reveal), Ghost (1 scudo)</div>
-                    <div><strong>MASTER:</strong> Blackout (buio), Distort (inverti), Cyberfog (nascondi)</div>
+                    SFIDANTE: O-CLK (5s stop) | SCAN (-10s reveal) | GHOST (1 scudo)<br>
+                    MASTER: DARK (buio) | DIST (inverti) | FOG (nascondi)
                 </div>
             </div>
             
@@ -39,8 +39,8 @@
             </div>
 
             <div id="master-section" class="input-group hidden">
-                <input type="text" id="secret-word-input" placeholder="PAROLA DA INVIARE">
-                <button class="btn-main blue" onclick="sendWord()">INIZIA PARTITA</button>
+                <input type="text" id="secret-word-input" placeholder="PAROLA SEGRETA">
+                <button class="btn-main blue" onclick="sendWord()">INIZIA UPLINK</button>
             </div>
             
             <button class="btn-main pink" onclick="startBotGame()">SFIDA IL BOT</button>
@@ -49,8 +49,10 @@
 
         <div id="play-screen" class="card hidden">
             <div class="status-bar">
-                <span id="game-led" class="led led-on"></span>
-                <div id="action-log">> UPLINK_ATTIVO</div>
+                <div class="status-left">
+                    <span id="game-led" class="led led-on"></span>
+                    <div id="action-log">READY...</div>
+                </div>
                 <div id="timer-display">01:00</div>
             </div>
 
@@ -60,14 +62,14 @@
             
             <div class="powers-container">
                 <div id="powers-sfidante" class="powers-grid">
-                    <button id="p-overclock" class="btn-power" onclick="useOverclock()" disabled><span class="led led-off"></span> O-CLK</button>
-                    <button id="p-rescan" class="btn-power" onclick="useRescan()" disabled><span class="led led-off"></span> R-SCAN</button>
-                    <button id="p-ghost" class="btn-power" onclick="useGhost()" disabled><span class="led led-off"></span> GHOST</button>
+                    <button id="p-overclock" class="btn-pwr" onclick="useOverclock()" disabled><span class="led"></span>O-CLK</button>
+                    <button id="p-rescan" class="btn-pwr" onclick="useRescan()" disabled><span class="led"></span>SCAN</button>
+                    <button id="p-ghost" class="btn-pwr" onclick="useGhost()" disabled><span class="led"></span>GHOST</button>
                 </div>
                 <div id="powers-master" class="powers-grid hidden">
-                    <button id="p-blackout" class="btn-power master" onclick="useBlackout()"><span class="led led-pink"></span> BLKOUT</button>
-                    <button id="p-distort" class="btn-power master" onclick="useDistort()"><span class="led led-pink"></span> DISTORT</button>
-                    <button id="p-cyberfog" class="btn-power master" onclick="useCyberfog()"><span class="led led-pink"></span> FOG</button>
+                    <button id="p-blackout" class="btn-pwr master" onclick="useBlackout()"><span class="led"></span>DARK</button>
+                    <button id="p-distort" class="btn-pwr master" onclick="useDistort()"><span class="led"></span>DIST</button>
+                    <button id="p-cyberfog" class="btn-pwr master" onclick="useCyberfog()"><span class="led"></span>FOG</button>
                 </div>
             </div>
 
