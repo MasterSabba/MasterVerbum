@@ -18,25 +18,25 @@
             </div>
             
             <div id="my-id" class="id-display">----</div>
-            <button id="copy-btn" class="btn-copy" onclick="copyId()">COPY_UPLINK_ID</button>
+            <button id="copy-btn" class="btn-copy" onclick="copyId()">COPY</button>
             
             <div class="rank-container">
                 <div class="rank-bar-bg"><div id="rank-bar-fill-setup" class="rank-bar-fill"></div></div>
-                <div id="rank-label-setup" class="rank-label">RECRUIT (0/20)</div>
+                <div id="rank-label-setup" class="rank-label">Rank (0/20)</div>
             </div>
 
             <div id="connect-section" class="input-group">
-                <input type="text" id="peer-id-input" placeholder="ENTER AMICO ID">
+                <input type="text" id="peer-id-input" placeholder="ENTER FRIEND'S ID">
                 <button class="btn-main blue" onclick="connectToPeer()">CONNECT</button>
             </div>
 
             <div id="master-section" class="input-group hidden">
                 <input type="text" id="secret-word-input" placeholder="SET SECRET WORD" oninput="this.value = this.value.replace(/[^A-Za-z]/g, '').toUpperCase()">
-                <button class="btn-main blue" onclick="sendWord()">START UPLINK</button>
+                <button class="btn-main blue" onclick="sendWord()">START GAME</button>
             </div>
             
-            <button class="btn-main pink" onclick="startBotGame()">SOLO_MISSION (BOT)</button>
-            <button class="btn-reset" onclick="resetAccount()">WIPE_ALL_DATA</button>
+            <button class="btn-main pink" onclick="startBotGame()">Singolplayer</button>
+            <button class="btn-reset" onclick="resetAccount()">Reset</button>
         </div>
 
         <div id="play-screen" class="card hidden">
