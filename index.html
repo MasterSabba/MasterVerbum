@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MasterVerbum Pro 2026</title>
+    <title>MasterVerbum 2026</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -14,7 +14,7 @@
         <div id="setup-screen" class="card">
             <div class="status-bar">
                 <span id="connection-led" class="led led-off"></span>
-                <span id="status-text">SYSTEM_OFFLINE</span>
+                <span id="status-text">DISCONNESSO</span>
             </div>
             
             <div id="my-id" class="id-display">----</div>
@@ -25,42 +25,43 @@
                 <div id="rank-label-setup" class="rank-label">RECLUTA (0/20)</div>
             </div>
 
-            <div id="connect-section" class="input-container">
+            <div id="connect-section" class="input-group">
                 <input type="text" id="peer-id-input" placeholder="CODICE AMICO">
-                <button class="btn-connetti" onclick="connectToPeer()">CONNETTI</button>
+                <button class="btn-main blue" onclick="connectToPeer()">CONNETTI</button>
             </div>
 
-            <div id="master-section" class="input-container hidden">
-                <p style="color: var(--neon-blue); font-size: 0.7rem; margin-bottom:10px;">INSERISCI PAROLA SEGRETA:</p>
-                <input type="text" id="secret-word-input" placeholder="ES: CYBERPUNK">
-                <button class="btn-connetti" onclick="sendWord()">AVVIA UPLINK</button>
+            <div id="master-section" class="input-group hidden">
+                <input type="text" id="secret-word-input" placeholder="PAROLA DA INVIARE">
+                <button class="btn-main blue" onclick="sendWord()">INIZIA PARTITA</button>
             </div>
             
-            <button class="btn-bot-pink" onclick="startBotGame()">SFIDA IL BOT</button>
-            <button class="btn-reset-small" onclick="resetAccount()">RESETTA ACCOUNT</button>
+            <button class="btn-main pink" onclick="startBotGame()">SFIDA IL BOT</button>
+            <button class="btn-reset" onclick="resetAccount()">RESETTA DATI</button>
         </div>
 
         <div id="play-screen" class="card hidden">
             <div class="status-bar">
                 <span class="led led-on"></span>
-                <div id="action-log">> TRACING_CONNECTION...</div>
+                <div id="action-log">> SYSTEM_READY</div>
+                <div id="timer-display">01:00</div>
             </div>
 
-            <div id="timer-display">01:00</div>
             <canvas id="hangmanCanvas" width="160" height="100"></canvas>
             <div id="word-display"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
-            <div id="powers-sfidante" class="powers-grid">
-                <button id="p-overclock" class="btn-power" onclick="useOverclock()" disabled>OVERCLOCK (45s)</button>
-                <button id="p-rescan" class="btn-power" onclick="useRescan()" disabled>RE-SCAN (30s)</button>
-                <button id="p-ghost" class="btn-power" onclick="useGhost()" disabled>GHOST (15s)</button>
-            </div>
+            <div class="powers-container">
+                <div id="powers-sfidante" class="powers-grid">
+                    <button id="p-overclock" class="btn-power" onclick="useOverclock()" disabled>OVERCLOCK</button>
+                    <button id="p-rescan" class="btn-power" onclick="useRescan()" disabled>RE-SCAN</button>
+                    <button id="p-ghost" class="btn-power" onclick="useGhost()" disabled>GHOST</button>
+                </div>
 
-            <div id="powers-master" class="powers-grid hidden">
-                <button id="p-blackout" class="btn-power master" onclick="useBlackout()">BLACKOUT</button>
-                <button id="p-distort" class="btn-power master" onclick="useDistort()">DISTORT</button>
-                <button id="p-cyberfog" class="btn-power master" onclick="useCyberfog()">CYBERFOG</button>
+                <div id="powers-master" class="powers-grid hidden">
+                    <button id="p-blackout" class="btn-power master" onclick="useBlackout()">BLACKOUT</button>
+                    <button id="p-distort" class="btn-power master" onclick="useDistort()">DISTORT</button>
+                    <button id="p-cyberfog" class="btn-power master" onclick="useCyberfog()">CYBERFOG</button>
+                </div>
             </div>
 
             <div id="keyboard"></div>
@@ -72,8 +73,8 @@
             <h1 id="result-title"></h1>
             <p id="result-desc"></p>
             <div class="overlay-btns">
-                <button class="btn-final btn-primary" onclick="retry()">GIOCA ANCORA</button>
-                <button class="btn-final btn-secondary" onclick="location.reload()">ESCI</button>
+                <button class="btn-main" onclick="retry()">RIGIOCA</button>
+                <button class="btn-main gray" onclick="location.reload()">ESCI</button>
             </div>
         </div>
     </div>
