@@ -186,7 +186,7 @@ function drawHangman() {
 
 function updateRankUI() {
     const p = Math.min((myScore/20)*100, 100);
-    const r = myScore>=20?"GOD_MODE":myScore>=10?"ELITE_HACKER":"RECRUIT";
+    const r = myScore>=20?"GOD_MODE":myScore>=10?"ELITE_HACKER":"Rank";
     document.querySelectorAll('.rank-bar-fill').forEach(el => el.style.width = p+"%");
     document.querySelectorAll('.rank-label').forEach(el => el.innerText = `${r} (${myScore}/20)`);
 }
