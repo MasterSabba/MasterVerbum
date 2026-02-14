@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MasterVerbum Pro</title>
+    <title>MasterVerbum Pro 2026</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -14,7 +14,7 @@
         <div id="setup-screen" class="card">
             <div class="status-bar">
                 <span id="connection-led" class="led led-off"></span>
-                <span id="status-text">DISCONNESSO</span>
+                <span id="status-text">SYSTEM_OFFLINE</span>
             </div>
             
             <div id="my-id" class="id-display">----</div>
@@ -31,9 +31,9 @@
             </div>
 
             <div id="master-section" class="input-container hidden">
-                <p style="color: var(--neon-blue); font-size: 0.7rem; margin-bottom:10px;">SCEGLI LA PAROLA:</p>
-                <input type="text" id="secret-word-input" placeholder="ES: HACKER">
-                <button class="btn-connetti" onclick="sendWord()">INIZIA PARTITA</button>
+                <p style="color: var(--neon-blue); font-size: 0.7rem; margin-bottom:10px;">INSERISCI PAROLA SEGRETA:</p>
+                <input type="text" id="secret-word-input" placeholder="ES: CYBERPUNK">
+                <button class="btn-connetti" onclick="sendWord()">AVVIA UPLINK</button>
             </div>
             
             <button class="btn-bot-pink" onclick="startBotGame()">SFIDA IL BOT</button>
@@ -41,42 +41,35 @@
         </div>
 
         <div id="play-screen" class="card hidden">
-            <div class="rank-container">
-                <div class="rank-bar-bg"><div id="rank-bar-fill" class="rank-bar-fill"></div></div>
-                <div id="rank-label-ingame" class="rank-label">RECLUTA (0/20)</div>
+            <div class="status-bar">
+                <span class="led led-on"></span>
+                <div id="action-log">> TRACING_CONNECTION...</div>
             </div>
 
             <div id="timer-display">01:00</div>
-            <canvas id="hangmanCanvas" width="160" height="120"></canvas>
+            <canvas id="hangmanCanvas" width="160" height="100"></canvas>
             <div id="word-display"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
             <div id="powers-sfidante" class="powers-grid">
-                <button id="p-decrypter" class="btn-power" onclick="useDecrypter()">
-                    <span class="led led-blue"></span> DECRYPTER
-                </button>
-                <button id="p-shield" class="btn-power" onclick="useShield()">
-                    <span class="led led-blue"></span> SHIELD
-                </button>
+                <button id="p-overclock" class="btn-power" onclick="useOverclock()" disabled>OVERCLOCK (45s)</button>
+                <button id="p-rescan" class="btn-power" onclick="useRescan()" disabled>RE-SCAN (30s)</button>
+                <button id="p-ghost" class="btn-power" onclick="useGhost()" disabled>GHOST (15s)</button>
             </div>
 
             <div id="powers-master" class="powers-grid hidden">
-                <button id="p-glitch" class="btn-power master" onclick="useGlitch()">
-                    <span class="led led-pink"></span> GLITCH
-                </button>
-                <button id="p-overload" class="btn-power master" onclick="useOverload()">
-                    <span class="led led-pink"></span> OVERLOAD
-                </button>
+                <button id="p-blackout" class="btn-power master" onclick="useBlackout()">BLACKOUT</button>
+                <button id="p-distort" class="btn-power master" onclick="useDistort()">DISTORT</button>
+                <button id="p-cyberfog" class="btn-power master" onclick="useCyberfog()">CYBERFOG</button>
             </div>
 
             <div id="keyboard"></div>
         </div>
     </div>
 
-    <div id="overlay" class="overlay hidden">
+    <div id="overlay" class="overlay">
         <div class="overlay-card">
             <h1 id="result-title"></h1>
-            <div id="rank-display" class="rank-badge-final"></div>
             <p id="result-desc"></p>
             <div class="overlay-btns">
                 <button class="btn-final btn-primary" onclick="retry()">GIOCA ANCORA</button>
