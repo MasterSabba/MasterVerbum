@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MasterVerbum Pro</title>
+    <title>MasterVerbum Elite</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -13,41 +13,45 @@
 
         <div id="setup-screen" class="card">
             <div class="status-bar">
-                <span id="connection-led" class="led led-off"></span>
-                <span id="status-text">OFFLINE</span>
+                <span id="connection-led" class="led led-off" onclick="toggleManual()"></span>
+                <span id="status-text">SYSTEM_OFFLINE</span>
             </div>
             
             <div id="my-id" class="id-display">----</div>
-            <button id="copy-btn" class="btn-copy" onclick="copyId()">COPIA CODICE</button>
-
-            <div class="manual">
-                <div class="manual-tag">DATABASE POTERI</div>
-                <div class="manual-grid">
-                    SFIDANTE: LOCK (Time Stop) | REVEAL (Letter) | SHIELD (Protect)<br>
-                    MASTER: BLACKOUT (Dark) | GLITCH (Invert) | FOG (Hide)
-                </div>
-            </div>
+            <button id="copy-btn" class="btn-copy" onclick="copyId()">COPY_UPLINK_ID</button>
             
             <div class="rank-container">
                 <div class="rank-bar-bg"><div id="rank-bar-fill-setup" class="rank-bar-fill"></div></div>
-                <div id="rank-label-setup" class="rank-label">RECLUTA</div>
+                <div id="rank-label-setup" class="rank-label">RECRUIT (0/20)</div>
             </div>
 
             <div id="connect-section" class="input-group">
-                <input type="text" id="peer-id-input" placeholder="CODICE AMICO">
-                <button class="btn-main blue" onclick="connectToPeer()">CONNETTI</button>
+                <input type="text" id="peer-id-input" placeholder="ENTER AMICO ID">
+                <button class="btn-main blue" onclick="connectToPeer()">CONNECT</button>
             </div>
 
             <div id="master-section" class="input-group hidden">
-                <input type="text" id="secret-word-input" placeholder="PAROLA SEGRETA" oninput="this.value = this.value.replace(/[^A-Za-z]/g, '').toUpperCase()">
-                <button class="btn-main blue" onclick="sendWord()">INIZIA UPLINK</button>
+                <input type="text" id="secret-word-input" placeholder="SET SECRET WORD" oninput="this.value = this.value.replace(/[^A-Za-z]/g, '').toUpperCase()">
+                <button class="btn-main blue" onclick="sendWord()">START UPLINK</button>
             </div>
             
-            <button class="btn-main pink" onclick="startBotGame()">SFIDA IL BOT</button>
-            <button class="btn-reset" onclick="resetAccount()">RESETTA DATI</button>
+            <button class="btn-main pink" onclick="startBotGame()">SOLO_MISSION (BOT)</button>
+            <button class="btn-reset" onclick="resetAccount()">WIPE_ALL_DATA</button>
         </div>
 
         <div id="play-screen" class="card hidden">
+            <div class="match-score">
+                <div class="score-box">
+                    <span class="score-label">TU</span>
+                    <span id="score-me">0</span>
+                </div>
+                <div class="score-divider">/</div>
+                <div class="score-box">
+                    <span class="score-label">AVV</span>
+                    <span id="score-remote">0</span>
+                </div>
+            </div>
+
             <div class="status-bar">
                 <div class="status-left">
                     <span id="game-led" class="led led-on"></span>
@@ -77,13 +81,38 @@
         </div>
     </div>
 
+    <div id="manual-overlay" class="overlay" onclick="toggleManual()">
+        <div class="overlay-card manual-terminal">
+            <h2 style="color:var(--neon-blue)">POWER_DATABASE</h2>
+            <div class="manual-content">
+                <p><strong>[SFIDANTE]</strong></p>
+                <ul>
+                    <li>LOCK: Blocca il timer per 5s.</li>
+                    <li>REVEAL: Rivelazione (-10s).</li>
+                    <li>SHIELD: Para 1 errore.</li>
+                </ul>
+                <p><strong>[MASTER]</strong></p>
+                <ul>
+                    <li>BLACKOUT: Buio totale.</li>
+                    <li>GLITCH: Inversione visiva.</li>
+                    <li>FOG: Nasconde le lettere.</li>
+                </ul>
+            </div>
+            <p style="font-size: 0.6rem; color: #444; text-align: center;">CLICK TO CLOSE</p>
+        </div>
+    </div>
+
     <div id="overlay" class="overlay">
         <div class="overlay-card">
             <h1 id="result-title"></h1>
             <p id="result-desc"></p>
+            <div class="rank-container" style="margin: 15px 0;">
+                <div class="rank-bar-bg"><div class="rank-bar-fill"></div></div>
+                <div class="rank-label" style="font-size: 0.6rem;"></div>
+            </div>
             <div class="overlay-btns">
-                <button class="btn-main blue" onclick="retry()">RIGIOCA</button>
-                <button class="btn-main gray" onclick="location.reload()">ESCI</button>
+                <button class="btn-main blue" onclick="retry()">RETRY</button>
+                <button class="btn-main gray" onclick="location.reload()">EXIT</button>
             </div>
         </div>
     </div>
