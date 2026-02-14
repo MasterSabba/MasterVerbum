@@ -23,8 +23,8 @@
             <div class="manual">
                 <div class="manual-tag">DATABASE POTERI</div>
                 <div class="manual-grid">
-                    SFIDANTE: O-CLK (5s stop) | SCAN (-10s reveal) | GHOST (1 scudo)<br>
-                    MASTER: DARK (buio) | DIST (inverti) | FOG (nascondi)
+                    SFIDANTE: LOCK (Time Stop) | REVEAL (Letter) | SHIELD (Protect)<br>
+                    MASTER: BLACKOUT (Dark) | GLITCH (Invert) | FOG (Hide)
                 </div>
             </div>
             
@@ -39,7 +39,7 @@
             </div>
 
             <div id="master-section" class="input-group hidden">
-                <input type="text" id="secret-word-input" placeholder="PAROLA SEGRETA">
+                <input type="text" id="secret-word-input" placeholder="PAROLA SEGRETA" oninput="this.value = this.value.replace(/[^A-Za-z]/g, '').toUpperCase()">
                 <button class="btn-main blue" onclick="sendWord()">INIZIA UPLINK</button>
             </div>
             
@@ -62,13 +62,13 @@
             
             <div class="powers-container">
                 <div id="powers-sfidante" class="powers-grid">
-                    <button id="p-overclock" class="btn-pwr" onclick="useOverclock()" disabled><span class="led"></span>O-CLK</button>
-                    <button id="p-rescan" class="btn-pwr" onclick="useRescan()" disabled><span class="led"></span>SCAN</button>
-                    <button id="p-ghost" class="btn-pwr" onclick="useGhost()" disabled><span class="led"></span>GHOST</button>
+                    <button id="p-overclock" class="btn-pwr" onclick="useOverclock()" disabled><span class="led"></span>LOCK</button>
+                    <button id="p-rescan" class="btn-pwr" onclick="useRescan()" disabled><span class="led"></span>REVEAL</button>
+                    <button id="p-ghost" class="btn-pwr" onclick="useGhost()" disabled><span class="led"></span>SHIELD</button>
                 </div>
                 <div id="powers-master" class="powers-grid hidden">
-                    <button id="p-blackout" class="btn-pwr master" onclick="useBlackout()"><span class="led"></span>DARK</button>
-                    <button id="p-distort" class="btn-pwr master" onclick="useDistort()"><span class="led"></span>DIST</button>
+                    <button id="p-blackout" class="btn-pwr master" onclick="useBlackout()"><span class="led"></span>BLACKOUT</button>
+                    <button id="p-distort" class="btn-pwr master" onclick="useDistort()"><span class="led"></span>GLITCH</button>
                     <button id="p-cyberfog" class="btn-pwr master" onclick="useCyberfog()"><span class="led"></span>FOG</button>
                 </div>
             </div>
