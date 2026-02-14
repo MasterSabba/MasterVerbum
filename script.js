@@ -196,5 +196,5 @@ function consume(id) { let b = document.getElementById(id); b.disabled = true; b
 function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIED"; }
 function toggleManual() { const m = document.getElementById('manual-overlay'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
 function retry() { if(isBot) initGame(); else { document.getElementById('overlay').style.display='none'; document.getElementById('play-screen').classList.add('hidden'); document.getElementById('setup-screen').classList.remove('hidden'); } }
-function resetAccount() { if(confirm("WIPE?")) { localStorage.clear(); location.reload(); } }
+function resetAccount() { if(confirm("SURE?")) { localStorage.clear(); location.reload(); } }
 updateRankUI();
