@@ -14,15 +14,23 @@
         <div id="setup-screen" class="card">
             <div class="status-bar">
                 <span id="connection-led" class="led led-off"></span>
-                <span id="status-text">DISCONNESSO</span>
+                <span id="status-text">SISTEMA_OFFLINE</span>
             </div>
             
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn" class="btn-copy" onclick="copyId()">COPIA CODICE</button>
+
+            <div class="manual">
+                <div class="manual-tag">DATABASE POTERI</div>
+                <div class="manual-grid">
+                    <div><strong>SFIDANTE:</strong> Overclock (5s stop), Re-Scan (-10s reveal), Ghost (1 scudo)</div>
+                    <div><strong>MASTER:</strong> Blackout (buio), Distort (inverti), Cyberfog (nascondi)</div>
+                </div>
+            </div>
             
             <div class="rank-container">
                 <div class="rank-bar-bg"><div id="rank-bar-fill-setup" class="rank-bar-fill"></div></div>
-                <div id="rank-label-setup" class="rank-label">RECLUTA (0/20)</div>
+                <div id="rank-label-setup" class="rank-label">RECLUTA</div>
             </div>
 
             <div id="connect-section" class="input-group">
@@ -41,26 +49,25 @@
 
         <div id="play-screen" class="card hidden">
             <div class="status-bar">
-                <span class="led led-on"></span>
-                <div id="action-log">> SYSTEM_READY</div>
+                <span id="game-led" class="led led-on"></span>
+                <div id="action-log">> UPLINK_ATTIVO</div>
                 <div id="timer-display">01:00</div>
             </div>
 
-            <canvas id="hangmanCanvas" width="160" height="100"></canvas>
+            <canvas id="hangmanCanvas" width="160" height="90"></canvas>
             <div id="word-display"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
             <div class="powers-container">
                 <div id="powers-sfidante" class="powers-grid">
-                    <button id="p-overclock" class="btn-power" onclick="useOverclock()" disabled>OVERCLOCK</button>
-                    <button id="p-rescan" class="btn-power" onclick="useRescan()" disabled>RE-SCAN</button>
-                    <button id="p-ghost" class="btn-power" onclick="useGhost()" disabled>GHOST</button>
+                    <button id="p-overclock" class="btn-power" onclick="useOverclock()" disabled><span class="led led-off"></span> O-CLK</button>
+                    <button id="p-rescan" class="btn-power" onclick="useRescan()" disabled><span class="led led-off"></span> R-SCAN</button>
+                    <button id="p-ghost" class="btn-power" onclick="useGhost()" disabled><span class="led led-off"></span> GHOST</button>
                 </div>
-
                 <div id="powers-master" class="powers-grid hidden">
-                    <button id="p-blackout" class="btn-power master" onclick="useBlackout()">BLACKOUT</button>
-                    <button id="p-distort" class="btn-power master" onclick="useDistort()">DISTORT</button>
-                    <button id="p-cyberfog" class="btn-power master" onclick="useCyberfog()">CYBERFOG</button>
+                    <button id="p-blackout" class="btn-power master" onclick="useBlackout()"><span class="led led-pink"></span> BLKOUT</button>
+                    <button id="p-distort" class="btn-power master" onclick="useDistort()"><span class="led led-pink"></span> DISTORT</button>
+                    <button id="p-cyberfog" class="btn-power master" onclick="useCyberfog()"><span class="led led-pink"></span> FOG</button>
                 </div>
             </div>
 
@@ -73,7 +80,7 @@
             <h1 id="result-title"></h1>
             <p id="result-desc"></p>
             <div class="overlay-btns">
-                <button class="btn-main" onclick="retry()">RIGIOCA</button>
+                <button class="btn-main blue" onclick="retry()">RIGIOCA</button>
                 <button class="btn-main gray" onclick="location.reload()">ESCI</button>
             </div>
         </div>
