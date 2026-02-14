@@ -12,7 +12,7 @@ if(saved) myScore = JSON.parse(saved).score || 0;
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
     document.getElementById('connection-led').className = 'led led-on';
-    document.getElementById('status-text').innerText = "SISTEMA_ONLINE";
+    document.getElementById('status-text').innerText = "ONLINE";
 });
 
 peer.on('connection', c => { conn = c; setupRemote(); });
@@ -31,16 +31,16 @@ function setupRemote() {
         document.getElementById('connect-section').classList.add('hidden');
         document.getElementById('master-section').classList.remove('hidden');
     } else {
-        document.getElementById('setup-screen').innerHTML = "<h2>HACKING...</h2>";
+        document.getElementById('setup-screen').innerHTML = "<h2>UPLINK...</h2>";
     }
     conn.on('data', d => {
         if(d.type === 'START') { secretWord = d.word; amIMaster = false; initGame(); }
         if(d.type === 'GUESS') remoteMove(d.letter);
         if(d.type === 'FINISH') forceEnd(d.win);
+        if(d.type === 'SYNC') { timeLeft = d.time; mistakes = d.mistakes; updateTimerUI(); renderWord(); }
         if(d.type === 'P_BLACKOUT') triggerBlackout();
         if(d.type === 'P_DISTORT') triggerDistort();
         if(d.type === 'P_CYBERFOG') triggerCyberfog();
-        if(d.type === 'SYNC') { timeLeft = d.time; mistakes = d.mistakes; updateTimerUI(); renderWord(); }
     });
 }
 
@@ -73,9 +73,9 @@ function startTimer() {
     timerInterval = setInterval(() => {
         if(!amIMaster) {
             if(!isOverclock) timeLeft--;
-            if(timeLeft <= 45) unlock('p-overclock');
-            if(timeLeft <= 30) unlock('p-rescan');
-            if(timeLeft <= 15) unlock('p-ghost');
+            if(timeLeft <= 45) unlock('p-overclock', 'led-blue');
+            if(timeLeft <= 30) unlock('p-rescan', 'led-blue');
+            if(timeLeft <= 15) unlock('p-ghost', 'led-blue');
             if(timeLeft <= 0) triggerEnd(false);
             if(conn && !isBot && timeLeft % 2 === 0) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
         }
@@ -85,18 +85,26 @@ function startTimer() {
 
 function updateTimerUI() { document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`; }
 
-// POTERI
-function useOverclock() { isOverclock = true; consume('p-overclock'); logAction("OVERCLOCK ATTIVO"); setTimeout(() => { isOverclock = false; logAction("OVERCLOCK FINITO"); }, 5000); }
-function useRescan() { timeLeft -= 10; consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[0]); }
-function useGhost() { isGhost = true; consume('p-ghost'); logAction("GHOST: SCUDO ATTIVO"); }
+// POTERI SFIDANTE
+function useOverclock() { isOverclock = true; consume('p-overclock'); logAction("TIMER BLOCCATO"); setTimeout(() => { isOverclock = false; logAction("TIMER RIPRESO"); }, 5000); }
+function useRescan() { 
+    if(timeLeft <= 10) return;
+    timeLeft -= 10; 
+    updateTimerUI();
+    consume('p-rescan'); 
+    if(conn && !isBot) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
+    let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); 
+    if(m.length) handleMove(m[0]); 
+}
+function useGhost() { isGhost = true; consume('p-ghost'); logAction("SCUDO ATTIVO"); }
 
+// POTERI MASTER
 function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
 function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
 function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
 
 function triggerBlackout() {
-    const ps = document.getElementById('play-screen');
-    ps.classList.add('blackout-mode');
+    const ps = document.getElementById('play-screen'); ps.classList.add('blackout-mode');
     const mv = (e) => {
         let r = ps.getBoundingClientRect();
         ps.style.setProperty('--x', ((e.touches?e.touches[0].clientX:e.clientX)-r.left)+'px');
@@ -108,12 +116,12 @@ function triggerBlackout() {
 function triggerDistort() { document.body.classList.add('distort-active'); setTimeout(() => document.body.classList.remove('distort-active'), 4000); }
 function triggerCyberfog() { document.getElementById('word-display').classList.add('cyberfog-active'); setTimeout(() => document.getElementById('word-display').classList.remove('cyberfog-active'), 6000); }
 
-// LOGICA CORE
+// CORE
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
     if(!secretWord.includes(l)) {
-        if(isGhost) { isGhost = false; logAction("SCUDO USATO!"); } else { mistakes++; }
+        if(isGhost) { isGhost = false; logAction("ERRORE PARATO!"); } else { mistakes++; }
     }
     if(conn && !isBot) conn.send({type:'GUESS', letter:l});
     renderWord();
@@ -139,15 +147,16 @@ function forceEnd(win) {
         if(win) myScore++; else myScore = Math.max(0, myScore - 1);
         localStorage.setItem('mv_stats', JSON.stringify({score: myScore}));
     }
-    document.getElementById('overlay').style.display = 'flex';
+    const o = document.getElementById('overlay'); o.style.display = 'flex';
     const t = document.getElementById('result-title');
-    // CORREZIONE LOGICA MESSAGGI
     if(amIMaster) {
-        t.innerText = win ? "LO SFIDANTE HA VINTO" : "HAI VINTO!";
+        t.innerText = win ? "LO SFIDANTE HA VINTO" : "HAI VINTO (PAROLA DIFESA)";
+        t.className = win ? "lose-glow" : "win-glow";
     } else {
-        t.innerText = win ? "HAI VINTO!" : "SCONFITTA!";
+        t.innerText = win ? "VITTORIA!" : "SISTEMA BLOCCATO";
+        t.className = win ? "win-glow" : "lose-glow";
     }
-    document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
+    document.getElementById('result-desc').innerText = "DATA: " + secretWord;
     updateRankUI();
 }
 
@@ -179,9 +188,10 @@ function updateRankUI() {
     document.querySelectorAll('.rank-label').forEach(el => el.innerText = `${r} (${myScore}/20)`);
 }
 
-function unlock(id) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led led-blue'; } }
-function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led led-off'; }
-function logAction(m) { document.getElementById('action-log').innerText = "> " + m; }
-function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO!"; }
+function unlock(id, color) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led ' + color; } }
+function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
+function logAction(m) { document.getElementById('action-log').innerText = m; }
+function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO"; }
 function retry() { location.reload(); }
+function resetAccount() { if(confirm("RESET?")) { localStorage.clear(); location.reload(); } }
 updateRankUI();
