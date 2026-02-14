@@ -4,33 +4,15 @@ let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false,
 let timerInterval, timeLeft = 60, myScore = 0;
 let isOverclock = false, isGhost = false;
 
-const dizionario = [
-  "AMORE", "CASA", "SOLE", "LUNA", "MARE", "VENTO", "FUOCO", "ACQUA", "TERRA", "CIELO",
-  "STELLA", "PIETRA", "FIORE", "ALBERO", "RADICE", "FOGLIA", "FRUTTO", "SEME", "PRATO", "BOSCO",
-  "MONTE", "FIUME", "LAGO", "ISOLA", "SPIAGGIA", "DESERTO", "VALLE", "COLLINA", "NEVE", "PIOGGIA",
-  "TEMPO", "NOTTE", "GIORNO", "LUCE", "OMBRA", "SOGNO", "RICORDO", "SPERANZA", "PAURA", "FORZA",
-  "PACE", "GUERRA", "ONDA", "VENTAGLIO", "PORTA", "FINESTRA", "STRADA", "PONTE", "TORRE", "CASTELLO",
-  "CITTA", "PAESE", "PIAZZA", "SCUOLA", "LIBRO", "PAGINA", "PAROLA", "LETTERA", "VOCE", "SUONO",
-  "CANTO", "MUSICA", "ARTE", "COLORE", "QUADRO", "PENNELLO", "TEATRO", "FILM", "STORIA", "LEGGENDA",
-  "FAVOLA", "MITO", "EROE", "REGINA", "RE", "PRINCIPE", "CAVALIERE", "DRAGO", "SPADA", "SCUDO",
-  "AMICO", "NEMICO", "FRATELLO", "SORELLA", "MADRE", "PADRE", "FIGLIO", "FIGLIA", "NONNO", "NONNA",
-  "CUORE", "MENTE", "CORPO", "ANIMA", "VOLTO", "MANO", "OCCHIO", "SGUARDO", "PASSO", "CORSA",
-  "VIAGGIO", "TRENO", "AEREO", "NAVE", "AUTO", "BICICLETTA", "STRUMENTO", "GIOCO", "SQUADRA", "VITTORIA",
-  "SCONFITTA", "RISATA", "LACRIMA", "ABBRACCIO", "BACIO", "SORRISO", "DESIDERIO", "SEGRETO", "MISTERO", "MAGIA",
-  "ENERGIA", "NATURA", "ANIMALE", "CANE", "GATTO", "CAVALLO", "LEONE", "TIGRE", "AQUILA", "FALCO",
-  "PESCE", "BALENA", "DELFINO", "FARFALLA", "FORMICA", "APE", "LUPO", "VOLPE", "ORSO", "CERVO",
-  "PANE", "ACQUA", "LATTE", "FORMAGGIO", "FRUTTA", "VERDURA", "SALE", "ZUCCHERO", "MIELE", "CAFFE",
-  "TAVOLO", "SEDIA", "LETTO", "ARMADIO", "SPECCHIO", "OROLOGIO", "TAPPETO", "TENDA", "LAMPADA", "CUSCINO"
-];
+const dizionario = ["AMORE", "CASA", "SOLE", "LUNA", "MARE", "VENTO", "FUOCO", "ACQUA", "TERRA", "CIELO", "STELLA", "PIETRA", "FIORE", "ALBERO", "RADICE", "FOGLIA", "FRUTTO", "SEME", "PRATO", "BOSCO", "MONTE", "FIUME", "LAGO", "ISOLA", "SPIAGGIA", "DESERTO", "VALLE", "COLLINA", "NEVE", "PIOGGIA", "TEMPO", "NOTTE", "GIORNO", "LUCE", "OMBRA", "SOGNO", "RICORDO", "SPERANZA", "PAURA", "FORZA", "PACE", "GUERRA", "ONDA", "VENTAGLIO", "PORTA", "FINESTRA", "STRADA", "PONTE", "TORRE", "CASTELLO", "CITTA", "PAESE", "PIAZZA", "SCUOLA", "LIBRO", "PAGINA", "PAROLA", "LETTERA", "VOCE", "SUONO", "CANTO", "MUSICA", "ARTE", "COLORE", "QUADRO", "PENNELLO", "TEATRO", "FILM", "STORIA", "LEGGENDA", "FAVOLA", "MITO", "EROE", "REGINA", "RE", "PRINCIPE", "CAVALIERE", "DRAGO", "SPADA", "SCUDO", "AMICO", "NEMICO", "FRATELLO", "SORELLA", "MADRE", "PADRE", "FIGLIO", "FIGLIA", "NONNO", "NONNA", "CUORE", "MENTE", "CORPO", "ANIMA", "VOLTO", "MANO", "OCCHIO", "SGUARDO", "PASSO", "CORSA", "VIAGGIO", "TRENO", "AEREO", "NAVE", "AUTO", "BICICLETTA", "STRUMENTO", "GIOCO", "SQUADRA", "VITTORIA", "SCONFITTA", "RISATA", "LACRIMA", "ABBRACCIO", "BACIO", "SORRISO", "DESIDERIO", "SEGRETO", "MISTERO", "MAGIA", "ENERGIA", "NATURA", "ANIMALE", "CANE", "GATTO", "CAVALLO", "LEONE", "TIGRE", "AQUILA", "FALCO", "PESCE", "BALENA", "DELFINO", "FARFALLA", "FORMICA", "APE", "LUPO", "VOLPE", "ORSO", "CERVO", "PANE", "ACQUA", "LATTE", "FORMAGGIO", "FRUTTA", "VERDURA", "SALE", "ZUCCHERO", "MIELE", "CAFFE", "TAVOLO", "SEDIA", "LETTO", "ARMADIO", "SPECCHIO", "OROLOGIO", "TAPPETO", "TENDA", "LAMPADA", "CUSCINO"];
 
-// Caricamento Punteggio
 const saved = localStorage.getItem('mv_stats');
 if(saved) myScore = JSON.parse(saved).score || 0;
 
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
     document.getElementById('connection-led').className = 'led led-on';
-    document.getElementById('status-text').innerText = "SYSTEM_ONLINE";
+    document.getElementById('status-text').innerText = "SISTEMA ONLINE";
 });
 
 peer.on('connection', c => { conn = c; setupRemote(); });
@@ -49,16 +31,16 @@ function setupRemote() {
         document.getElementById('connect-section').classList.add('hidden');
         document.getElementById('master-section').classList.remove('hidden');
     } else {
-        document.getElementById('setup-screen').innerHTML = "<h2 style='color:var(--neon-blue)'>WAITING FOR MASTER...</h2>";
+        document.getElementById('setup-screen').innerHTML = "<h2 style='color:var(--neon-blue)'>ATTENDI IL MASTER...</h2>";
     }
     conn.on('data', d => {
         if(d.type === 'START') { secretWord = d.word; amIMaster = false; initGame(); }
         if(d.type === 'GUESS') remoteMove(d.letter);
         if(d.type === 'FINISH') forceEnd(d.win);
-        if(d.type === 'SYNC') { timeLeft = d.time; mistakes = d.mistakes; renderWord(); }
         if(d.type === 'P_BLACKOUT') triggerBlackout();
         if(d.type === 'P_DISTORT') triggerDistort();
         if(d.type === 'P_CYBERFOG') triggerCyberfog();
+        if(d.type === 'SYNC') { timeLeft = d.time; mistakes = d.mistakes; updateTimerUI(); renderWord(); }
     });
 }
 
@@ -84,10 +66,7 @@ function initGame() {
     document.getElementById('powers-master').classList.toggle('hidden', !amIMaster);
     
     guessedLetters = []; mistakes = 0; timeLeft = 60;
-    document.getElementById('wrong-letters').innerText = "";
-    document.querySelectorAll('.btn-power').forEach(b => { b.disabled = true; b.removeAttribute('used'); });
-    
-    updateRankUI();
+    updateTimerUI();
     createKeyboard();
     renderWord();
     startTimer();
@@ -102,33 +81,21 @@ function startTimer() {
             if(timeLeft <= 30) unlock('p-rescan');
             if(timeLeft <= 15) unlock('p-ghost');
             if(timeLeft <= 0) triggerEnd(false);
-            if(timeLeft % 3 === 0 && conn) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
+            if(conn && !isBot && timeLeft % 2 === 0) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
         }
         updateTimerUI();
     }, 1000);
 }
 
-function unlock(id) {
-    const b = document.getElementById(id);
-    if(b && !b.getAttribute('used')) b.disabled = false;
+function updateTimerUI() {
+    document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
 }
 
-// --- POTERI SFIDANTE ---
-function useOverclock() {
-    isOverclock = true; consume('p-overclock'); logAction("OVERCLOCK ACTIVE");
-    setTimeout(() => { isOverclock = false; logAction("OVERCLOCK EXHAUSTED"); }, 5000);
-}
-function useRescan() {
-    timeLeft -= 10; consume('p-rescan');
-    const m = secretWord.split("").filter(l => !guessedLetters.includes(l));
-    if(m.length) handleMove(m[0]);
-}
-function useGhost() {
-    isGhost = true; consume('p-ghost'); logAction("GHOST MODE: 3s");
-    setTimeout(() => isGhost = false, 3000);
-}
+// POTERI
+function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
+function useRescan() { timeLeft -= 10; consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[0]); }
+function useGhost() { isGhost = true; consume('p-ghost'); setTimeout(() => isGhost = false, 3000); }
 
-// --- POTERI MASTER ---
 function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
 function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
 function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
@@ -136,39 +103,28 @@ function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyb
 function triggerBlackout() {
     const ps = document.getElementById('play-screen');
     ps.classList.add('blackout-mode');
-    const move = (e) => {
-        const r = ps.getBoundingClientRect();
+    const mv = (e) => {
+        let r = ps.getBoundingClientRect();
         ps.style.setProperty('--x', ((e.touches?e.touches[0].clientX:e.clientX)-r.left)+'px');
         ps.style.setProperty('--y', ((e.touches?e.touches[0].clientY:e.clientY)-r.top)+'px');
     };
-    window.addEventListener('mousemove', move); window.addEventListener('touchmove', move);
-    setTimeout(() => { ps.classList.remove('blackout-mode'); window.removeEventListener('mousemove', move); }, 5000);
+    window.addEventListener('mousemove', mv); window.addEventListener('touchmove', mv);
+    setTimeout(() => { ps.classList.remove('blackout-mode'); window.removeEventListener('mousemove', mv); }, 5000);
 }
 
-function triggerDistort() {
-    document.body.classList.add('distort-active');
-    setTimeout(() => document.body.classList.remove('distort-active'), 4000);
-}
+function triggerDistort() { document.body.classList.add('distort-active'); setTimeout(() => document.body.classList.remove('distort-active'), 4000); }
+function triggerCyberfog() { document.getElementById('word-display').classList.add('cyberfog-active'); setTimeout(() => document.getElementById('word-display').classList.remove('cyberfog-active'), 6000); }
 
-function triggerCyberfog() {
-    document.getElementById('word-display').classList.add('cyberfog-active');
-    setTimeout(() => document.getElementById('word-display').classList.remove('cyberfog-active'), 6000);
-}
-
-// --- CORE GAME ---
+// GIOCO
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) { if(!isGhost) mistakes++; else logAction("GHOST BLOCK!"); }
+    if(!secretWord.includes(l)) { if(!isGhost) mistakes++; }
     if(conn && !isBot) conn.send({type:'GUESS', letter:l});
     renderWord();
 }
 
-function remoteMove(l) {
-    guessedLetters.push(l);
-    if(!secretWord.includes(l)) mistakes++;
-    renderWord();
-}
+function remoteMove(l) { guessedLetters.push(l); if(!secretWord.includes(l)) mistakes++; renderWord(); }
 
 function renderWord() {
     const d = document.getElementById('word-display');
@@ -180,10 +136,7 @@ function renderWord() {
     }
 }
 
-function triggerEnd(win) {
-    if(conn && !isBot) conn.send({type:'FINISH', win:win});
-    forceEnd(win);
-}
+function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
 
 function forceEnd(win) {
     clearInterval(timerInterval);
@@ -191,10 +144,9 @@ function forceEnd(win) {
         if(win) myScore++; else myScore = Math.max(0, myScore - 1);
         localStorage.setItem('mv_stats', JSON.stringify({score: myScore}));
     }
-    const o = document.getElementById('overlay'); o.style.display = 'flex';
-    const t = document.getElementById('result-title');
-    t.innerText = win ? (amIMaster?"LO SFIDANTE HA VINTO":"VITTORIA") : (amIMaster?"HAI VINTO":"SCONFITTA");
-    t.className = win ? "win-glow" : "lose-glow";
+    document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('result-title').innerText = win ? "VITTORIA" : "SCONFITTA";
+    document.getElementById('result-title').className = win ? "win-glow" : "lose-glow";
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
     updateRankUI();
 }
@@ -203,7 +155,7 @@ function createKeyboard() {
     const k = document.getElementById('keyboard'); k.innerHTML = "";
     "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
         const b = document.createElement('button'); b.className="key"; b.innerText=l;
-        b.onclick = () => { b.classList.add('used'); handleMove(l); };
+        b.onclick = () => { if(amIMaster) return; b.classList.add('used'); handleMove(l); };
         k.appendChild(b);
     });
 }
@@ -227,10 +179,10 @@ function updateRankUI() {
     document.querySelectorAll('.rank-label').forEach(el => el.innerText = `${r} (${myScore}/20)`);
 }
 
+function unlock(id) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) b.disabled = false; }
+function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); }
 function logAction(m) { document.getElementById('action-log').innerText = "> " + m; }
-function consume(id) { const b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); }
-function retry() { if(isBot) startBotGame(); else location.reload(); }
 function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO!"; }
-function updateTimerUI() { document.getElementById('timer-display').innerText = `00:${timeLeft<10?'0'+timeLeft:timeLeft}`; }
+function retry() { if(isBot) startBotGame(); else location.reload(); }
 function resetAccount() { if(confirm("RESET?")) { localStorage.clear(); location.reload(); } }
 updateRankUI();
