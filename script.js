@@ -12,7 +12,7 @@ if(saved) myScore = JSON.parse(saved).score || 0;
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
     document.getElementById('connection-led').className = 'led led-on';
-    document.getElementById('status-text').innerText = "SISTEMA ONLINE";
+    document.getElementById('status-text').innerText = "SISTEMA_ONLINE";
 });
 
 peer.on('connection', c => { conn = c; setupRemote(); });
@@ -31,7 +31,7 @@ function setupRemote() {
         document.getElementById('connect-section').classList.add('hidden');
         document.getElementById('master-section').classList.remove('hidden');
     } else {
-        document.getElementById('setup-screen').innerHTML = "<h2 style='color:var(--neon-blue)'>ATTENDI IL MASTER...</h2>";
+        document.getElementById('setup-screen').innerHTML = "<h2>HACKING...</h2>";
     }
     conn.on('data', d => {
         if(d.type === 'START') { secretWord = d.word; amIMaster = false; initGame(); }
@@ -48,7 +48,7 @@ function sendWord() {
     const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
     if(val.length < 3) return;
     secretWord = val;
-    conn.send({ type: 'START', word: secretWord });
+    if(conn) conn.send({ type: 'START', word: secretWord });
     initGame();
 }
 
@@ -64,12 +64,8 @@ function initGame() {
     document.getElementById('overlay').style.display = 'none';
     document.getElementById('powers-sfidante').classList.toggle('hidden', amIMaster);
     document.getElementById('powers-master').classList.toggle('hidden', !amIMaster);
-    
     guessedLetters = []; mistakes = 0; timeLeft = 60;
-    updateTimerUI();
-    createKeyboard();
-    renderWord();
-    startTimer();
+    updateTimerUI(); createKeyboard(); renderWord(); startTimer();
 }
 
 function startTimer() {
@@ -87,14 +83,12 @@ function startTimer() {
     }, 1000);
 }
 
-function updateTimerUI() {
-    document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
-}
+function updateTimerUI() { document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`; }
 
 // POTERI
-function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
+function useOverclock() { isOverclock = true; consume('p-overclock'); logAction("OVERCLOCK ATTIVO"); setTimeout(() => { isOverclock = false; logAction("OVERCLOCK FINITO"); }, 5000); }
 function useRescan() { timeLeft -= 10; consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[0]); }
-function useGhost() { isGhost = true; consume('p-ghost'); setTimeout(() => isGhost = false, 3000); }
+function useGhost() { isGhost = true; consume('p-ghost'); logAction("GHOST: SCUDO ATTIVO"); }
 
 function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
 function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
@@ -111,15 +105,16 @@ function triggerBlackout() {
     window.addEventListener('mousemove', mv); window.addEventListener('touchmove', mv);
     setTimeout(() => { ps.classList.remove('blackout-mode'); window.removeEventListener('mousemove', mv); }, 5000);
 }
-
 function triggerDistort() { document.body.classList.add('distort-active'); setTimeout(() => document.body.classList.remove('distort-active'), 4000); }
 function triggerCyberfog() { document.getElementById('word-display').classList.add('cyberfog-active'); setTimeout(() => document.getElementById('word-display').classList.remove('cyberfog-active'), 6000); }
 
-// GIOCO
+// LOGICA CORE
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) { if(!isGhost) mistakes++; }
+    if(!secretWord.includes(l)) {
+        if(isGhost) { isGhost = false; logAction("SCUDO USATO!"); } else { mistakes++; }
+    }
     if(conn && !isBot) conn.send({type:'GUESS', letter:l});
     renderWord();
 }
@@ -145,8 +140,13 @@ function forceEnd(win) {
         localStorage.setItem('mv_stats', JSON.stringify({score: myScore}));
     }
     document.getElementById('overlay').style.display = 'flex';
-    document.getElementById('result-title').innerText = win ? "VITTORIA" : "SCONFITTA";
-    document.getElementById('result-title').className = win ? "win-glow" : "lose-glow";
+    const t = document.getElementById('result-title');
+    // CORREZIONE LOGICA MESSAGGI
+    if(amIMaster) {
+        t.innerText = win ? "LO SFIDANTE HA VINTO" : "HAI VINTO!";
+    } else {
+        t.innerText = win ? "HAI VINTO!" : "SCONFITTA!";
+    }
     document.getElementById('result-desc').innerText = "LA PAROLA ERA: " + secretWord;
     updateRankUI();
 }
@@ -155,20 +155,20 @@ function createKeyboard() {
     const k = document.getElementById('keyboard'); k.innerHTML = "";
     "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
         const b = document.createElement('button'); b.className="key"; b.innerText=l;
-        b.onclick = () => { if(amIMaster) return; b.classList.add('used'); handleMove(l); };
+        b.onclick = () => { b.classList.add('used'); handleMove(l); };
         k.appendChild(b);
     });
 }
 
 function drawHangman() {
     const c = document.getElementById('hangmanCanvas'); const ctx = c.getContext('2d');
-    ctx.clearRect(0,0,160,100); ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2; ctx.beginPath();
-    if(mistakes>0) ctx.arc(80, 20, 8, 0, Math.PI*2);
-    if(mistakes>1) { ctx.moveTo(80, 28); ctx.lineTo(80, 60); }
-    if(mistakes>2) { ctx.moveTo(80, 35); ctx.lineTo(60, 50); }
-    if(mistakes>3) { ctx.moveTo(80, 35); ctx.lineTo(100, 50); }
-    if(mistakes>4) { ctx.moveTo(80, 60); ctx.lineTo(65, 85); }
-    if(mistakes>5) { ctx.moveTo(80, 60); ctx.lineTo(95, 85); }
+    ctx.clearRect(0,0,160,90); ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2; ctx.beginPath();
+    if(mistakes>0) ctx.arc(80, 15, 7, 0, Math.PI*2);
+    if(mistakes>1) { ctx.moveTo(80, 22); ctx.lineTo(80, 50); }
+    if(mistakes>2) { ctx.moveTo(80, 30); ctx.lineTo(65, 45); }
+    if(mistakes>3) { ctx.moveTo(80, 30); ctx.lineTo(95, 45); }
+    if(mistakes>4) { ctx.moveTo(80, 50); ctx.lineTo(70, 75); }
+    if(mistakes>5) { ctx.moveTo(80, 50); ctx.lineTo(90, 75); }
     ctx.stroke();
 }
 
@@ -179,10 +179,9 @@ function updateRankUI() {
     document.querySelectorAll('.rank-label').forEach(el => el.innerText = `${r} (${myScore}/20)`);
 }
 
-function unlock(id) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) b.disabled = false; }
-function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); }
+function unlock(id) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led led-blue'; } }
+function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led led-off'; }
 function logAction(m) { document.getElementById('action-log').innerText = "> " + m; }
 function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO!"; }
-function retry() { if(isBot) startBotGame(); else location.reload(); }
-function resetAccount() { if(confirm("RESET?")) { localStorage.clear(); location.reload(); } }
+function retry() { location.reload(); }
 updateRankUI();
