@@ -2,17 +2,19 @@ let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 let timerInterval, timeLeft = 60, myScore = 0;
+let myMatchScore = 0, remoteMatchScore = 0;
 let isOverclock = false, isGhost = false;
 
 const dizionario = ["AMORE", "CASA", "SOLE", "LUNA", "MARE", "VENTO", "FUOCO", "ACQUA", "TERRA", "CIELO", "STELLA", "PIETRA", "FIORE", "ALBERO", "RADICE", "FOGLIA", "FRUTTO", "SEME", "PRATO", "BOSCO", "MONTE", "FIUME", "LAGO", "ISOLA", "SPIAGGIA", "DESERTO", "VALLE", "COLLINA", "NEVE", "PIOGGIA", "TEMPO", "NOTTE", "GIORNO", "LUCE", "OMBRA", "SOGNO", "RICORDO", "SPERANZA", "PAURA", "FORZA", "PACE", "GUERRA", "ONDA", "VENTAGLIO", "PORTA", "FINESTRA", "STRADA", "PONTE", "TORRE", "CASTELLO", "CITTA", "PAESE", "PIAZZA", "SCUOLA", "LIBRO", "PAGINA", "PAROLA", "LETTERA", "VOCE", "SUONO", "CANTO", "MUSICA", "ARTE", "COLORE", "QUADRO", "PENNELLO", "TEATRO", "FILM", "STORIA", "LEGGENDA", "FAVOLA", "MITO", "EROE", "REGINA", "RE", "PRINCIPE", "CAVALIERE", "DRAGO", "SPADA", "SCUDO", "AMICO", "NEMICO", "FRATELLO", "SORELLA", "MADRE", "PADRE", "FIGLIO", "FIGLIA", "NONNO", "NONNA", "CUORE", "MENTE", "CORPO", "ANIMA", "VOLTO", "MANO", "OCCHIO", "SGUARDO", "PASSO", "CORSA", "VIAGGIO", "TRENO", "AEREO", "NAVE", "AUTO", "BICICLETTA", "STRUMENTO", "GIOCO", "SQUADRA", "VITTORIA", "SCONFITTA", "RISATA", "LACRIMA", "ABBRACCIO", "BACIO", "SORRISO", "DESIDERIO", "SEGRETO", "MISTERO", "MAGIA", "ENERGIA", "NATURA", "ANIMALE", "CANE", "GATTO", "CAVALLO", "LEONE", "TIGRE", "AQUILA", "FALCO", "PESCE", "BALENA", "DELFINO", "FARFALLA", "FORMICA", "APE", "LUPO", "VOLPE", "ORSO", "CERVO", "PANE", "ACQUA", "LATTE", "FORMAGGIO", "FRUTTA", "VERDURA", "SALE", "ZUCCHERO", "MIELE", "CAFFE", "TAVOLO", "SEDIA", "LETTO", "ARMADIO", "SPECCHIO", "OROLOGIO", "TAPPETO", "TENDA", "LAMPADA", "CUSCINO"];
 
-const saved = localStorage.getItem('mv_stats');
+// Caricamento Punti Salvati
+const saved = localStorage.getItem('mv_elite_stats');
 if(saved) myScore = JSON.parse(saved).score || 0;
 
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
     document.getElementById('connection-led').className = 'led led-on';
-    document.getElementById('status-text').innerText = "ONLINE";
+    document.getElementById('status-text').innerText = "SYSTEM_ONLINE";
 });
 
 peer.on('connection', c => { conn = c; setupRemote(); });
@@ -30,15 +32,13 @@ function setupRemote() {
     if(amIMaster) {
         document.getElementById('connect-section').classList.add('hidden');
         document.getElementById('master-section').classList.remove('hidden');
-    } else {
-        document.getElementById('setup-screen').innerHTML = "<h2>UPLINKING...</h2>";
     }
     conn.on('data', d => {
-        if(d.type === 'START') { secretWord = d.word; amIMaster = false; initGame(); }
+        if(d.type === 'START') { secretWord = d.word; initGame(); }
         if(d.type === 'GUESS') remoteMove(d.letter);
         if(d.type === 'FINISH') forceEnd(d.win);
         if(d.type === 'SYNC') { timeLeft = d.time; mistakes = d.mistakes; updateTimerUI(); renderWord(); }
-        if(d.type === 'RETRY') initGame(); // Nuova gestione per rigiocare subito
+        if(d.type === 'SCORE_SYNC') { myMatchScore = d.yourScore; remoteMatchScore = d.oppScore; updateMatchScoreUI(); }
         if(d.type === 'P_BLACKOUT') triggerBlackout();
         if(d.type === 'P_DISTORT') triggerDistort();
         if(d.type === 'P_CYBERFOG') triggerCyberfog();
@@ -69,15 +69,12 @@ function initGame() {
     guessedLetters = []; mistakes = 0; timeLeft = 60;
     isOverclock = false; isGhost = false;
     
-    // Reset grafica bottoni poteri
     document.querySelectorAll('.btn-pwr').forEach(b => {
         b.disabled = true; b.removeAttribute('used'); b.style.opacity = "1";
         b.querySelector('.led').className = 'led';
     });
     
-    document.getElementById('wrong-letters').innerText = "";
-    updateTimerUI(); createKeyboard(); renderWord(); startTimer();
-    logAction("UPLINK ESTABLISHED");
+    updateTimerUI(); updateMatchScoreUI(); createKeyboard(); renderWord(); startTimer();
 }
 
 function startTimer() {
@@ -96,9 +93,9 @@ function startTimer() {
 }
 
 function updateTimerUI() { document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`; }
+function updateMatchScoreUI() { document.getElementById('score-me').innerText = myMatchScore; document.getElementById('score-remote').innerText = remoteMatchScore; }
 
-// POTERI SFIDANTE (NOMI AGGIORNATI)
-function useOverclock() { isOverclock = true; consume('p-overclock'); logAction("TIME LOCKED"); setTimeout(() => { isOverclock = false; logAction("TIME RESUMED"); }, 5000); }
+function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
 function useRescan() { 
     if(timeLeft <= 10) return;
     timeLeft -= 10; updateTimerUI(); consume('p-rescan'); 
@@ -106,9 +103,8 @@ function useRescan() {
     let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); 
     if(m.length) handleMove(m[0]); 
 }
-function useGhost() { isGhost = true; consume('p-ghost'); logAction("SHIELD ACTIVE"); }
+function useGhost() { isGhost = true; consume('p-ghost'); }
 
-// POTERI MASTER (NOMI AGGIORNATI)
 function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
 function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
 function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
@@ -123,18 +119,14 @@ function triggerBlackout() {
     window.addEventListener('mousemove', mv); window.addEventListener('touchmove', mv);
     setTimeout(() => { ps.classList.remove('blackout-mode'); window.removeEventListener('mousemove', mv); }, 5000);
 }
+
 function triggerDistort() { document.body.classList.add('distort-active'); setTimeout(() => document.body.classList.remove('distort-active'), 4000); }
 function triggerCyberfog() { document.getElementById('word-display').classList.add('cyberfog-active'); setTimeout(() => document.getElementById('word-display').classList.remove('cyberfog-active'), 6000); }
 
-// CORE LOGIC
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
-    if(!secretWord.includes(l)) {
-        if(isGhost) { isGhost = false; logAction("SHIELD ABSORBED DAMAGE"); } else { mistakes++; }
-    } else {
-        logAction("CORRECT ENTRY");
-    }
+    if(!secretWord.includes(l)) { if(isGhost) isGhost = false; else mistakes++; }
     if(conn && !isBot) conn.send({type:'GUESS', letter:l});
     renderWord();
 }
@@ -155,21 +147,20 @@ function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}
 
 function forceEnd(win) {
     clearInterval(timerInterval);
-    if(!amIMaster) {
-        if(win) myScore++; else myScore = Math.max(0, myScore - 1);
-        localStorage.setItem('mv_stats', JSON.stringify({score: myScore}));
+    if (!amIMaster) {
+        if (win) { myScore++; myMatchScore++; } 
+        else { myScore = Math.max(0, myScore - 1); remoteMatchScore++; }
+        localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
+        if(conn) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
+    } else {
+        if (!win) myMatchScore++; else remoteMatchScore++;
     }
+    updateMatchScoreUI(); updateRankUI();
     document.getElementById('overlay').style.display = 'flex';
     const t = document.getElementById('result-title');
-    if(amIMaster) {
-        t.innerText = win ? "UPLINK COMPROMISED" : "UPLINK SECURED";
-        t.className = win ? "lose-glow" : "win-glow";
-    } else {
-        t.innerText = win ? "SYSTEM BYPASSED" : "CONNECTION LOST";
-        t.className = win ? "win-glow" : "lose-glow";
-    }
-    document.getElementById('result-desc').innerText = "KEYWORD: " + secretWord;
-    updateRankUI();
+    t.innerText = amIMaster ? (win ? "UPLINK COMPROMISED" : "UPLINK SECURED") : (win ? "SYSTEM BYPASSED" : "CONNECTION LOST");
+    t.className = (amIMaster ? !win : win) ? "win-glow" : "lose-glow";
+    document.getElementById('result-desc').innerText = "DATA: " + secretWord;
 }
 
 function createKeyboard() {
@@ -202,27 +193,8 @@ function updateRankUI() {
 
 function unlock(id, color) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led ' + color; } }
 function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
-function logAction(m) { document.getElementById('action-log').innerText = m; }
-function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO"; }
-
-// RIGIOCARE SENZA RESETTARE PEERJS
-function retry() {
-    if(isBot) { startBotGame(); } 
-    else {
-        if(amIMaster) {
-            // Torna alla scelta della parola
-            document.getElementById('play-screen').classList.add('hidden');
-            document.getElementById('setup-screen').classList.remove('hidden');
-            document.getElementById('overlay').style.display = 'none';
-        } else {
-            // Sfidante aspetta che il master reinvii la parola
-            document.getElementById('play-screen').classList.add('hidden');
-            document.getElementById('setup-screen').classList.remove('hidden');
-            document.getElementById('setup-screen').innerHTML = "<h2>AWAITING NEW KEYWORD...</h2>";
-            document.getElementById('overlay').style.display = 'none';
-        }
-    }
-}
-
-function resetAccount() { if(confirm("DELETE DATA?")) { localStorage.clear(); location.reload(); } }
+function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIED"; }
+function toggleManual() { const m = document.getElementById('manual-overlay'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
+function retry() { if(isBot) initGame(); else { document.getElementById('overlay').style.display='none'; document.getElementById('play-screen').classList.add('hidden'); document.getElementById('setup-screen').classList.remove('hidden'); } }
+function resetAccount() { if(confirm("WIPE?")) { localStorage.clear(); location.reload(); } }
 updateRankUI();
