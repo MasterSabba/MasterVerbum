@@ -31,13 +31,14 @@ function setupRemote() {
         document.getElementById('connect-section').classList.add('hidden');
         document.getElementById('master-section').classList.remove('hidden');
     } else {
-        document.getElementById('setup-screen').innerHTML = "<h2>UPLINK...</h2>";
+        document.getElementById('setup-screen').innerHTML = "<h2>UPLINKING...</h2>";
     }
     conn.on('data', d => {
         if(d.type === 'START') { secretWord = d.word; amIMaster = false; initGame(); }
         if(d.type === 'GUESS') remoteMove(d.letter);
         if(d.type === 'FINISH') forceEnd(d.win);
         if(d.type === 'SYNC') { timeLeft = d.time; mistakes = d.mistakes; updateTimerUI(); renderWord(); }
+        if(d.type === 'RETRY') initGame(); // Nuova gestione per rigiocare subito
         if(d.type === 'P_BLACKOUT') triggerBlackout();
         if(d.type === 'P_DISTORT') triggerDistort();
         if(d.type === 'P_CYBERFOG') triggerCyberfog();
@@ -64,8 +65,19 @@ function initGame() {
     document.getElementById('overlay').style.display = 'none';
     document.getElementById('powers-sfidante').classList.toggle('hidden', amIMaster);
     document.getElementById('powers-master').classList.toggle('hidden', !amIMaster);
+    
     guessedLetters = []; mistakes = 0; timeLeft = 60;
+    isOverclock = false; isGhost = false;
+    
+    // Reset grafica bottoni poteri
+    document.querySelectorAll('.btn-pwr').forEach(b => {
+        b.disabled = true; b.removeAttribute('used'); b.style.opacity = "1";
+        b.querySelector('.led').className = 'led';
+    });
+    
+    document.getElementById('wrong-letters').innerText = "";
     updateTimerUI(); createKeyboard(); renderWord(); startTimer();
+    logAction("UPLINK ESTABLISHED");
 }
 
 function startTimer() {
@@ -85,20 +97,18 @@ function startTimer() {
 
 function updateTimerUI() { document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`; }
 
-// POTERI SFIDANTE
-function useOverclock() { isOverclock = true; consume('p-overclock'); logAction("TIMER BLOCCATO"); setTimeout(() => { isOverclock = false; logAction("TIMER RIPRESO"); }, 5000); }
+// POTERI SFIDANTE (NOMI AGGIORNATI)
+function useOverclock() { isOverclock = true; consume('p-overclock'); logAction("TIME LOCKED"); setTimeout(() => { isOverclock = false; logAction("TIME RESUMED"); }, 5000); }
 function useRescan() { 
     if(timeLeft <= 10) return;
-    timeLeft -= 10; 
-    updateTimerUI();
-    consume('p-rescan'); 
+    timeLeft -= 10; updateTimerUI(); consume('p-rescan'); 
     if(conn && !isBot) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
     let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); 
     if(m.length) handleMove(m[0]); 
 }
-function useGhost() { isGhost = true; consume('p-ghost'); logAction("SCUDO ATTIVO"); }
+function useGhost() { isGhost = true; consume('p-ghost'); logAction("SHIELD ACTIVE"); }
 
-// POTERI MASTER
+// POTERI MASTER (NOMI AGGIORNATI)
 function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
 function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
 function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
@@ -116,12 +126,14 @@ function triggerBlackout() {
 function triggerDistort() { document.body.classList.add('distort-active'); setTimeout(() => document.body.classList.remove('distort-active'), 4000); }
 function triggerCyberfog() { document.getElementById('word-display').classList.add('cyberfog-active'); setTimeout(() => document.getElementById('word-display').classList.remove('cyberfog-active'), 6000); }
 
-// CORE
+// CORE LOGIC
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
     if(!secretWord.includes(l)) {
-        if(isGhost) { isGhost = false; logAction("ERRORE PARATO!"); } else { mistakes++; }
+        if(isGhost) { isGhost = false; logAction("SHIELD ABSORBED DAMAGE"); } else { mistakes++; }
+    } else {
+        logAction("CORRECT ENTRY");
     }
     if(conn && !isBot) conn.send({type:'GUESS', letter:l});
     renderWord();
@@ -147,16 +159,16 @@ function forceEnd(win) {
         if(win) myScore++; else myScore = Math.max(0, myScore - 1);
         localStorage.setItem('mv_stats', JSON.stringify({score: myScore}));
     }
-    const o = document.getElementById('overlay'); o.style.display = 'flex';
+    document.getElementById('overlay').style.display = 'flex';
     const t = document.getElementById('result-title');
     if(amIMaster) {
-        t.innerText = win ? "LO SFIDANTE HA VINTO" : "HAI VINTO (PAROLA DIFESA)";
+        t.innerText = win ? "UPLINK COMPROMISED" : "UPLINK SECURED";
         t.className = win ? "lose-glow" : "win-glow";
     } else {
-        t.innerText = win ? "VITTORIA!" : "SISTEMA BLOCCATO";
+        t.innerText = win ? "SYSTEM BYPASSED" : "CONNECTION LOST";
         t.className = win ? "win-glow" : "lose-glow";
     }
-    document.getElementById('result-desc').innerText = "DATA: " + secretWord;
+    document.getElementById('result-desc').innerText = "KEYWORD: " + secretWord;
     updateRankUI();
 }
 
@@ -183,7 +195,7 @@ function drawHangman() {
 
 function updateRankUI() {
     const p = Math.min((myScore/20)*100, 100);
-    const r = myScore>=20?"DIO DEL CODICE":myScore>=10?"HACKER ELITE":"RECLUTA";
+    const r = myScore>=20?"GOD_MODE":myScore>=10?"ELITE_HACKER":"RECRUIT";
     document.querySelectorAll('.rank-bar-fill').forEach(el => el.style.width = p+"%");
     document.querySelectorAll('.rank-label').forEach(el => el.innerText = `${r} (${myScore}/20)`);
 }
@@ -192,6 +204,25 @@ function unlock(id, color) { let b = document.getElementById(id); if(b && !b.get
 function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
 function logAction(m) { document.getElementById('action-log').innerText = m; }
 function copyId() { navigator.clipboard.writeText(myId); document.getElementById('copy-btn').innerText = "COPIATO"; }
-function retry() { location.reload(); }
-function resetAccount() { if(confirm("RESET?")) { localStorage.clear(); location.reload(); } }
+
+// RIGIOCARE SENZA RESETTARE PEERJS
+function retry() {
+    if(isBot) { startBotGame(); } 
+    else {
+        if(amIMaster) {
+            // Torna alla scelta della parola
+            document.getElementById('play-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('overlay').style.display = 'none';
+        } else {
+            // Sfidante aspetta che il master reinvii la parola
+            document.getElementById('play-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('setup-screen').innerHTML = "<h2>AWAITING NEW KEYWORD...</h2>";
+            document.getElementById('overlay').style.display = 'none';
+        }
+    }
+}
+
+function resetAccount() { if(confirm("DELETE DATA?")) { localStorage.clear(); location.reload(); } }
 updateRankUI();
