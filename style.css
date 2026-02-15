@@ -16,12 +16,13 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 #score-me, #score-remote { font-size: 1rem; font-weight: 900; color: var(--neon-blue); line-height: 1; }
 .score-divider { color: #222; font-size: 0.8rem; margin-top: 5px; }
 
-/* Stato online o offline */
+/* Stato: online, Multiplayer, Master */
 .led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #333; transition: 0.3s; cursor: pointer; }
 .led-on { background: var(--led-green); box-shadow: 0 0 10px var(--led-green); }
 .led-blue { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
 .led-pink { background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
 
+/* Status bar: Ready... */
 .status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 10px; margin-top: 15px; }
 #status-text { font-size: 0.7rem; color: #444; }
 
@@ -49,16 +50,18 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .btn-reset { background: transparent; border: none; color: rgba(255, 255, 255, 0.1); font-size: 0.65rem; cursor: pointer; margin-top: 15px; font-family: monospace; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
 .btn-reset:hover { color: var(--neon-pink); opacity: 1; }
 
-/* Bottoni poteri del gioco */ DA CAPIRE
+/* Bottoni poteri: Scatola, Spento, Carico, Bottoni Master colori e invisibili... */
 .powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
 .btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .btn-pwr:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
 .btn-pwr.master:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); }
 
+/* Tastiera */
 #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; }
 .key { aspect-ratio: 1/1; background: #1a1a1f; border: none; border-radius: 6px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; }
 .key.used { opacity: 0.05; pointer-events: none; }
 
+/* Lettera da indovinare con trattini e lettere sbagliate */
 #word-display { display: flex; gap: 6px; min-height: 40px; }
 .letter-slot { width: 22px; border-bottom: 2px solid #333; font-size: 1.8rem; text-align: center; color: var(--neon-blue); font-weight: bold; }
 .wrong-text { color: var(--neon-pink); text-decoration: line-through; font-size: 0.8rem; height: 15px; letter-spacing: 2px; }
