@@ -30,9 +30,7 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 #timer-display { font-size: 1.3rem; color: var(--neon-pink); font-weight: bold; }
 
 /* Id Display */
-.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 5px 0; text-align: center; width: 100%; margin-bottom: 12px }
-
-/* Stile e spaziatura per separare ID e pulsante Connect */
+.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 5px 0; text-align: center; width: 100%; margin-bottom: 18px }
 #peer-id-input, #secret-word-input { width: 100%; height: 55px; background: #050505; border: 1px solid #222; color: var(--neon-blue); text-align: center; font-size: 1.1rem; font-family: monospace; border-radius: 8px; box-sizing: border-box; }
 #secret-word-input { color: var(--neon-pink); border-color: #331111; }
 
