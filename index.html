@@ -12,8 +12,8 @@
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
 
         <div id="setup-screen" class="card">
-            <div class="status-bar">
-                <span id="connection-led" class="led led-off" onclick="toggleManual()"></span>
+            <div class="status-bar-setup">
+                <span id="connection-led-setup" class="led led-off"></span>
                 <span id="status-text">SYSTEM_OFFLINE</span>
             </div>
             
@@ -41,26 +41,16 @@
 
         <div id="play-screen" class="card hidden">
             <div class="match-score">
-                <div class="score-box">
-                    <span class="score-label">TU</span>
-                    <div>
-                        <span class="led led-blue"></span>
-                        <span id="score-me">0</span>
-                    </div>
-                </div>
-                <div class="score-divider">/</div>
-                <div class="score-box">
-                    <span class="score-label">AVV</span>
-                    <div>
-                        <span id="score-remote">0</span>
-                        <span class="led led-pink"></span>
-                    </div>
+                <span id="game-led" class="led led-on"></span>
+                <div class="score-display">
+                    <span id="score-me">0</span>
+                    <span class="score-divider">/</span>
+                    <span id="score-remote">0</span>
                 </div>
             </div>
 
-            <div class="status-bar" style="justify-content: center;">
+            <div class="timer-container">
                 <div id="timer-display">01:00</div>
-                <span id="game-led" class="led led-on" style="position: absolute; right: 0;"></span>
             </div>
 
             <canvas id="hangmanCanvas" width="160" height="90"></canvas>
@@ -101,13 +91,13 @@
                     <li>FOG: Nasconde le lettere.</li>
                 </ul>
             </div>
-            <p style="font-size: 0.6rem; color: #444; text-align: center;">CLICK TO CLOSE</p>
         </div>
     </div>
 
     <div id="overlay" class="overlay">
         <div class="overlay-card">
-            <h1 id="result-title" style="font-size: 2.5rem;"></h1> <p id="result-desc"></p>
+            <h1 id="result-title" style="font-size: 2.2rem; margin-bottom: 10px;"></h1>
+            <p id="result-desc"></p>
             <div class="rank-container" style="margin: 20px 0;">
                 <div class="rank-bar-bg"><div id="rank-bar-fill-final" class="rank-bar-fill"></div></div>
                 <div id="rank-label-final" class="rank-label"></div>
