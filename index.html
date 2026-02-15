@@ -18,7 +18,7 @@
             </div>
             
             <div id="my-id" class="id-display">----</div>
-            <button id="copy-btn" class="btn-copy" onclick="copyId()">Copy Code </button>
+            <button id="copy-btn" class="btn-copy" onclick="copyId()">Copy Code</button>
             
             <div class="rank-container">
                 <div class="rank-bar-bg"><div id="rank-bar-fill-setup" class="rank-bar-fill"></div></div>
@@ -26,7 +26,7 @@
             </div>
 
             <div id="connect-section" class="input-group">
-                <input type="text" id="peer-id-input" placeholder="Enter Code" style="margin-bottom: 5px;">
+                <input type="text" id="peer-id-input" placeholder="Enter Code">
                 <button class="btn-main blue" onclick="connectToPeer()">Connect</button>
                 <button class="btn-main pink" onclick="startBotGame()">Singleplayer</button>
             </div>
@@ -36,29 +36,31 @@
                 <button class="btn-main blue" onclick="sendWord()">Start Game</button>
             </div>
             
-            
-            <button class="btn-reset" onclick="resetAccount()">Reset</button>
+            <button class="btn-reset" onclick="resetAccount()">Reset Account</button>
         </div>
 
         <div id="play-screen" class="card hidden">
             <div class="match-score">
                 <div class="score-box">
                     <span class="score-label">TU</span>
-                    <span id="score-me">0</span>
+                    <div>
+                        <span class="led led-blue"></span>
+                        <span id="score-me">0</span>
+                    </div>
                 </div>
                 <div class="score-divider">/</div>
                 <div class="score-box">
                     <span class="score-label">AVV</span>
-                    <span id="score-remote">0</span>
+                    <div>
+                        <span id="score-remote">0</span>
+                        <span class="led led-pink"></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="status-bar">
-                <div class="status-left">
-                    <span id="game-led" class="led led-on"></span>
-                    <div id="action-log">READY...</div>
-                </div>
+            <div class="status-bar" style="justify-content: center;">
                 <div id="timer-display">01:00</div>
+                <span id="game-led" class="led led-on" style="position: absolute; right: 0;"></span>
             </div>
 
             <canvas id="hangmanCanvas" width="160" height="90"></canvas>
@@ -105,15 +107,14 @@
 
     <div id="overlay" class="overlay">
         <div class="overlay-card">
-            <h1 id="result-title"></h1>
-            <p id="result-desc"></p>
-            <div class="rank-container" style="margin: 15px 0;">
-                <div class="rank-bar-bg"><div class="rank-bar-fill"></div></div>
-                <div class="rank-label" style="font-size: 0.6rem;"></div>
+            <h1 id="result-title" style="font-size: 2.5rem;"></h1> <p id="result-desc"></p>
+            <div class="rank-container" style="margin: 20px 0;">
+                <div class="rank-bar-bg"><div id="rank-bar-fill-final" class="rank-bar-fill"></div></div>
+                <div id="rank-label-final" class="rank-label"></div>
             </div>
             <div class="overlay-btns">
                 <button class="btn-main blue" onclick="retry()">RETRY</button>
-                <button class="btn-main gray" onclick="location.reload()">EXIT</button>
+                <button class="btn-main" style="background: #ff0000; color: #fff;" onclick="location.reload()">EXIT</button>
             </div>
         </div>
     </div>
