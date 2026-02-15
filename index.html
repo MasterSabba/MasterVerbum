@@ -12,8 +12,8 @@
         <h1 class="neon-title">MASTER<span>VERBUM</span></h1>
 
         <div id="setup-screen" class="card">
-            <div class="status-bar-setup">
-                <span id="connection-led-setup" class="led led-off"></span>
+            <div class="status-bar">
+                <span id="connection-led" class="led led-off" onclick="toggleManual()"></span>
                 <span id="status-text">SYSTEM_OFFLINE</span>
             </div>
             
@@ -41,19 +41,19 @@
 
         <div id="play-screen" class="card hidden">
             <div class="match-score">
-    <span id="game-led" class="led led-on"></span>
-    <div class="score-display">
-        <div class="score-box">
-            <span class="score-label">TU</span>
-            <span id="score-me">0</span>
-        </div>
-        <span class="score-divider">/</span>
-        <div class="score-box">
-            <span class="score-label">AVV</span>
-            <span id="score-remote">0</span>
-        </div>
-    </div>
-</div>
+                <div class="score-display">
+                    <div class="score-box">
+                        <span class="score-label">TU</span>
+                        <span id="score-me">0</span>
+                    </div>
+                    <span class="score-divider">/</span>
+                    <div class="score-box">
+                        <span class="score-label">AVV</span>
+                        <span id="score-remote">0</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="timer-container">
                 <div id="timer-display">01:00</div>
             </div>
@@ -95,21 +95,6 @@
                     <li>GLITCH: Inversione visiva.</li>
                     <li>FOG: Nasconde le lettere.</li>
                 </ul>
-            </div>
-        </div>
-    </div>
-
-    <div id="overlay" class="overlay">
-        <div class="overlay-card">
-            <h1 id="result-title" style="font-size: 2.2rem; margin-bottom: 10px;"></h1>
-            <p id="result-desc"></p>
-            <div class="rank-container" style="margin: 20px 0;">
-                <div class="rank-bar-bg"><div id="rank-bar-fill-final" class="rank-bar-fill"></div></div>
-                <div id="rank-label-final" class="rank-label"></div>
-            </div>
-            <div class="overlay-btns">
-                <button class="btn-main blue" onclick="retry()">RETRY</button>
-                <button class="btn-main" style="background: #ff0000; color: #fff;" onclick="location.reload()">EXIT</button>
             </div>
         </div>
     </div>
