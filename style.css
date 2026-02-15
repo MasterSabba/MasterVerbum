@@ -47,6 +47,10 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .pink { background: var(--neon-pink); color: #fff; }
 .btn-main:active { transform: scale(0.96); }
 
+/* Bottone Reset */
+.btn-reset { background: transparent; border: none; color: rgba(255, 255, 255, 0.1); font-size: 0.65rem; cursor: pointer; margin-top: 15px; font-family: monospace; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
+.btn-reset:hover { color: var(--neon-pink); }
+
 /* Bottoni poteri */
 .powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
 .btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; }
