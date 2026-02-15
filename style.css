@@ -9,6 +9,17 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .neon-title span { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink); }
 .card { background: #0f0f13; border-radius: 15px; padding: 25px 15px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; width: 100%; }
 
+/* Manuale Power Database */
+.manual-terminal { border: 1px solid var(--neon-blue); text-align: left !important; padding: 20px; }
+.terminal-header { font-size: 0.7rem; color: var(--neon-blue); margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+.manual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.manual-col h3 { font-size: 0.8rem; margin-bottom: 10px; letter-spacing: 1px; }
+.power-item { font-size: 0.65rem; color: #888; margin-bottom: 8px; line-height: 1.2; }
+.power-item span { color: #fff; font-weight: bold; display: block; font-size: 0.7rem; }
+.blue-text { color: var(--neon-blue); }
+.pink-text { color: var(--neon-pink); }
+.terminal-footer { font-size: 0.5rem; color: #333; margin-top: 20px; text-align: center; letter-spacing: 2px; }
+
 /* Punteggio: Contenitore, Etichette, Numeri, Divisore */
 .match-score { position: absolute; top: 15px; left: 15px; display: flex; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 12px; border-radius: 6px; }
 .score-display { display: flex; align-items: center; gap: 8px; }
