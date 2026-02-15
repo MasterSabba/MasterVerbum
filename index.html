@@ -77,21 +77,22 @@
 
     <div id="manual-overlay" class="overlay" onclick="toggleManual()">
         <div class="overlay-card manual-terminal">
-            <h2 style="color:var(--neon-blue)">POWER_DATABASE</h2>
-            <div class="manual-content">
-                <p><strong>[SFIDANTE]</strong></p>
-                <ul>
-                    <li>LOCK: Blocca il timer per 5s.</li>
-                    <li>REVEAL: Rivelazione (-10s).</li>
-                    <li>SHIELD: Para 1 errore.</li>
-                </ul>
-                <p><strong>[MASTER]</strong></p>
-                <ul>
-                    <li>BLACKOUT: Buio totale.</li>
-                    <li>GLITCH: Inversione visiva.</li>
-                    <li>FOG: Nasconde le lettere.</li>
-                </ul>
+            <div class="terminal-header">ACCESSING_POWER_DB...</div>
+            <div class="manual-grid">
+                <div class="manual-col">
+                    <h3 class="blue-text">[SFIDANTE]</h3>
+                    <div class="power-item"><span>LOCK</span> Blocca timer 5s</div>
+                    <div class="power-item"><span>REVEAL</span> Svela lettera (-10s)</div>
+                    <div class="power-item"><span>SHIELD</span> Para 1 errore</div>
+                </div>
+                <div class="manual-col">
+                    <h3 class="pink-text">[MASTER]</h3>
+                    <div class="power-item"><span>BLACKOUT</span> Buio totale</div>
+                    <div class="power-item"><span>GLITCH</span> Inverte tastiera</div>
+                    <div class="power-item"><span>FOG</span> Copre lettere</div>
+                </div>
             </div>
+            <div class="terminal-footer">CLICCA OVUNQUE PER TORNARE</div>
         </div>
     </div>
 
