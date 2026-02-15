@@ -59,17 +59,10 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 @keyframes distort { 0%, 100% { filter: invert(0); } 50% { filter: invert(1) hue-rotate(180deg); } }
 .cyberfog-active .letter-slot { color: transparent !important; }
 
-/* L'overlay di sfondo */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-
-/* La card: limitiamo la larghezza rispetto al panel (che è 380px) */
-.overlay-card { background: #000; padding: 25px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; }
-
-/* Il contenitore specifico dei tuoi bottoni nell'HTML */
-.overlay-btns { display: flex; flex-direction: row; gap: 10px; width: 100%; justify-content: center; margin-top: 15px; }
-
-/* I singoli bottoni: finalmente piccoli e ordinati */
-.overlay-btns .btn-main { flex: 1; max-width: 220px; height: 40px; font-size: 0.75rem; margin: 0; }
+.overlay-card { background: #000; padding: 50px 30px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 100%; max-width: 400px; min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
+.overlay-btns { display: flex; flex-direction: row; gap: 15px; width: 100%; justify-content: center; margin-top: 25px; }
+.overlay-btns .btn-main { flex: 1; max-width: 160px; height: 50px; font-size: 0.9rem; margin: 0; }
 .win-glow { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
 .lose-glow { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
 .hidden { display: none !important; }
