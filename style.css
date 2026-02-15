@@ -59,8 +59,10 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 @keyframes distort { 0%, 100% { filter: invert(0); } 50% { filter: invert(1) hue-rotate(180deg); } }
 .cyberfog-active .letter-slot { color: transparent !important; }
 
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
-.overlay-card { background: #000; padding: 30px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 100%; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+.overlay-card { background: #000; padding: 25px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 75%; max-width: 280px; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.overlay-card h1, .overlay-card p { flex: 0 0 100%; margin: 5px 0; }
+.overlay-card .btn-main { width: 100px; height: 40px; font-size: 0.75rem; margin: 0; }
 .win-glow { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
 .lose-glow { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
 .hidden { display: none !important; }
