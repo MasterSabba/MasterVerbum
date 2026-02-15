@@ -66,17 +66,24 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .letter-slot { width: 22px; border-bottom: 2px solid #333; font-size: 1.8rem; text-align: center; color: var(--neon-blue); font-weight: bold; }
 .wrong-text { color: var(--neon-pink); text-decoration: line-through; font-size: 0.8rem; height: 15px; letter-spacing: 2px; }
 
-/* Effetti */
+/* Poteri del Master */
 .blackout-mode::after { content: ''; position: absolute; inset: 0; z-index: 999; background: radial-gradient(circle 75px at var(--x) var(--y), transparent, #000 90%); }
 .blackout-mode * { opacity: 0 !important; }
+
 .distort-active { animation: distort 0.25s infinite; }
 @keyframes distort { 0%, 100% { filter: invert(0); } 50% { filter: invert(1) hue-rotate(180deg); } }
+
 .cyberfog-active .letter-slot { color: transparent !important; }
 
+/* Interfaccia Post-Partita */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
 .overlay-card { background: #000; padding: 50px 30px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 100%; max-width: 400px; min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
+
+/* Bottoni Post-Partita */
 .overlay-btns { display: flex; flex-direction: row; gap: 15px; width: 100%; justify-content: center; margin-top: 25px; }
 .overlay-btns .btn-main { flex: 1; max-width: 160px; height: 50px; font-size: 0.9rem; margin: 0; }
+
+/* Colori Bottoni post-partita */
 .win-glow { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
 .lose-glow { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
 .hidden { display: none !important; }
