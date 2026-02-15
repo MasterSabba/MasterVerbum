@@ -30,7 +30,9 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 #timer-display { font-size: 1.3rem; color: var(--neon-pink); font-weight: bold; }
 
 /* Id Display */
-.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 5px 0; }
+.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 5px 0; text-align: center; width: 100%; }
+#peer-id-input, #secret-word-input { width: 100%; height: 50px; background: #050505; border: 1px solid #222; color: var(--neon-blue); text-align: center; font-size: 1.1rem; font-family: monospace; border-radius: 8px; box-sizing: border-box; }
+#secret-word-input { color: var(--neon-pink); border-color: #331111; margin-bottom: 20px; }
 
 /* Barra del Rank */
 .rank-container { width: 100%; }
@@ -55,6 +57,9 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .btn-pwr:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
 .btn-pwr.master:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); }
+
+/* Distanza di sicurezza per il tasto Start */
+#master-section .btn-main { margin-top: 25px; }
 
 /* Tastiera */
 #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; }
