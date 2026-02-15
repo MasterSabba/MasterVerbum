@@ -16,26 +16,21 @@
                 <span id="connection-led" class="led led-off" onclick="toggleManual()"></span>
                 <span id="status-text">SYSTEM_OFFLINE</span>
             </div>
-            
             <div id="my-id" class="id-display">----</div>
             <button id="copy-btn" class="btn-copy" onclick="copyId()">Copy Code</button>
-            
             <div class="rank-container">
                 <div class="rank-bar-bg"><div id="rank-bar-fill-setup" class="rank-bar-fill"></div></div>
                 <div id="rank-label-setup" class="rank-label">Rank (0/20)</div>
             </div>
-
             <div id="connect-section" class="input-group">
                 <input type="text" id="peer-id-input" placeholder="Enter Code">
                 <button class="btn-main blue" onclick="connectToPeer()">Connect</button>
                 <button class="btn-main pink" onclick="startBotGame()">Singleplayer</button>
             </div>
-
             <div id="master-section" class="input-group hidden">
                 <input type="text" id="secret-word-input" placeholder="SET SECRET WORD" oninput="this.value = this.value.replace(/[^A-Za-z]/g, '').toUpperCase()">
                 <button class="btn-main blue" onclick="sendWord()">Start Game</button>
             </div>
-            
             <button class="btn-reset" onclick="resetAccount()">Reset Account</button>
         </div>
 
@@ -59,7 +54,8 @@
             </div>
 
             <canvas id="hangmanCanvas" width="160" height="90"></canvas>
-            <div id="word-display"></div>
+            
+            <div id="word-display" class="word-container"></div>
             <div id="wrong-letters" class="wrong-text"></div>
             
             <div class="powers-container">
@@ -95,6 +91,21 @@
                     <li>GLITCH: Inversione visiva.</li>
                     <li>FOG: Nasconde le lettere.</li>
                 </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="overlay-card">
+            <h1 id="result-title"></h1>
+            <p id="result-desc"></p>
+            <div class="rank-container" style="margin: 20px 0;">
+                <div class="rank-bar-bg"><div id="rank-bar-fill-final" class="rank-bar-fill"></div></div>
+                <div id="rank-label-final" class="rank-label"></div>
+            </div>
+            <div class="overlay-btns">
+                <button class="btn-main blue" onclick="retry()">RETRY</button>
+                <button class="btn-main" style="background: #ff0000; color: #fff;" onclick="location.reload()">EXIT</button>
             </div>
         </div>
     </div>
