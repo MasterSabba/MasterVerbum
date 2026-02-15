@@ -1,20 +1,22 @@
+/* Variabili Colori, Prevenzione Fuori Bordi, Aspetto */ 
 :root { --neon-blue: #00f2ff; --neon-pink: #ff0055; --bg-dark: #0a0a0c; --led-green: #39ff14; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 body { margin: 0; background: var(--bg-dark); color: white; font-family: monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
 
+/* Interfaccia iniziale */
 .panel { width: 95%; max-width: 380px; }
 .neon-title { font-size: 1.8rem; text-align: left; margin-bottom: 20px; letter-spacing: 3px; color: #fff; }
 .neon-title span { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink); }
 .card { background: #0f0f13; border-radius: 15px; padding: 25px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
 
-/* Contatore TU/AVV */
+/* Punteggio: Contenitore, Etichette, Numeri, Divisore */
 .match-score { position: absolute; top: 10px; left: 15px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); padding: 2px 10px; border-radius: 4px; border-left: 2px solid var(--neon-blue); }
 .score-box { display: flex; flex-direction: column; align-items: center; }
 .score-label { font-size: 0.5rem; color: #444; font-weight: bold; }
 #score-me, #score-remote { font-size: 1rem; font-weight: 900; color: var(--neon-blue); line-height: 1; }
 .score-divider { color: #222; font-size: 0.8rem; margin-top: 5px; }
 
-/* LED e Stato */
+/* Stato online o offline */
 .led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #333; transition: 0.3s; cursor: pointer; }
 .led-on { background: var(--led-green); box-shadow: 0 0 10px var(--led-green); }
 .led-blue { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
@@ -22,25 +24,32 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 
 .status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 10px; margin-top: 15px; }
 #status-text { font-size: 0.7rem; color: #444; }
+
+/* Timer */
 #timer-display { font-size: 1.3rem; color: var(--neon-pink); font-weight: bold; }
 
+/* Id Display */
 .id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 5px 0; }
-.btn-copy { background: none; border: 1px solid #222; color: #333; font-size: 0.6rem; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
 
-/* Rank */
+/* Barra del Rank */
 .rank-container { width: 100%; }
 .rank-bar-bg { width: 100%; height: 4px; background: #000; }
 .rank-bar-fill { height: 100%; width: 0%; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); transition: width 1.5s ease; }
 .rank-label { font-size: 0.6rem; color: var(--neon-blue); margin-top: 5px; text-align: center; }
 
-/* Bottoni */
+/* Bottone Copia ID */
+.btn-copy { background: none; border: 1px solid #222; color: #333; font-size: 0.6rem; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+
+/* Bottoni Connetti e Singolpalyer */
 .btn-main { width: 100%; max-width: 500px; height: 55px; padding: 0; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
 .blue { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
 .pink { background: var(--neon-pink); color: #fff; box-shadow: 0 0 15px rgba(255, 0, 85, 0.2); }
 
+/* Bottoni Reset */
 .btn-reset { background: transparent; border: none; color: rgba(255, 255, 255, 0.1); font-size: 0.65rem; cursor: pointer; margin-top: 15px; font-family: monospace; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
 .btn-reset:hover { color: var(--neon-pink); opacity: 1; }
 
+/* Bottoni poteri del gioco */ DA CAPIRE
 .powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
 .btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .btn-pwr:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
