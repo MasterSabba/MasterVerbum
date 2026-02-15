@@ -10,91 +10,59 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .card { background: #0f0f13; border-radius: 15px; padding: 25px 15px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; width: 100%; }
 
 /* Punteggio: Contenitore, Etichette, Numeri, Divisore */
-.match-score { position: absolute; top: 15px; left: 15px; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.03); padding: 5px 12px; border-radius: 6px; border-left: 2px solid var(--led-green); }
-.score-display { display: flex; align-items: center; }
-#score-me, #score-remote { font-size: 1.2rem; font-weight: 900; color: var(--neon-blue); letter-spacing: 1px; }
-.score-divider { color: #333; margin: 0 5px; font-weight: 900; }
+.match-score { position: absolute; top: 15px; left: 15px; display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); padding: 5px 12px; border-radius: 6px; border-left: 2px solid var(--led-green); }
+.score-display { display: flex; align-items: center; gap: 8px; }
+.score-box { display: flex; flex-direction: column; align-items: center; }
+.score-label { font-size: 0.5rem; color: #444; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
+#score-me, #score-remote { font-size: 1.2rem; font-weight: 900; color: var(--neon-blue); line-height: 1; }
+.score-divider { color: #333; margin: 8px 2px 0 2px; font-weight: bold; }
 
 /* Stato: online, Multiplayer, Master */
-.led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #333; transition: 0.3s; cursor: pointer; }
+.led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #333; transition: 0.3s; }
 .led-on { background: var(--led-green); box-shadow: 0 0 10px var(--led-green); }
-.led-blue { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
-.led-pink { background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
 
 /* Status bar: Ready... */
-.status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 10px; margin-top: 15px; }
+.status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 10px; }
 #status-text { font-size: 0.7rem; color: #444; }
 
-/* Timer Gigante */
-.timer-extreme { width: 100%; display: flex; justify-content: center; margin-top: 40px; margin-bottom: 10px; }
+/* Timer Gigante (Alto-Centro) */
+.timer-container { width: 100%; display: flex; justify-content: center; margin-top: 45px; margin-bottom: 10px; }
 #timer-display { font-size: 3.5rem; color: var(--neon-pink); font-weight: bold; text-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
 
-/* Id Display */
-.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; margin: 5px 0; text-align: center; width: 100%; margin-bottom: 9px }
-#peer-id-input, #secret-word-input { width: 100%; height: 55px; background: #050505; border: 1px solid #222; color: var(--neon-blue); text-align: center; font-size: 1.1rem; font-family: monospace; border-radius: 8px; box-sizing: border-box; margin-bottom: 12px !important; }
+/* Id Display e Input */
+.id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; text-align: center; width: 100%; margin-bottom: 9px; }
+.btn-copy { background: none; border: 1px solid #222; color: #333; font-size: 0.6rem; padding: 5px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 10px; }
+#peer-id-input, #secret-word-input { width: 100%; height: 55px; background: #050505; border: 1px solid #222; color: var(--neon-blue); text-align: center; font-size: 1.1rem; border-radius: 8px; margin-bottom: 12px !important; }
 #secret-word-input { color: var(--neon-pink); border-color: #331111; }
 
 /* Barra del Rank */
 .rank-container { width: 100%; }
-.rank-bar-bg { width: 100%; height: 4px; background: #000; }
-.rank-bar-fill { height: 100%; width: 0%; transition: width 1.5s ease, background 0.5s ease, box-shadow 0.5s ease; }
-.rank-label { font-size: 0.6rem; margin-top: 5px; text-align: center; font-weight: bold; letter-spacing: 1px; }
+.rank-bar-bg { width: 100%; height: 4px; background: #000; overflow: hidden; }
+.rank-bar-fill { height: 100%; width: 0%; transition: width 1.5s ease; }
+.rank-label { font-size: 0.6rem; margin-top: 5px; text-align: center; font-weight: bold; }
 
-/* Bottone Copia ID */
-.btn-copy { background: none; border: 1px solid #222; color: #333; font-size: 0.6rem; padding: 5px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 10px }
+/* Bottoni Main */
+.btn-main { width: 100%; height: 60px; border-radius: 8px; border: none; font-weight: bold; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.blue { background: var(--neon-blue); color: #000; }
+.pink { background: var(--neon-pink); color: #fff; }
+.btn-main:active { transform: scale(0.96); }
 
-/* Bottoni Connetti e Singolpalyer */
-.btn-main { width: 100%; height: 60px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 1.1rem; letter-spacing: 2px; transition: 0.2s; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; text-transform: uppercase; }
-.btn-main:active { transform: scale(0.96); filter: brightness(1.3); }
-.blue { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px rgba(0, 242, 255, 0.15); }
-.pink { background: var(--neon-pink); color: #fff; box-shadow: 0 0 20px rgba(255, 0, 85, 0.15); }
-
-/* Bottoni Reset */
-.btn-reset { background: transparent; border: none; color: rgba(255, 255, 255, 0.1); font-size: 0.65rem; cursor: pointer; margin-top: 15px; font-family: monospace; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
-.btn-reset:hover { color: var(--neon-pink); opacity: 1; }
-
-/* Bottoni poteri: Scatola, Spento, Carico, Bottoni Master colori e invisibili... */
+/* Bottoni poteri */
 .powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
-.btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; }
 .btn-pwr:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
 .btn-pwr.master:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); }
 
-/* Distanza di sicurezza per il tasto Start */
-#master-section .btn-main { margin-top: 25px; }
-
-/* Tastiera */
+/* Tastiera e Display Parola */
 #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; }
-.key { aspect-ratio: 1/1; background: #1a1a1f; border: none; border-radius: 6px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; }
+.key { aspect-ratio: 1/1; background: #1a1a1f; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
 .key.used { opacity: 0.05; pointer-events: none; }
-
-/* Lettera da indovinare con trattini e lettere sbagliate */
-#word-display { display: flex; gap: 6px; min-height: 40px; }
+#word-display { display: flex; gap: 6px; min-height: 40px; margin-top: 10px; }
 .letter-slot { width: 22px; border-bottom: 2px solid #333; font-size: 1.8rem; text-align: center; color: var(--neon-blue); font-weight: bold; }
-.wrong-text { color: var(--neon-pink); text-decoration: line-through; font-size: 0.8rem; height: 15px; letter-spacing: 2px; }
+.wrong-text { color: var(--neon-pink); text-decoration: line-through; font-size: 0.8rem; height: 15px; }
 
-/* Poteri del Master */
-.blackout-mode::after { content: ''; position: absolute; inset: 0; z-index: 999; background: radial-gradient(circle 75px at var(--x) var(--y), transparent, #000 90%); }
-.distort-active { animation: distort 0.25s infinite; }
-@keyframes distort { 0%, 100% { filter: invert(0); } 50% { filter: invert(1) hue-rotate(180deg); } }
-.cyberfog-active .letter-slot { color: transparent !important; }
-
-/* Interfaccia Post-Partita */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-.overlay-card { background: #000; padding: 50px 30px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 100%; max-width: 400px; min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
-
-/* Bottoni Post-Partita */
-.overlay-btns { display: flex; flex-direction: row; gap: 15px; width: 100%; justify-content: center; margin-top: 25px; }
-.overlay-btns .btn-main { flex: 1; max-width: 160px; height: 50px; font-size: 0.9rem; margin: 0; }
-
-/* Colori Bottoni post-partita */
-.win-glow { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
-.lose-glow { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
+/* Overlays */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+.overlay-card { background: #000; padding: 40px 20px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 90%; max-width: 380px; }
+.overlay-btns { display: flex; gap: 15px; margin-top: 20px; width: 100%; }
 .hidden { display: none !important; }
-
-/* Spiegazione Poteri */
-#manual-overlay .manual-terminal { border: 1px solid var(--neon-blue); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); }
-.manual-content { text-align: left; width: 100%; font-size: 0.75rem; color: #888; }
-.manual-content strong { color: var(--neon-pink); display: block; margin-top: 15px; letter-spacing: 1px; text-transform: uppercase; }
-.manual-content ul { list-style: none; padding-left: 10px; border-left: 1px solid #222; margin: 5px 0; }
-.manual-content li { margin-bottom: 4px; }
-.manual-content li::before { content: "> "; color: var(--neon-blue); }
