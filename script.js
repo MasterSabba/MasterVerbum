@@ -186,9 +186,19 @@ function drawHangman() {
 
 function updateRankUI() {
     const p = Math.min((myScore/20)*100, 100);
-    const r = myScore>=20?"GOD_MODE":myScore>=10?"ELITE_HACKER":"Rank";
-    document.querySelectorAll('.rank-bar-fill').forEach(el => el.style.width = p+"%");
-    document.querySelectorAll('.rank-label').forEach(el => el.innerText = `${r} (${myScore}/20)`);
+    let r = "HACKER"; let c = "var(--neon-blue)"; // Default
+    if(myScore >= 10) { r = "ELITE_HACKER"; c = "var(--led-green)"; }
+    if(myScore >= 20) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
+    
+    document.querySelectorAll('.rank-bar-fill').forEach(el => { 
+        el.style.width = p+"%"; 
+        el.style.background = c; 
+        el.style.boxShadow = `0 0 10px ${c}`; 
+    });
+    document.querySelectorAll('.rank-label').forEach(el => { 
+        el.innerText = `${r} (${myScore}/20)`; 
+        el.style.color = c; 
+    });
 }
 
 function unlock(id, color) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led ' + color; } }
