@@ -43,10 +43,10 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 /* Id Display e Input */
 .id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; text-align: center; width: 100%; margin: 0; display: block; }
 
-/* Bottone Copia e Parola Segreta */
+/* Bottone Copia e Codice da Inserire e Parola Segreta */
 .btn-copy { margin: 10px auto 20px auto !important; display: table; background: none; border: 1px solid #333; color: #555; font-size: 0.6rem; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
-#peer-id-input, #secret-word-input { width: 100%; height: 55px; background: #050505; border: 1px solid #222; color: var(--neon-blue); text-align: center; font-size: 1.1rem; border-radius: 8px; margin-bottom: 12px !important; }
-#secret-word-input { color: var(--neon-pink); border-color: #331111; }
+#peer-id-input, #secret-word-input { width: 100%; height: 55px; background: #050505; border: 1px solid #222; color: var(--bg-dark); text-align: center; font-size: 1.1rem; border-radius: 8px; margin-bottom: 12px !important; }
+#secret-word-input { color: var(--bg-dark); border-color: #331111; }
 
 /* Barra del Rank */
 .rank-container { width: 100%; }
