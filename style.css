@@ -61,7 +61,7 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .btn-main:active { transform: scale(0.96); }
 
 /* Bottone Reset */
-.btn-reset { margin-top: 5px !important; margin-bottom: 5px !important; background: transparent; border: none; color: rgba(255, 255, 255, 0.1); font-size: 0.65rem; cursor: pointer; font-family: monospace; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
+.btn-reset { margin-top: 20px ; margin-bottom: 5px ; background: transparent; border: none; color: rgba(255, 255, 255, 0.1); font-size: 0.65rem; cursor: pointer; font-family: monospace; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
 .btn-reset:hover { color: var(--neon-pink); }
 
 /* Bottoni poteri */
