@@ -6,14 +6,14 @@ let timerInterval, timeLeft = 60;
 let myMatchScore = 0, remoteMatchScore = 0;
 let isOverclock = false, isGhost = false;
 
-// [LOCAL_STORAGE]: Punteggio globale (Rank)
+// [LOCAL_STORAGE]: Caricamento punti salvati
 let myScore = 0;
 const saved = localStorage.getItem('mv_elite_stats');
 if(saved) myScore = JSON.parse(saved).score || 0;
 
 const dizionario = ["AMORE", "CASA", "SOLE", "LUNA", "MARE", "VENTO", "FUOCO", "ACQUA", "TERRA", "CIELO", "STELLA", "PIETRA", "FIORE", "ALBERO", "RADICE", "FOGLIA", "FRUTTO", "SEME", "PRATO", "BOSCO", "MONTE", "FIUME", "LAGO", "ISOLA", "SPIAGGIA", "DESERTO", "VALLE", "COLLINA", "NEVE", "PIOGGIA", "TEMPO", "NOTTE", "GIORNO", "LUCE", "OMBRA", "SOGNO", "RICORDO", "SPERANZA", "PAURA", "FORZA", "PACE", "GUERRA", "ONDA", "VENTAGLIO", "PORTA", "FINESTRA", "STRADA", "PONTE", "TORRE", "CASTELLO", "CITTA", "PAESE", "PIAZZA", "SCUOLA", "LIBRO", "PAGINA", "PAROLA", "LETTERA", "VOCE", "SUONO", "CANTO", "MUSICA", "ARTE", "COLORE", "QUADRO", "PENNELLO", "TEATRO", "FILM", "STORIA", "LEGGENDA", "FAVOLA", "MITO", "EROE", "REGINA", "RE", "PRINCIPE", "CAVALIERE", "DRAGO", "SPADA", "SCUDO", "AMICO", "NEMICO", "FRATELLO", "SORELLA", "MADRE", "PADRE", "FIGLIO", "FIGLIA", "NONNO", "NONNA", "CUORE", "MENTE", "CORPO", "ANIMA", "VOLTO", "MANO", "OCCHIO", "SGUARDO", "PASSO", "CORSA", "VIAGGIO", "TRENO", "AEREO", "NAVE", "AUTO", "BICICLETTA", "STRUMENTO", "GIOCO", "SQUADRA", "VITTORIA", "SCONFITTA", "RISATA", "LACRIMA", "ABBRACCIO", "BACIO", "SORRISO", "DESIDERIO", "SEGRETO", "MISTERO", "MAGIA", "ENERGIA", "NATURA", "ANIMALE", "CANE", "GATTO", "CAVALLO", "LEONE", "TIGRE", "AQUILA", "FALCO", "PESCE", "BALENA", "DELFINO", "FARFALLA", "FORMICA", "APE", "LUPO", "VOLPE", "ORSO", "CERVO", "PANE", "ACQUA", "LATTE", "FORMAGGIO", "FRUTTA", "VERDURA", "SALE", "ZUCCHERO", "MIELE", "CAFFE", "TAVOLO", "SEDIA", "LETTO", "ARMADIO", "SPECCHIO", "OROLOGIO", "TAPPETO", "TENDA", "LAMPADA", "CUSCINO"];
 
-// --- INIZIALIZZAZIONE PEER ---
+// --- INIZIALIZZAZIONE ---
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
     document.getElementById('connection-led').className = 'led led-on';
@@ -25,6 +25,27 @@ peer.on('connection', c => {
     conn.on('open', () => setupRemote()); 
 });
 
+// --- FUNZIONI DI INTERFACCIA ---
+function toggleManual() {
+    const m = document.getElementById('manual-overlay');
+    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+}
+
+function resetAccount() {
+    if(confirm("SURE? All system data will be wiped.")) {
+        localStorage.clear();
+        location.reload();
+    }
+}
+
+function copyId() {
+    const id = document.getElementById('my-id').innerText;
+    navigator.clipboard.writeText(id);
+    document.getElementById('copy-btn').innerText = "COPIED";
+    setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000);
+}
+
+// --- CONNESSIONE E RUOLI ---
 function connectToPeer() {
     const rId = document.getElementById('peer-id-input').value.toUpperCase().trim();
     if(!rId) return;
@@ -51,7 +72,7 @@ function setupRemote() {
     });
 }
 
-// --- LOGICA DI GIOCO ---
+// --- LOGICA CORE ---
 function initGame() {
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
@@ -88,7 +109,7 @@ function startTimer() {
     }, 1000);
 }
 
-// --- GESTIONE POTERI ---
+// --- POTERI E AZIONI ---
 function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
 function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
 function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
@@ -109,19 +130,19 @@ function triggerCyberfog() {
     setTimeout(() => document.getElementById('word-display').classList.remove('effect-fog'), 6000); 
 }
 
-// --- RANK E SALVATAGGIO ---
+// --- RANK E PUNTI ---
 function updateRankUI() {
     const p = Math.min((myScore/20)*100, 100);
     let r = "HACKER"; let c = "var(--neon-blue)"; 
     if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
     if(myScore >= 20) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
     
+    // [AUTO_SAVE]: Salvataggio punti
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
 
     document.querySelectorAll('.rank-bar-fill').forEach(el => { 
         el.style.width = p+"%"; 
         el.style.background = c; 
-        el.style.boxShadow = `0 0 10px ${c}`; 
     });
     document.querySelectorAll('.rank-label').forEach(el => { 
         el.innerText = `${r} (${myScore}/20)`; 
@@ -129,7 +150,7 @@ function updateRankUI() {
     });
 }
 
-// --- CORE GAMEPLAY FUNCTIONS ---
+// --- GESTIONE PAROLA E TASTIERA ---
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
@@ -175,9 +196,24 @@ function updateTimerUI() {
     const secs = timeLeft % 60;
     document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; 
 }
-function updateMatchScoreUI() { document.getElementById('score-me').innerText = myMatchScore; document.getElementById('score-remote').innerText = remoteMatchScore; }
-function unlock(id, colorClass) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').classList.add(colorClass); } }
-function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
+function updateMatchScoreUI() { 
+    document.getElementById('score-me').innerText = myMatchScore; 
+    document.getElementById('score-remote').innerText = remoteMatchScore; 
+}
+function unlock(id, colorClass) { 
+    let b = document.getElementById(id); 
+    if(b && !b.getAttribute('used')) { 
+        b.disabled = false; 
+        b.querySelector('.led').className = 'led ' + colorClass; 
+    } 
+}
+function consume(id) { 
+    let b = document.getElementById(id); 
+    b.disabled = true; 
+    b.setAttribute('used', 'true'); 
+    b.querySelector('.led').className = 'led'; 
+    b.style.opacity="0.1"; 
+}
 function sendWord() {
     const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
     if(val.length < 3) return;
@@ -186,6 +222,7 @@ function sendWord() {
     initGame();
 }
 function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
+
 function forceEnd(win) {
     clearInterval(timerInterval);
     if (!amIMaster) {
@@ -200,6 +237,7 @@ function forceEnd(win) {
     document.getElementById('result-title').innerText = amIMaster ? (win ? "UPLINK COMPROMISED" : "UPLINK SECURED") : (win ? "SYSTEM BYPASSED" : "CONNECTION LOST");
     document.getElementById('result-desc').innerText = "DATA: " + secretWord;
 }
+
 function retry() { if(isBot) initGame(); else location.reload(); }
 function startBotGame() { isBot = true; amIMaster = false; secretWord = dizionario[Math.floor(Math.random()*dizionario.length)]; initGame(); }
 function remoteMove(l) { guessedLetters.push(l); if(!secretWord.includes(l)) mistakes++; renderWord(); }
@@ -207,5 +245,4 @@ function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout
 function useRescan() { if(timeLeft <= 10) return; timeLeft -= 10; updateTimerUI(); consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[Math.floor(Math.random()*m.length)]); }
 function useGhost() { isGhost = true; consume('p-ghost'); }
 
-// Avvio iniziale
 updateRankUI();
