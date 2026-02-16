@@ -6,7 +6,7 @@ let timerInterval, timeLeft = 60;
 let myMatchScore = 0, remoteMatchScore = 0;
 let isOverclock = false, isGhost = false;
 
-// [LOCAL_STORAGE]: Caricamento punti salvati
+// [LOCAL_STORAGE]: Caricamento punti salvati (Salvataggio automatico del 13/02)
 let myScore = 0;
 const saved = localStorage.getItem('mv_elite_stats');
 if(saved) myScore = JSON.parse(saved).score || 0;
@@ -137,7 +137,7 @@ function updateRankUI() {
     if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
     if(myScore >= 20) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
     
-    // [AUTO_SAVE]: Salvataggio punti
+    // [AUTO_SAVE]: Salvataggio punti automatico richiesto
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
 
     document.querySelectorAll('.rank-bar-fill').forEach(el => { 
@@ -223,19 +223,40 @@ function sendWord() {
 }
 function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
 
+// --- NUOVA FUNZIONE FINALE AGGIORNATA ---
 function forceEnd(win) {
     clearInterval(timerInterval);
+    
+    // Calcolo Punteggio e Rank
     if (!amIMaster) {
         if (win) { myScore++; myMatchScore++; } 
         else { myScore = Math.max(0, myScore - 1); remoteMatchScore++; }
         if(conn) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
     } else {
+        // Se sei il Master, "vinci" se lo sfidante perde (!win)
         if (!win) myMatchScore++; else remoteMatchScore++;
     }
-    updateMatchScoreUI(); updateRankUI();
+    
+    updateMatchScoreUI(); 
+    updateRankUI(); 
+
+    const resTitle = document.getElementById('result-title');
+    const resDesc = document.getElementById('result-desc');
     document.getElementById('overlay').style.display = 'flex';
-    document.getElementById('result-title').innerText = amIMaster ? (win ? "UPLINK COMPROMISED" : "UPLINK SECURED") : (win ? "SYSTEM BYPASSED" : "CONNECTION LOST");
-    document.getElementById('result-desc').innerText = "DATA: " + secretWord;
+
+    // Logica Colori e Testi
+    if (amIMaster) {
+        // Il Master gode se lo sfidante NON ha bypassato il sistema
+        resTitle.innerText = win ? "UPLINK COMPROMISED" : "UPLINK SECURED";
+        resTitle.className = win ? "lose-glow" : "win-glow";
+    } else {
+        // Lo Sfidante gode se vince (win)
+        resTitle.innerText = win ? "SYSTEM BYPASSED" : "CONNECTION LOST";
+        resTitle.className = win ? "win-glow" : "lose-glow";
+    }
+
+    // Sostituzione Data -> PAROLA
+    resDesc.innerHTML = `PAROLA: <span style="color:white; font-weight:bold; letter-spacing:3px;">${secretWord}</span>`;
 }
 
 function retry() { if(isBot) initGame(); else location.reload(); }
