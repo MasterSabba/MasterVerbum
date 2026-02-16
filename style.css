@@ -65,7 +65,7 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .btn-reset:hover { color: var(--neon-pink); }
 
 /* Bottoni poteri */
-.powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+.powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 10px }
 .btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; }
 .btn-pwr:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
 .btn-pwr.master:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); }
