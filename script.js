@@ -2,52 +2,25 @@
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
-let timerInterval, timeLeft = 60;
-let myMatchScore = 0, remoteMatchScore = 0;
-let isOverclock = false, isGhost = false;
+let timerInterval, timeLeft = 60, myMatchScore = 0, remoteMatchScore = 0, isOverclock = false, isGhost = false;
 
-// [LOCAL_STORAGE]: Caricamento punti salvati (Salvataggio automatico del 13/02)
+// [AUTO_SAVE]: Caricamento punti salvati (Salvataggio automatico richiesto il 13/02)
 let myScore = 0;
 const saved = localStorage.getItem('mv_elite_stats');
 if(saved) myScore = JSON.parse(saved).score || 0;
 
-const dizionario = ["AMORE", "CASA", "SOLE", "LUNA", "MARE", "VENTO", "FUOCO", "ACQUA", "TERRA", "CIELO", "STELLA", "PIETRA", "FIORE", "ALBERO", "RADICE", "FOGLIA", "FRUTTO", "SEME", "PRATO", "BOSCO", "MONTE", "FIUME", "LAGO", "ISOLA", "SPIAGGIA", "DESERTO", "VALLE", "COLLINA", "NEVE", "PIOGGIA", "TEMPO", "NOTTE", "GIORNO", "LUCE", "OMBRA", "SOGNO", "RICORDO", "SPERANZA", "PAURA", "FORZA", "PACE", "GUERRA", "ONDA", "VENTAGLIO", "PORTA", "FINESTRA", "STRADA", "PONTE", "TORRE", "CASTELLO", "CITTA", "PAESE", "PIAZZA", "SCUOLA", "LIBRO", "PAGINA", "PAROLA", "LETTERA", "VOCE", "SUONO", "CANTO", "MUSICA", "ARTE", "COLORE", "QUADRO", "PENNELLO", "TEATRO", "FILM", "STORIA", "LEGGENDA", "FAVOLA", "MITO", "EROE", "REGINA", "RE", "PRINCIPE", "CAVALIERE", "DRAGO", "SPADA", "SCUDO", "AMICO", "NEMICO", "FRATELLO", "SORELLA", "MADRE", "PADRE", "FIGLIO", "FIGLIA", "NONNO", "NONNA", "CUORE", "MENTE", "CORPO", "ANIMA", "VOLTO", "MANO", "OCCHIO", "SGUARDO", "PASSO", "CORSA", "VIAGGIO", "TRENO", "AEREO", "NAVE", "AUTO", "BICICLETTA", "STRUMENTO", "GIOCO", "SQUADRA", "VITTORIA", "SCONFITTA", "RISATA", "LACRIMA", "ABBRACCIO", "BACIO", "SORRISO", "DESIDERIO", "SEGRETO", "MISTERO", "MAGIA", "ENERGIA", "NATURA", "ANIMALE", "CANE", "GATTO", "CAVALLO", "LEONE", "TIGRE", "AQUILA", "FALCO", "PESCE", "BALENA", "DELFINO", "FARFALLA", "FORMICA", "APE", "LUPO", "VOLPE", "ORSO", "CERVO", "PANE", "ACQUA", "LATTE", "FORMAGGIO", "FRUTTA", "VERDURA", "SALE", "ZUCCHERO", "MIELE", "CAFFE", "TAVOLO", "SEDIA", "LETTO", "ARMADIO", "SPECCHIO", "OROLOGIO", "TAPPETO", "TENDA", "LAMPADA", "CUSCINO"];
-
-// --- INIZIALIZZAZIONE ---
+// --- INIZIALIZZAZIONE PEER ---
 peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
     document.getElementById('connection-led').className = 'led led-on';
     document.getElementById('status-text').innerText = "SYSTEM_ONLINE";
 });
+peer.on('connection', c => { conn = c; conn.on('open', () => setupRemote()); });
 
-peer.on('connection', c => { 
-    conn = c; 
-    conn.on('open', () => setupRemote()); 
-});
-
-// --- FUNZIONI DI INTERFACCIA ---
-function toggleManual() {
-    const m = document.getElementById('manual-overlay');
-    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-}
-
-function resetAccount() {
-    if(confirm("SURE? All system data will be wiped.")) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-
-function copyId() {
-    const id = document.getElementById('my-id').innerText;
-    navigator.clipboard.writeText(id);
-    document.getElementById('copy-btn').innerText = "COPIED";
-    setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000);
-}
-
-// --- CONNESSIONE E RUOLI ---
+// --- GESTIONE CONNESSIONE E RUOLI ---
 function connectToPeer() {
-    const rId = document.getElementById('peer-id-input').value.toUpperCase().trim();
+    const input = document.getElementById('peer-id-input');
+    const rId = input.value.toUpperCase().trim();
     if(!rId) return;
     conn = peer.connect(rId);
     conn.on('open', () => setupRemote());
@@ -72,28 +45,89 @@ function setupRemote() {
     });
 }
 
-// --- LOGICA CORE ---
+// --- LOGICA CORE GIOCO ---
 function initGame() {
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('overlay').style.display = 'none';
-    
     document.getElementById('powers-sfidante').classList.toggle('hidden', amIMaster);
     document.getElementById('powers-master').classList.toggle('hidden', !amIMaster);
-    
-    guessedLetters = []; mistakes = 0; timeLeft = 60;
-    isOverclock = false; isGhost = false;
-    
+    guessedLetters = []; mistakes = 0; timeLeft = 60; isOverclock = false; isGhost = false;
     document.querySelectorAll('.btn-pwr').forEach(b => {
         b.disabled = amIMaster ? false : true;
-        b.removeAttribute('used'); 
-        b.style.opacity = "1";
+        b.removeAttribute('used'); b.style.opacity = "1";
         b.querySelector('.led').className = 'led';
     });
-    
     updateTimerUI(); updateMatchScoreUI(); createKeyboard(); renderWord(); startTimer();
 }
 
+// --- PUNTO 5: GENERATORE AUTOMATICO (BOT) ---
+async function startBotGame() {
+    isBot = true; amIMaster = false;
+    document.getElementById('status-text').innerText = "FETCHING_HEX_DATA...";
+    try {
+        const response = await fetch(`https://it.wiktionary.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`);
+        const data = await response.json();
+        let raw = data.query.random[0].title.toUpperCase();
+        secretWord = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, "");
+        if (secretWord.length < 4 || secretWord.length > 10) return startBotGame();
+        initGame();
+    } catch (e) {
+        const fallback = ["SISTEMA", "HACKER", "CODICE", "MATRICE", "FIREWALL"];
+        secretWord = fallback[Math.floor(Math.random()*fallback.length)];
+        initGame();
+    }
+}
+
+// --- PUNTO 5: VALIDAZIONE PAROLA (MASTER) ---
+async function sendWord() {
+    const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
+    if(val.length < 3) return alert("MIN_3_CHARS");
+    document.getElementById('status-text').innerText = "VALIDATING_UPLINK...";
+    try {
+        const check = await fetch(`https://it.wikipedia.org/w/api.php?action=query&titles=${val}&format=json&origin=*`);
+        const data = await check.json();
+        if (data.query.pages["-1"]) {
+            alert("ERRORE: PAROLA NON TROVATA NEL DATABASE");
+            document.getElementById('secret-word-input').value = "";
+            document.getElementById('status-text').innerText = "INVALID_ENTRY";
+            return;
+        }
+        secretWord = val;
+        if(conn) conn.send({ type: 'START', word: secretWord });
+        initGame();
+    } catch (e) {
+        secretWord = val;
+        if(conn) conn.send({ type: 'START', word: secretWord });
+        initGame();
+    }
+}
+
+// --- FUNZIONE FINALE (AZZURRO/ROSSO + PAROLA) ---
+function forceEnd(win) {
+    clearInterval(timerInterval);
+    if (!amIMaster) {
+        if (win) { myScore++; myMatchScore++; } 
+        else { myScore = Math.max(0, myScore - 1); remoteMatchScore++; }
+        if(conn) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
+    } else {
+        if (!win) myMatchScore++; else remoteMatchScore++;
+    }
+    updateMatchScoreUI(); updateRankUI();
+    const resTitle = document.getElementById('result-title');
+    const resDesc = document.getElementById('result-desc');
+    document.getElementById('overlay').style.display = 'flex';
+    if (amIMaster) {
+        resTitle.innerText = win ? "UPLINK COMPROMISED" : "UPLINK SECURED";
+        resTitle.className = win ? "lose-glow" : "win-glow";
+    } else {
+        resTitle.innerText = win ? "SYSTEM BYPASSED" : "CONNECTION LOST";
+        resTitle.className = win ? "win-glow" : "lose-glow";
+    }
+    resDesc.innerHTML = `PAROLA: <span style="color:white; font-weight:bold; letter-spacing:3px;">${secretWord}</span>`;
+}
+
+// --- LOGICA DI GIOCO ---
 function startTimer() {
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -109,48 +143,6 @@ function startTimer() {
     }, 1000);
 }
 
-// --- POTERI E AZIONI ---
-function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
-function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
-function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
-
-function triggerBlackout() {
-    const ps = document.getElementById('play-screen');
-    ps.classList.add('effect-blackout');
-    setTimeout(() => ps.classList.remove('effect-blackout'), 5000);
-}
-
-function triggerDistort() { 
-    document.getElementById('keyboard').classList.add('effect-glitch'); 
-    setTimeout(() => document.getElementById('keyboard').classList.remove('effect-glitch'), 4000); 
-}
-
-function triggerCyberfog() { 
-    document.getElementById('word-display').classList.add('effect-fog'); 
-    setTimeout(() => document.getElementById('word-display').classList.remove('effect-fog'), 6000); 
-}
-
-// --- RANK E PUNTI ---
-function updateRankUI() {
-    const p = Math.min((myScore/20)*100, 100);
-    let r = "HACKER"; let c = "var(--neon-blue)"; 
-    if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
-    if(myScore >= 20) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
-    
-    // [AUTO_SAVE]: Salvataggio punti automatico richiesto
-    localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
-
-    document.querySelectorAll('.rank-bar-fill').forEach(el => { 
-        el.style.width = p+"%"; 
-        el.style.background = c; 
-    });
-    document.querySelectorAll('.rank-label').forEach(el => { 
-        el.innerText = `${r} (${myScore}/20)`; 
-        el.style.color = c; 
-    });
-}
-
-// --- GESTIONE PAROLA E TASTIERA ---
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
@@ -190,80 +182,37 @@ function drawHangman() {
     ctx.stroke();
 }
 
-// --- UTILITY ---
-function updateTimerUI() { 
-    const mins = Math.floor(timeLeft / 60);
-    const secs = timeLeft % 60;
-    document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; 
-}
-function updateMatchScoreUI() { 
-    document.getElementById('score-me').innerText = myMatchScore; 
-    document.getElementById('score-remote').innerText = remoteMatchScore; 
-}
-function unlock(id, colorClass) { 
-    let b = document.getElementById(id); 
-    if(b && !b.getAttribute('used')) { 
-        b.disabled = false; 
-        b.querySelector('.led').className = 'led ' + colorClass; 
-    } 
-}
-function consume(id) { 
-    let b = document.getElementById(id); 
-    b.disabled = true; 
-    b.setAttribute('used', 'true'); 
-    b.querySelector('.led').className = 'led'; 
-    b.style.opacity="0.1"; 
-}
-function sendWord() {
-    const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
-    if(val.length < 3) return;
-    secretWord = val;
-    if(conn) conn.send({ type: 'START', word: secretWord });
-    initGame();
-}
-function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
-
-// --- NUOVA FUNZIONE FINALE AGGIORNATA ---
-function forceEnd(win) {
-    clearInterval(timerInterval);
-    
-    // Calcolo Punteggio e Rank
-    if (!amIMaster) {
-        if (win) { myScore++; myMatchScore++; } 
-        else { myScore = Math.max(0, myScore - 1); remoteMatchScore++; }
-        if(conn) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
-    } else {
-        // Se sei il Master, "vinci" se lo sfidante perde (!win)
-        if (!win) myMatchScore++; else remoteMatchScore++;
-    }
-    
-    updateMatchScoreUI(); 
-    updateRankUI(); 
-
-    const resTitle = document.getElementById('result-title');
-    const resDesc = document.getElementById('result-desc');
-    document.getElementById('overlay').style.display = 'flex';
-
-    // Logica Colori e Testi
-    if (amIMaster) {
-        // Il Master gode se lo sfidante NON ha bypassato il sistema
-        resTitle.innerText = win ? "UPLINK COMPROMISED" : "UPLINK SECURED";
-        resTitle.className = win ? "lose-glow" : "win-glow";
-    } else {
-        // Lo Sfidante gode se vince (win)
-        resTitle.innerText = win ? "SYSTEM BYPASSED" : "CONNECTION LOST";
-        resTitle.className = win ? "win-glow" : "lose-glow";
-    }
-
-    // Sostituzione Data -> PAROLA
-    resDesc.innerHTML = `PAROLA: <span style="color:white; font-weight:bold; letter-spacing:3px;">${secretWord}</span>`;
-}
-
-function retry() { if(isBot) initGame(); else location.reload(); }
-function startBotGame() { isBot = true; amIMaster = false; secretWord = dizionario[Math.floor(Math.random()*dizionario.length)]; initGame(); }
-function remoteMove(l) { guessedLetters.push(l); if(!secretWord.includes(l)) mistakes++; renderWord(); }
+// --- POTERI E UTILITY ---
 function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
 function useRescan() { if(timeLeft <= 10) return; timeLeft -= 10; updateTimerUI(); consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[Math.floor(Math.random()*m.length)]); }
 function useGhost() { isGhost = true; consume('p-ghost'); }
+function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
+function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
+function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
+function triggerBlackout() { const ps = document.getElementById('play-screen'); ps.classList.add('effect-blackout'); setTimeout(() => ps.classList.remove('effect-blackout'), 5000); }
+function triggerDistort() { document.getElementById('keyboard').classList.add('effect-glitch'); setTimeout(() => document.getElementById('keyboard').classList.remove('effect-glitch'), 4000); }
+function triggerCyberfog() { document.getElementById('word-display').classList.add('effect-fog'); setTimeout(() => document.getElementById('word-display').classList.remove('effect-fog'), 6000); }
+
+function updateTimerUI() { const mins = Math.floor(timeLeft / 60); const secs = timeLeft % 60; document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; }
+function updateMatchScoreUI() { document.getElementById('score-me').innerText = myMatchScore; document.getElementById('score-remote').innerText = remoteMatchScore; }
+function unlock(id, colorClass) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led ' + colorClass; } }
+function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
+function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
+function retry() { if(isBot) startBotGame(); else location.reload(); }
+function remoteMove(l) { guessedLetters.push(l); if(!secretWord.includes(l)) mistakes++; renderWord(); }
+
+function toggleManual() { const m = document.getElementById('manual-overlay'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
+function resetAccount() { if(confirm("SURE? All system data will be wiped.")) { localStorage.clear(); location.reload(); } }
+function copyId() { const id = document.getElementById('my-id').innerText; navigator.clipboard.writeText(id); document.getElementById('copy-btn').innerText = "COPIED"; setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000); }
+
+function updateRankUI() {
+    const p = Math.min((myScore/20)*100, 100);
+    let r = "HACKER", c = "var(--neon-blue)"; 
+    if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
+    if(myScore >= 20) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
+    localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
+    document.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = p+"%"; el.style.background = c; });
+    document.querySelectorAll('.rank-label').forEach(el => { el.innerText = `${r} (${myScore}/20)`; el.style.color = c; });
+}
 
 updateRankUI();
