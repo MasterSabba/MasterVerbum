@@ -93,7 +93,7 @@ function sendWord() {
     const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
     const cleanWord = val.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, "");
 
-    if(cleanWord.length < 3) return alert("MIN_3_CHARS");
+    if(cleanWord.length < 3) return alert("MIN 3 CHARS");
     
     secretWord = cleanWord;
     if(conn) conn.send({ type: 'START', word: secretWord });
