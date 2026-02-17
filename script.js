@@ -4,10 +4,12 @@ const peer = new Peer(myId);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
 let timerInterval, timeLeft = 60, myMatchScore = 0, remoteMatchScore = 0, isOverclock = false, isGhost = false;
 
-// [AUTO_SAVE]: Caricamento punti salvati (Salvataggio automatico richiesto il 13/02)
+// [AUTO_SAVE]: Caricamento punti salvati localmente
 let myScore = 0;
-const saved = localStorage.getItem('mv_elite_stats');
-if(saved) myScore = JSON.parse(saved).score || 0;
+const savedData = localStorage.getItem('mv_elite_stats');
+if(savedData) {
+    myScore = JSON.parse(savedData).score || 0;
+}
 
 // --- INIZIALIZZAZIONE PEER ---
 peer.on('open', id => {
@@ -53,25 +55,32 @@ function initGame() {
     document.getElementById('powers-sfidante').classList.toggle('hidden', amIMaster);
     document.getElementById('powers-master').classList.toggle('hidden', !amIMaster);
     guessedLetters = []; mistakes = 0; timeLeft = 60; isOverclock = false; isGhost = false;
+    
     document.querySelectorAll('.btn-pwr').forEach(b => {
         b.disabled = amIMaster ? false : true;
         b.removeAttribute('used'); b.style.opacity = "1";
         b.querySelector('.led').className = 'led';
     });
+    
     updateTimerUI(); updateMatchScoreUI(); createKeyboard(); renderWord(); startTimer();
 }
 
-// --- PUNTO 5: GENERATORE AUTOMATICO (BOT) ---
+// --- GENERATORE AUTOMATICO (BOT) DINAMICO ---
 async function startBotGame() {
     isBot = true; amIMaster = false;
-    document.getElementById('status-text').innerText = "FETCHING_HEX_DATA...";
+    document.getElementById('status-text').innerText = "QUERYING_DATAMUSE...";
     try {
-        const response = await fetch(`https://it.wiktionary.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`);
+        const length = Math.floor(Math.random() * 4) + 5; // Lunghezza 5-8
+        const pattern = "?".repeat(length);
+        const response = await fetch(`https://api.datamuse.com/words?sp=${pattern}&v=it&max=50`);
         const data = await response.json();
-        let raw = data.query.random[0].title.toUpperCase();
-        secretWord = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, "");
-        if (secretWord.length < 4 || secretWord.length > 10) return startBotGame();
-        initGame();
+        
+        if (data && data.length > 0) {
+            let raw = data[Math.floor(Math.random() * data.length)].word.toUpperCase();
+            secretWord = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, "");
+            if(secretWord.length < 3) return startBotGame();
+            initGame();
+        } else { throw new Error(); }
     } catch (e) {
         const fallback = ["SISTEMA", "HACKER", "CODICE", "MATRICE", "FIREWALL"];
         secretWord = fallback[Math.floor(Math.random()*fallback.length)];
@@ -79,44 +88,34 @@ async function startBotGame() {
     }
 }
 
-// --- PUNTO 5: VALIDAZIONE PAROLA (MASTER) ---
-async function sendWord() {
+// --- INVIO PAROLA (MASTER) ---
+function sendWord() {
     const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
-    if(val.length < 3) return alert("MIN_3_CHARS");
-    document.getElementById('status-text').innerText = "VALIDATING_UPLINK...";
-    try {
-        const check = await fetch(`https://it.wikipedia.org/w/api.php?action=query&titles=${val}&format=json&origin=*`);
-        const data = await check.json();
-        if (data.query.pages["-1"]) {
-            alert("ERRORE: PAROLA NON TROVATA NEL DATABASE");
-            document.getElementById('secret-word-input').value = "";
-            document.getElementById('status-text').innerText = "INVALID_ENTRY";
-            return;
-        }
-        secretWord = val;
-        if(conn) conn.send({ type: 'START', word: secretWord });
-        initGame();
-    } catch (e) {
-        secretWord = val;
-        if(conn) conn.send({ type: 'START', word: secretWord });
-        initGame();
-    }
+    const cleanWord = val.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, "");
+
+    if(cleanWord.length < 3) return alert("MIN_3_CHARS");
+    
+    secretWord = cleanWord;
+    if(conn) conn.send({ type: 'START', word: secretWord });
+    initGame();
 }
 
-// --- FUNZIONE FINALE (AZZURRO/ROSSO + PAROLA) ---
+// --- LOGICA PARTITA E PUNTEGGI ---
 function forceEnd(win) {
     clearInterval(timerInterval);
     if (!amIMaster) {
         if (win) { myScore++; myMatchScore++; } 
         else { myScore = Math.max(0, myScore - 1); remoteMatchScore++; }
-        if(conn) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
+        if(conn && !isBot) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
     } else {
         if (!win) myMatchScore++; else remoteMatchScore++;
     }
     updateMatchScoreUI(); updateRankUI();
+    
     const resTitle = document.getElementById('result-title');
     const resDesc = document.getElementById('result-desc');
     document.getElementById('overlay').style.display = 'flex';
+    
     if (amIMaster) {
         resTitle.innerText = win ? "UPLINK COMPROMISED" : "UPLINK SECURED";
         resTitle.className = win ? "lose-glow" : "win-glow";
@@ -127,7 +126,7 @@ function forceEnd(win) {
     resDesc.innerHTML = `PAROLA: <span style="color:white; font-weight:bold; letter-spacing:3px;">${secretWord}</span>`;
 }
 
-// --- LOGICA DI GIOCO ---
+// --- TIMER E MOVIMENTI ---
 function startTimer() {
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -205,14 +204,19 @@ function toggleManual() { const m = document.getElementById('manual-overlay'); m
 function resetAccount() { if(confirm("SURE? All system data will be wiped.")) { localStorage.clear(); location.reload(); } }
 function copyId() { const id = document.getElementById('my-id').innerText; navigator.clipboard.writeText(id); document.getElementById('copy-btn').innerText = "COPIED"; setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000); }
 
+// --- [AUTO_SAVE]: Aggiornamento Rank e Salvataggio Permanente ---
 function updateRankUI() {
     const p = Math.min((myScore/20)*100, 100);
     let r = "HACKER", c = "var(--neon-blue)"; 
     if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
     if(myScore >= 20) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
+    
+    // Salvataggio nel browser
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
+    
     document.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = p+"%"; el.style.background = c; });
     document.querySelectorAll('.rank-label').forEach(el => { el.innerText = `${r} (${myScore}/20)`; el.style.color = c; });
 }
 
+// Avvio UI iniziale
 updateRankUI();
