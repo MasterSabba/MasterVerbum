@@ -261,6 +261,33 @@ function updateRankUI() {
     document.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = p+"%"; el.style.background = c; });
     document.querySelectorAll('.rank-label').forEach(el => { el.innerText = `${r} (${myScore}/20)`; el.style.color = c; });
 }
+// --- [NEW] SUPPORTO TASTIERA ESTERNA ---
+window.addEventListener('keydown', (e) => {
+    // 1. Verifichiamo che il gioco sia attivo e che non siamo il Master
+    // (Il Master non deve poter indovinare la propria parola)
+    if (document.getElementById('play-screen').classList.contains('hidden') || amIMaster) return;
+
+    // 2. Prendiamo il tasto premuto e trasformiamolo in MAIUSCOLO
+    const key = e.key.toUpperCase();
+
+    // 3. Controlliamo che sia una singola lettera tra A e Z
+    if (key.length === 1 && key >= 'A' && key <= 'Z') {
+        
+        // Controlliamo se la lettera è già stata usata per evitare doppie penalità
+        if (guessedLetters.includes(key)) return;
+
+        // 4. Troviamo il tasto corrispondente nella tastiera a schermo per "spegnerlo" visivamente
+        const buttons = document.querySelectorAll('.key');
+        buttons.forEach(btn => {
+            if (btn.innerText === key) {
+                btn.classList.add('used'); // Lo rende grigio/disattivato come se fosse cliccato
+            }
+        });
+
+        // 5. Eseguiamo la mossa
+        handleMove(key);
+    }
+});
 
 // Avvio UI iniziale
 updateRankUI();
