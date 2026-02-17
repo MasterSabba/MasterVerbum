@@ -25,17 +25,34 @@ function connectToPeer() {
     const rId = input.value.toUpperCase().trim();
     if(!rId) return;
     conn = peer.connect(rId);
-    conn.on('open', () => setupRemote());
+    conn.on('open', () => {
+        setupRemote();
+        // [NUOVO]: Lancia la moneta per il primo turno
+        const randomRole = Math.random() > 0.5 ? 'MASTER' : 'GUEST';
+        amIMaster = (randomRole === 'GUEST'); // Io prendo l'opposto di quello che mando
+        conn.send({ type: 'ROLE_ASSIGN', role: randomRole });
+        updateRoleUI();
+    });
 }
 
 function setupRemote() {
     isBot = false;
-    amIMaster = myId < conn.peer;
-    if(amIMaster) {
-        document.getElementById('connect-section').classList.add('hidden');
-        document.getElementById('master-section').classList.remove('hidden');
-    }
+    // La vecchia riga "amIMaster = myId < conn.peer" è stata rimossa per favorire il random
+    
+    document.getElementById('connect-section').classList.add('hidden');
+    
     conn.on('data', d => {
+        // [NUOVO]: Ricezione ruolo iniziale
+        if(d.type === 'ROLE_ASSIGN') {
+            amIMaster = (d.role === 'MASTER');
+            updateRoleUI();
+        }
+        // [NUOVO]: Gestione Rematch con inversione
+        if(d.type === 'REMATCH_REQUEST') {
+            amIMaster = !amIMaster;
+            updateRoleUI();
+        }
+
         if(d.type === 'START') { secretWord = d.word; initGame(); }
         if(d.type === 'GUESS') remoteMove(d.letter);
         if(d.type === 'FINISH') forceEnd(d.win);
@@ -45,6 +62,20 @@ function setupRemote() {
         if(d.type === 'P_DISTORT') triggerDistort();
         if(d.type === 'P_CYBERFOG') triggerCyberfog();
     });
+}
+
+// [NUOVO]: Funzione per aggiornare l'interfaccia in base al ruolo
+function updateRoleUI() {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('play-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.remove('hidden');
+    if(amIMaster) {
+        document.getElementById('master-section').classList.remove('hidden');
+        document.getElementById('status-text').innerText = "YOUR_TURN_MASTER";
+    } else {
+        document.getElementById('master-section').classList.add('hidden');
+        document.getElementById('status-text').innerText = "WAITING_FOR_MASTER...";
+    }
 }
 
 // --- LOGICA CORE GIOCO ---
@@ -70,7 +101,7 @@ async function startBotGame() {
     isBot = true; amIMaster = false;
     document.getElementById('status-text').innerText = "QUERYING_DATAMUSE...";
     try {
-        const length = Math.floor(Math.random() * 4) + 5; // Lunghezza 5-8
+        const length = Math.floor(Math.random() * 4) + 5;
         const pattern = "?".repeat(length);
         const response = await fetch(`https://api.datamuse.com/words?sp=${pattern}&v=it&max=50`);
         const data = await response.json();
@@ -82,39 +113,7 @@ async function startBotGame() {
             initGame();
         } else { throw new Error(); }
     } catch (e) {
-        const fallback = [
-"ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA",
-"STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO",
-"FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE",
-"MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA",
-"PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA",
-"VELOCE","LENTO","GRANDE","PICCOLO","ALTO","BASSO","LARGO","STRETTO","NUOVO","VECCHIO",
-"GIOCO","SQUADRA","CALCIO","TENNIS","CORSA","SALTO","NUOTO","CICLISMO","ATLETA","MEDAGLIA",
-"CUCINA","FORNO","PIATTO","BICCHIERE","COLTELLO","FORCHETTA","CUCCHIAIO","TOVAGLIA","PENTOLA","RICETTA",
-"PIZZA","PASTA","RISOTTO","LASAGNA","TORTA","BISCOTTO","GELATO","CIOCCOLATO","ZUCCHERO","SALE",
-"PEPE","OLIO","ACQUA","LATTE","CAFFE","TE","SUCCO","VINO","BIRRA","FRUTTA",
-"MELA","PERA","PESCA","ARANCIA","LIMONE","BANANA","CILIEGIA","FRAGOLA","KIWI","ANANAS",
-"VERDURA","CAROTA","PATATA","POMODORO","INSALATA","CIPOLLA","AGLIO","SPINACI","ZUCCHINA","MELANZANA",
-"ANIMALE","LEONE","TIGRE","ELEFANTE","GIRAFFA","ZEBRA","ORSO","LUPO","VOLPE","CERVO",
-"FARFALLA","APE","FORMICA","RAGNO","SERPENTE","LUCERTOLA","TARTARUGA","DELFINO","BALENA","SQUALO",
-"TECNOLOGIA","COMPUTER","TELEFONO","SMARTPHONE","TABLET","STAMPANTE","MONITOR","CUFFIA","MICROFONO","ROUTER",
-"PROGRAMMA","SOFTWARE","HARDWARE","DATABASE","RETE","CLOUD","SICUREZZA","PASSWORD","ACCOUNT","PROFILO",
-"VIAGGIO","TRENO","AEREO","NAVE","AUTOBUS","BICICLETTA","MOTORE","MACCHINA","STRUMENTO","VALIGIA",
-"MAPPA","BUSSOLA","BIGLIETTO","HOTEL","OSTELLO","SPIAGGIA","FORESTA","DESERTO","ISOLA","CITTA",
-"PAESE","REGIONE","PROVINCIA","NAZIONE","CONTINENTE","EUROPA","ASIA","AFRICA","AMERICA","OCEANIA",
-"MUSICA","CANZONE","SUONO","RITMO","MELODIA","CHITARRA","PIANOFORTE","VIOLINO","BATTERIA","TROMBA",
-"ARTE","QUADRO","SCULTURA","TEATRO","CINEMA","FILM","ATTORE","REGISTA","SCENA","PALCO",
-"LIBRERIA","BIBLIOTECA","ROMANZO","POESIA","RACCONTO","CAPITOLO","PAGINA","PAROLA","LETTERA","ALFABETO",
-"NUMERO","CALCOLO","SOMMA","SOTTRAZIONE","MOLTIPLICAZIONE","DIVISIONE","FRAZIONE","RADICE","POTENZA","EQUAZIONE",
-"SCIENZA","FISICA","CHIMICA","BIOLOGIA","ASTRONOMIA","GEOLOGIA","MATEMATICA","FILOSOFIA","STORIA","GEOGRAFIA",
-"LAVORO","UFFICIO","AZIENDA","FABBRICA","NEGOZIO","MERCATO","CLIENTE","PROGETTO","OBIETTIVO","RISULTATO",
-"FAMIGLIA","MADRE","PADRE","FRATELLO","SORELLA","CUGINO","NONNO","NONNA","ZIO","ZIA",
-"AMICO","COLLEGA","VICINO","MAESTRO","STUDENTE","DOTTORE","INFERMIERE","INGEGNERE","AVVOCATO","ARTISTA",
-"GIARDINO","FIORI","ROSA","TULIPANO","MARGHERITA","ALBERGO","CASTELLO","TORRE","PONTE","MUSEO",
-"OROLOGIO","CALENDARIO","MINUTO","SECONDO","ORARIO","ATTIMO","EPOCA","SECOLO","MILLENNIO","TRAMONTO",
-"ALBA","MEZZOGIORNO","NOTTE","SERA","MATTINA","PRIMAVERA","ESTATE","AUTUNNO","INVERNO","STAGIONE"
-];
-
+        const fallback = ["ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA","STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO","FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE","MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA","PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA","VELOCE","LENTO","GRANDE","PICCOLO","ALTO","BASSO","LARGO","STRETTO","NUOVO","VECCHIO","GIOCO","SQUADRA","CALCIO","TENNIS","CORSA","SALTO","NUOTO","CICLISMO","ATLETA","MEDAGLIA","CUCINA","FORNO","PIATTO","BICCHIERE","COLTELLO","FORCHETTA","CUCCHIAIO","TOVAGLIA","PENTOLA","RICETTA","PIZZA","PASTA","RISOTTO","LASAGNA","TORTA","BISCOTTO","GELATO","CIOCCOLATO","ZUCCHERO","SALE","PEPE","OLIO","ACQUA","LATTE","CAFFE","TE","SUCCO","VINO","BIRRA","FRUTTA","MELA","PERA","PESCA","ARANCIA","LIMONE","BANANA","CILIEGIA","FRAGOLA","KIWI","ANANAS","VERDURA","CAROTA","PATATA","POMODORO","INSALATA","CIPOLLA","AGLIO","SPINACI","ZUCCHINA","MELANZANA","ANIMALE","LEONE","TIGRE","ELEFANTE","GIRAFFA","ZEBRA","ORSO","LUPO","VOLPE","CERVO","FARFALLA","APE","FORMICA","RAGNO","SERPENTE","LUCERTOLA","TARTARUGA","DELFINO","BALENA","SQUALO","TECNOLOGIA","COMPUTER","TELEFONO","SMARTPHONE","TABLET","STAMPANTE","MONITOR","CUFFIA","MICROFONO","ROUTER","PROGRAMMA","SOFTWARE","HARDWARE","DATABASE","RETE","CLOUD","SICUREZZA","PASSWORD","ACCOUNT","PROFILO","VIAGGIO","TRENO","AEREO","NAVE","AUTOBUS","BICICLETTA","MOTORE","MACCHINA","STRUMENTO","VALIGIA","MAPPA","BUSSOLA","BIGLIETTO","HOTEL","OSTELLO","SPIAGGIA","FORESTA","DESERTO","ISOLA","CITTA","PAESE","REGIONE","PROVINCIA","NAZIONE","CONTINENTE","EUROPA","ASIA","AFRICA","AMERICA","OCEANIA","MUSICA","CANZONE","SUONO","RITMO","MELODIA","CHITARRA","PIANOFORTE","VIOLINO","BATTERIA","TROMBA","ARTE","QUADRO","SCULTURA","TEATRO","CINEMA","FILM","ATTORE","REGISTA","SCENA","PALCO","LIBRERIA","BIBLIOTECA","ROMANZO","POESIA","RACCONTO","CAPITOLO","PAGINA","PAROLA","LETTERA","ALFABETO","NUMERO","CALCOLO","SOMMA","SOTTRAZIONE","MOLTIPLICAZIONE","DIVISIONE","FRAZIONE","RADICE","POTENZA","EQUAZIONE","SCIENZA","FISICA","CHIMICA","BIOLOGIA","ASTRONOMIA","GEOLOGIA","MATEMATICA","FILOSOFIA","STORIA","GEOGRAFIA","LAVORO","UFFICIO","AZIENDA","FABBRICA","NEGOZIO","MERCATO","CLIENTE","PROGETTO","OBIETTIVO","RISULTATO","FAMIGLIA","MADRE","PADRE","FRATELLO","SORELLA","CUGINO","NONNO","NONNA","ZIO","ZIA","AMICO","COLLEGA","VICINO","MAESTRO","STUDENTE","DOTTORE","INFERMIERE","INGEGNERE","AVVOCATO","ARTISTA","GIARDINO","FIORI","ROSA","TULIPANO","MARGHERITA","ALBERGO","CASTELLO","TORRE","PONTE","MUSEO","OROLOGIO","CALENDARIO","MINUTO","SECONDO","ORARIO","ATTIMO","EPOCA","SECOLO","MILLENNIO","TRAMONTO","ALBA","MEZZOGIORNO","NOTTE","SERA","MATTINA","PRIMAVERA","ESTATE","AUTUNNO","INVERNO","STAGIONE"];
         secretWord = fallback[Math.floor(Math.random()*fallback.length)];
         initGame();
     }
@@ -229,7 +228,20 @@ function updateMatchScoreUI() { document.getElementById('score-me').innerText = 
 function unlock(id, colorClass) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led ' + colorClass; } }
 function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
 function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
-function retry() { if(isBot) startBotGame(); else location.reload(); }
+
+// [MODIFICATO]: Retry gestisce ora lo scambio ruoli fluido
+function retry() { 
+    if(isBot) {
+        startBotGame();
+    } else if (conn) {
+        amIMaster = !amIMaster; // Inverte ruolo localmente
+        conn.send({ type: 'REMATCH_REQUEST' });
+        updateRoleUI();
+    } else {
+        location.reload(); 
+    }
+}
+
 function remoteMove(l) { guessedLetters.push(l); if(!secretWord.includes(l)) mistakes++; renderWord(); }
 
 function toggleManual() { const m = document.getElementById('manual-overlay'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
