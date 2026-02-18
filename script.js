@@ -9,7 +9,7 @@ let wordHistory = [];
 let myScore = JSON.parse(localStorage.getItem('mv_elite_stats'))?.score || 0;
 let myHackerTag = localStorage.getItem('mv_hacker_tag') || "";
 
-const fallback = ["ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA","STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO","FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE","MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA","PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA","MELA","PERA","BANANA","LIMONE","FRAGOLA","CILIEGIA","PESCA","ARANCIA","UVA","PANE","PASTA","PIZZA","LATTE","UOVO","CARNE","PESCE","FORMAGGIO","VINO","BIRRA","ACQUA","SALE","PEPE","OLIO","ACETO","DOLCE","AMARO","SALATO","ACIDO","CALDO","FREDDO","ROSSO","VERDE","BLU","GIALLO","NERO","BIANCO","GRIGIO","AZZURRO","VIOLA","ROSA","MARRONE","ESTATE","INVERNO","PRIMAVERA","AUTUNNO"];
+const fallback = ["ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA","STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO","FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE","MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA","PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA","MELA","PERA","BANANA","LIMONE","FRAGOLA","CILIEGIA","PESCA","ARANCIA","UVA","PANE","PASTA","PIZZA","LATTE","UOVO","CARNE","PESCE","FORMAGGIO","VINO","BIRRA","ACQUA","SALE","PEPE","OLIO","ACETO","DOLCE","AMARO","SALATO","ACIDO","CALDO","FREDDO","ROSSO","VERDE","BLU","GIALLO","NERO","BIANCO","GRIGIO","AZZURRO","VIOLA","ROSA","MARRONE"];
 
 // --- DIFFICOLTÀ ADATTIVA ---
 function getDifficultySettings() {
@@ -55,7 +55,7 @@ function updateRankUI() {
     if (myScore >= 100) triggerGodEnding();
 }
 
-// --- DISEGNO OMINO (HANGMAN) ---
+// --- DISEGNO OMINO ---
 function drawHangman() {
     const canvas = document.getElementById('hangmanCanvas');
     if(!canvas) return;
@@ -64,12 +64,12 @@ function drawHangman() {
     ctx.strokeStyle = "#00f2ff";
     ctx.lineWidth = 2;
 
-    if (mistakes > 0) { ctx.beginPath(); ctx.moveTo(20, 80); ctx.lineTo(140, 80); ctx.stroke(); } // Base
-    if (mistakes > 1) { ctx.beginPath(); ctx.moveTo(40, 80); ctx.lineTo(40, 10); ctx.lineTo(100, 10); ctx.lineTo(100, 20); ctx.stroke(); } // Trave
-    if (mistakes > 2) { ctx.beginPath(); ctx.arc(100, 30, 10, 0, Math.PI * 2); ctx.stroke(); } // Testa
-    if (mistakes > 3) { ctx.beginPath(); ctx.moveTo(100, 40); ctx.lineTo(100, 60); ctx.stroke(); } // Corpo
-    if (mistakes > 4) { ctx.beginPath(); ctx.moveTo(100, 45); ctx.lineTo(85, 55); ctx.moveTo(100, 45); ctx.lineTo(115, 55); ctx.stroke(); } // Braccia
-    if (mistakes > 5) { ctx.beginPath(); ctx.moveTo(100, 60); ctx.lineTo(85, 75); ctx.moveTo(100, 60); ctx.lineTo(115, 75); ctx.stroke(); } // Gambe
+    if (mistakes > 0) { ctx.beginPath(); ctx.moveTo(20, 80); ctx.lineTo(140, 80); ctx.stroke(); } 
+    if (mistakes > 1) { ctx.beginPath(); ctx.moveTo(40, 80); ctx.lineTo(40, 10); ctx.lineTo(100, 10); ctx.lineTo(100, 20); ctx.stroke(); } 
+    if (mistakes > 2) { ctx.beginPath(); ctx.arc(100, 30, 10, 0, Math.PI * 2); ctx.stroke(); } 
+    if (mistakes > 3) { ctx.beginPath(); ctx.moveTo(100, 40); ctx.lineTo(100, 60); ctx.stroke(); } 
+    if (mistakes > 4) { ctx.beginPath(); ctx.moveTo(100, 45); ctx.lineTo(85, 55); ctx.moveTo(100, 45); ctx.lineTo(115, 55); ctx.stroke(); } 
+    if (mistakes > 5) { ctx.beginPath(); ctx.moveTo(100, 60); ctx.lineTo(85, 75); ctx.moveTo(100, 60); ctx.lineTo(115, 75); ctx.stroke(); } 
 }
 
 // --- LOGICA GIOCO ---
@@ -89,7 +89,9 @@ function initGame() {
     isOverclock = false; isGhost = false;
     
     document.querySelectorAll('.btn-pwr').forEach(b => {
-        b.disabled = true; b.style.opacity = "0.3";
+        b.disabled = true; 
+        b.style.opacity = "0.3";
+        b.removeAttribute('data-used');
         const led = b.querySelector('.led');
         if(led) led.className = 'led';
     });
@@ -105,112 +107,64 @@ function startTimer() {
     timerInterval = setInterval(() => {
         if(!amIMaster) {
             if(!isOverclock) timeLeft--;
-            const wordDisp = document.getElementById('word-display');
-            if(getDifficultySettings().shake) wordDisp.classList.add('effect-shake');
             
             if(timeLeft <= 45) unlockPower('p-overclock');
             if(timeLeft <= 30) unlockPower('p-rescan');
             if(timeLeft <= 15) unlockPower('p-ghost');
+            
             if(timeLeft <= 0) triggerEnd(false);
         }
         document.getElementById('timer-display').innerText = formatTime(timeLeft);
     }, 1000);
 }
 
-function formatTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-}
-
-function renderWord() {
-    const d = document.getElementById('word-display');
-    d.innerHTML = secretWord.split("").map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join("");
-    
-    if(!amIMaster) {
-        if(secretWord.split("").every(l => guessedLetters.includes(l))) triggerEnd(true);
-        else if(mistakes >= 6) triggerEnd(false);
+function unlockPower(id) {
+    const b = document.getElementById(id);
+    if(b && !b.hasAttribute('data-used')) {
+        b.disabled = false;
+        b.style.opacity = "1";
+        const led = b.querySelector('.led');
+        if(led) led.classList.add('led-on');
     }
 }
 
-function handleMove(l) {
-    if(guessedLetters.includes(l)) return;
-    guessedLetters.push(l);
-    if(!secretWord.includes(l)) {
-        if(isGhost) {
-            isGhost = false;
-            const gLed = document.getElementById('p-ghost').querySelector('.led');
-            gLed.className = 'led';
-        } else {
-            mistakes++;
-            drawHangman();
-        }
+function consumePower(id) {
+    const b = document.getElementById(id);
+    if(b) {
+        b.disabled = true;
+        b.setAttribute('data-used', 'true');
+        b.style.opacity = "0.1";
+        const led = b.querySelector('.led');
+        if(led) led.className = 'led';
     }
-    renderWord();
 }
 
+// --- FINALE CON LED ---
 function triggerEnd(win) {
     clearInterval(timerInterval);
     if (win) {
         myScore++;
         if (!myHackerTag) {
-            myHackerTag = prompt("NUOVO RECORD! INSERISCI HACKER_TAG:", "USER_" + myId);
+            myHackerTag = prompt("NUOVO RECORD! NOME:", "USER_" + myId);
             if(myHackerTag) localStorage.setItem('mv_hacker_tag', myHackerTag);
         }
     } else {
         myScore = Math.max(0, myScore - 1);
     }
     updateRankUI();
-    
+
     const ov = document.getElementById('overlay');
     ov.style.display = 'flex';
+    
+    // Inseriamo il LED nell'overlay in base al risultato
+    const ledClass = win ? "led-on" : "led-off"; // led-off di solito è rosso nel tuo CSS
+    const ledColor = win ? "var(--neon-green, #39ff14)" : "#ff003c";
+    
     document.getElementById('result-title').innerText = win ? "ACCESSO_GARANTITO" : "SISTEMA_VIOLATO";
-    document.getElementById('result-desc').innerText = "PAROLA CHIAVE: " + secretWord;
-}
-
-// --- UTILS ---
-function createKeyboard() {
-    const k = document.getElementById('keyboard');
-    k.innerHTML = "";
-    "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
-        const b = document.createElement('button');
-        b.className = "key";
-        b.innerText = l;
-        b.onclick = () => { b.classList.add('used'); b.disabled = true; handleMove(l); };
-        k.appendChild(b);
-    });
-}
-
-function unlockPower(id) {
-    const b = document.getElementById(id);
-    if(b && b.disabled) {
-        b.disabled = false;
-        b.style.opacity = "1";
-        b.querySelector('.led').classList.add('led-on');
-    }
-}
-
-function toggleManual() {
-    const m = document.getElementById('manual-overlay');
-    m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-}
-
-function retry() {
-    document.getElementById('overlay').style.display = 'none';
-    if(isBot) startBotGame(); else location.reload();
-}
-
-function resetAccount() {
-    if(confirm("DELETE ALL LOGIN DATA?")) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-
-function copyId() {
-    navigator.clipboard.writeText(myId);
-    document.getElementById('copy-btn').innerText = "COPIED!";
-    setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000);
+    document.getElementById('result-desc').innerHTML = `
+        <div class="led ${ledClass}" style="margin: 0 auto 15px; background: ${ledColor}; box-shadow: 0 0 15px ${ledColor}; width: 12px; height: 12px; border-radius: 50%;"></div>
+        PAROLA CHIAVE: <span style="color:white; letter-spacing: 2px;">${secretWord}</span>
+    `;
 }
 
 // --- POTERI ---
@@ -224,22 +178,72 @@ function useRescan() {
 }
 function useGhost() { isGhost = true; consumePower('p-ghost'); }
 
-function consumePower(id) {
-    const b = document.getElementById(id);
-    b.disabled = true;
-    b.style.opacity = "0.1";
-    b.querySelector('.led').className = 'led';
+// --- UTILS ---
+function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+}
+
+function renderWord() {
+    const d = document.getElementById('word-display');
+    d.innerHTML = secretWord.split("").map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join("");
+    if(!amIMaster) {
+        if(secretWord.split("").every(l => guessedLetters.includes(l))) triggerEnd(true);
+        else if(mistakes >= 6) triggerEnd(false);
+    }
+}
+
+function handleMove(l) {
+    if(guessedLetters.includes(l)) return;
+    guessedLetters.push(l);
+    if(!secretWord.includes(l)) {
+        if(isGhost) { isGhost = false; } else {
+            mistakes++;
+            drawHangman();
+        }
+    }
+    renderWord();
+}
+
+function createKeyboard() {
+    const k = document.getElementById('keyboard');
+    k.innerHTML = "";
+    "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
+        const b = document.createElement('button');
+        b.className = "key";
+        b.innerText = l;
+        b.onclick = () => { b.classList.add('used'); b.disabled = true; handleMove(l); };
+        k.appendChild(b);
+    });
+}
+
+function toggleManual() {
+    const m = document.getElementById('manual-overlay');
+    m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function retry() {
+    document.getElementById('overlay').style.display = 'none';
+    if(isBot) startBotGame(); else location.reload();
+}
+
+function resetAccount() {
+    if(confirm("DELETE ALL DATA?")) { localStorage.clear(); location.reload(); }
+}
+
+function copyId() {
+    navigator.clipboard.writeText(myId);
+    document.getElementById('copy-btn').innerText = "COPIED!";
+    setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000);
 }
 
 function triggerGodEnding() {
     document.body.innerHTML = `<div style="background:black; color:#ff00ff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:monospace; text-align:center;">
-        <h1 style="font-size:3em; text-shadow: 0 0 20px #ff00ff;">GOD_MODE_ACTIVE</h1>
-        <p>Hai saturato il database delle parole. La realtà è ora sotto il tuo controllo.</p>
-        <button onclick="localStorage.clear();location.reload();" style="background:#ff00ff; color:black; border:none; padding:20px; font-weight:bold; cursor:pointer; margin-top:20px;">RESET_UNIVERSE (PRESTIGE)</button>
+        <h1>GOD_MODE_ACTIVE</h1><button onclick="localStorage.clear();location.reload();">RESET_UNIVERSE</button>
     </div>`;
 }
 
-// --- INIT ---
 peer.on('open', id => { 
     document.getElementById('my-id').innerText = id; 
     document.getElementById('connection-led').className = 'led led-on';
