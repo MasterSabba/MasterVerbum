@@ -69,6 +69,14 @@ function updateRoleUI() {
 
 // --- LOGICA CORE GIOCO ---
 function initGame() {
+    // AGGIUNTA CRONOLOGIA: Registra la parola per evitare ripetizioni (sia Bot che Master)
+    if (secretWord) {
+        if (!wordHistory.includes(secretWord)) {
+            wordHistory.push(secretWord);
+            if (wordHistory.length > 20) wordHistory.shift();
+        }
+    }
+
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('overlay').style.display = 'none';
@@ -86,10 +94,7 @@ function initGame() {
 function getRandomWord() {
     let availableWords = fallback.filter(word => !wordHistory.includes(word));
     if (availableWords.length === 0) { wordHistory = []; availableWords = fallback; }
-    const chosenWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-    wordHistory.push(chosenWord);
-    if (wordHistory.length > 20) { wordHistory.shift(); }
-    return chosenWord;
+    return availableWords[Math.floor(Math.random() * availableWords.length)];
 }
 
 async function startBotGame() {
@@ -100,8 +105,15 @@ async function startBotGame() {
         const response = await fetch(`https://api.datamuse.com/words?sp=${"?".repeat(length)}&v=it&max=50`);
         const data = await response.json();
         if (data && data.length > 0) {
-            let raw = data[Math.floor(Math.random() * data.length)].word.toUpperCase();
-            secretWord = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, "");
+            // Filtra i risultati Datamuse per non usare parole recenti
+            let validChoices = data.map(w => w.word.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, ""))
+                                  .filter(w => !wordHistory.includes(w));
+            
+            if (validChoices.length > 0) {
+                secretWord = validChoices[Math.floor(Math.random() * validChoices.length)];
+            } else {
+                secretWord = getRandomWord();
+            }
             initGame();
         } else { throw new Error(); }
     } catch (e) {
