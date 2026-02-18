@@ -5,7 +5,7 @@ let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false,
 let timerInterval, timeLeft = 60, myMatchScore = 0, remoteMatchScore = 0, isOverclock = false, isGhost = false;
 let wordHistory = []; 
 
-// [PERSONALIZZAZIONE] Nickname e Rank
+// [PERSONALIZZAZIONE] Nickname e Rank (Salvataggio automatico locale)
 let myHackerTag = localStorage.getItem('mv_hacker_tag') || "GUEST_USER";
 let myScore = 0;
 const savedData = localStorage.getItem('mv_elite_stats');
@@ -89,7 +89,13 @@ function initGame() {
     if(pSfidante) pSfidante.classList.toggle('hidden', amIMaster);
     if(pMaster) pMaster.classList.toggle('hidden', !amIMaster);
 
-    guessedLetters = []; mistakes = 0; timeLeft = 60; isOverclock = false; isGhost = false;
+    // --- DIFFICOLTÀ DINAMICA BASATA SULLE 4 FASI ---
+    timeLeft = 60; // Base: Hacker (0-9)
+    if(myScore >= 10 && myScore < 50) timeLeft = 45;  // Elite Hacker
+    if(myScore >= 50 && myScore < 100) timeLeft = 40; // Cyber Phantom
+    if(myScore >= 100) timeLeft = 35;                 // God Mode
+
+    guessedLetters = []; mistakes = 0; isOverclock = false; isGhost = false;
     document.querySelectorAll('.btn-pwr').forEach(b => {
         b.disabled = amIMaster ? false : true;
         b.removeAttribute('used'); b.style.opacity = "1";
@@ -144,8 +150,8 @@ function forceEnd(win) {
             }
         } 
         else { 
-            // Immunità GOD_MODE
-            if(myScore < 50) myScore = Math.max(0, myScore - 1); 
+            // PRIVILEGIO GOD_MODE: Immunità alla perdita punti sopra i 100
+            if(myScore < 100) myScore = Math.max(0, myScore - 1); 
             remoteMatchScore++; 
         }
         if(conn && !isBot) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
@@ -158,22 +164,42 @@ function forceEnd(win) {
     document.getElementById('overlay').style.display = 'flex';
     
     if (win) {
-        resTitle.innerText = (myScore >= 50) ? "GOD_MODE_ACTIVE" : (amIMaster ? "UPLINK SECURED" : "SYSTEM BYPASSED");
+        // --- GESTIONE COLORI RISULTATO ---
+        if (myScore >= 100) {
+            resTitle.innerText = "GOD_MODE_ACTIVE";
+            resTitle.style.color = "#ff00ff";
+            resTitle.style.textShadow = "0 0 20px #ff00ff";
+        } else if (myScore >= 50) {
+            resTitle.innerText = "PHANTOM_UPLINK_SECURED";
+            resTitle.style.color = "#ffcc00";
+        } else {
+            resTitle.innerText = amIMaster ? "UPLINK SECURED" : "SYSTEM BYPASSED";
+            resTitle.style.color = "#00f2ff";
+        }
         resTitle.className = "win-glow";
-        if(myScore >= 50) resTitle.style.color = "#ff00ff";
     } else {
         resTitle.innerText = amIMaster ? "UPLINK COMPROMISED" : "CONNECTION LOST";
         resTitle.className = "lose-glow";
+        resTitle.style.color = "#ff003c";
     }
     document.getElementById('result-desc').innerHTML = `PAROLA: <span style="color:white; font-weight:bold; letter-spacing:3px;">${secretWord}</span>`;
 }
 
-// --- LOGICA PROGRESSIONE ---
+// --- LOGICA PROGRESSIONE (4 LIVELLI) ---
 function updateRankUI() {
     const p = Math.min((myScore / 100) * 100, 100);
     let r = "HACKER", c = "#00f2ff"; 
-    if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
-    if(myScore >= 50) { r = "GOD_MODE"; c = "#ff00ff"; }
+    
+    if(myScore >= 10 && myScore < 50) { 
+        r = "ELITE_HACKER"; 
+        c = "#39ff14"; 
+    } else if(myScore >= 50 && myScore < 100) {
+        r = "CYBER_PHANTOM";
+        c = "#ffcc00"; // Giallo Oro
+    } else if(myScore >= 100) { 
+        r = "GOD_MODE"; 
+        c = "#ff00ff"; // Fucsia
+    }
 
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
     document.getElementById('status-text').innerText = `[${myHackerTag}] SYSTEM_ONLINE`;
@@ -195,9 +221,12 @@ function startTimer() {
     timerInterval = setInterval(() => {
         if(!amIMaster) {
             if(!isOverclock) timeLeft--;
+            
+            // Sblocco poteri adattivo basato sul tempo
             if(timeLeft <= 45) unlock('p-overclock', 'led-on');
             if(timeLeft <= 30) unlock('p-rescan', 'led-on');
             if(timeLeft <= 15) unlock('p-ghost', 'led-on');
+            
             if(timeLeft <= 0) triggerEnd(false);
             if(conn && !isBot && timeLeft % 2 === 0) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
         }
