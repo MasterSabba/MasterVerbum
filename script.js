@@ -7,53 +7,11 @@ let wordHistory = [];
 
 // [AUTO_SAVE] Data Loading
 let myScore = JSON.parse(localStorage.getItem('mv_elite_stats'))?.score || 0;
-let myHackerTag = localStorage.getItem('mv_hacker_tag') || "";
+let myHackerTag = localStorage.getItem('mv_hacker_tag') || "GUEST_USER";
 
 const fallback = ["ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA","STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO","FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE","MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA","PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA","MELA","PERA","BANANA","LIMONE","FRAGOLA","CILIEGIA","PESCA","ARANCIA","UVA","PANE","PASTA","PIZZA","LATTE","UOVO","CARNE","PESCE","FORMAGGIO","VINO","BIRRA","ACQUA","SALE","PEPE","OLIO","ACETO","DOLCE","AMARO","SALATO","ACIDO","CALDO","FREDDO","ROSSO","VERDE","BLU","GIALLO","NERO","BIANCO","GRIGIO","AZZURRO","VIOLA","ROSA","MARRONE"];
 
-// --- MULTIPLAYER CORE (THE MISSING PART) ---
-function connectToPeer() {
-    const targetId = document.getElementById('peer-id-input').value.toUpperCase();
-    if (!targetId) return;
-    
-    document.getElementById('status-text').innerText = "ESTABLISHING_LINK...";
-    conn = peer.connect(targetId);
-    setupConn();
-}
-
-peer.on('connection', (c) => {
-    conn = c;
-    setupConn();
-});
-
-function setupConn() {
-    conn.on('open', () => {
-        document.getElementById('status-text').innerText = "LINK_ESTABLISHED";
-        document.getElementById('connection-led').style.background = "#39ff14";
-        
-        // Se ricevo la connessione, divento Master (scelgo la parola)
-        if (!conn.outbound) {
-            amIMaster = true;
-            let word = prompt("ENTER WORD TO HIDE:").toUpperCase();
-            if(!word) word = "HACK";
-            secretWord = word;
-            conn.send({ type: 'start', word: secretWord });
-            initGame();
-        }
-    });
-
-    conn.on('data', (data) => {
-        if (data.type === 'start') {
-            secretWord = data.word;
-            amIMaster = false;
-            initGame();
-        } else if (data.type === 'move') {
-            handleMove(data.letter);
-        }
-    });
-}
-
-// --- INTERFACE & RANK ---
+// --- UI UPDATE CON NICKNAME ---
 function updateRankUI() {
     const progress = Math.min((myScore / 100) * 100, 100);
     let r = "NOVICE", c = "#888";
@@ -65,6 +23,10 @@ function updateRankUI() {
     if(myScore >= 100) { r = "GOD_MODE"; c = "#ff00ff"; }
 
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
+    
+    // Aggiorna Nickname e Status nella barra
+    const statusText = document.getElementById('status-text');
+    if(statusText) statusText.innerText = `[${myHackerTag}] SYSTEM_READY`;
 
     const updateElements = (suffix) => {
         const fill = document.getElementById('rank-bar-fill-' + suffix);
@@ -76,7 +38,66 @@ function updateRankUI() {
     updateElements('final');
 }
 
-// --- GAME LOGIC ---
+// --- DISEGNO OMINO CLASSICO ---
+function drawHangman() {
+    const canvas = document.getElementById('hangmanCanvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#00f2ff";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+
+    // Disegno basato sui "mistakes" (6 parti: Testa, Busto, 2 Braccia, 2 Gambe)
+    if (mistakes > 0) { // Testa
+        ctx.beginPath(); ctx.arc(75, 20, 12, 0, Math.PI * 2); ctx.stroke(); 
+    }
+    if (mistakes > 1) { // Busto
+        ctx.beginPath(); ctx.moveTo(75, 32); ctx.lineTo(75, 60); ctx.stroke(); 
+    }
+    if (mistakes > 2) { // Braccio SX
+        ctx.beginPath(); ctx.moveTo(75, 40); ctx.lineTo(55, 50); ctx.stroke(); 
+    }
+    if (mistakes > 3) { // Braccio DX
+        ctx.beginPath(); ctx.moveTo(75, 40); ctx.lineTo(95, 50); ctx.stroke(); 
+    }
+    if (mistakes > 4) { // Gamba SX
+        ctx.beginPath(); ctx.moveTo(75, 60); ctx.lineTo(60, 85); ctx.stroke(); 
+    }
+    if (mistakes > 5) { // Gamba DX
+        ctx.beginPath(); ctx.moveTo(75, 60); ctx.lineTo(90, 85); ctx.stroke(); 
+    }
+}
+
+// --- MULTIPLAYER & CONN ---
+function connectToPeer() {
+    const targetId = document.getElementById('peer-id-input').value.toUpperCase();
+    if (!targetId) return;
+    document.getElementById('status-text').innerText = "LINKING...";
+    conn = peer.connect(targetId);
+    setupConn();
+}
+
+peer.on('connection', (c) => { conn = c; setupConn(); });
+
+function setupConn() {
+    conn.on('open', () => {
+        document.getElementById('status-text').innerText = "CONNECTED";
+        if (!conn.outbound) {
+            amIMaster = true;
+            let word = prompt("ENTER SECRET WORD:").toUpperCase();
+            secretWord = word || "HACK";
+            conn.send({ type: 'start', word: secretWord });
+            initGame();
+        }
+    });
+    conn.on('data', (data) => {
+        if (data.type === 'start') { secretWord = data.word; amIMaster = false; initGame(); }
+        else if (data.type === 'move') { handleMove(data.letter); }
+    });
+}
+
+// --- LOGICA GIOCO ---
 function startBotGame() {
     isBot = true; amIMaster = false;
     secretWord = fallback[Math.floor(Math.random() * fallback.length)];
@@ -88,17 +109,11 @@ function initGame() {
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('overlay').style.display = 'none';
     guessedLetters = []; mistakes = 0; timeLeft = 60;
-    
     document.querySelectorAll('.btn-pwr').forEach(b => {
-        b.disabled = true; b.style.opacity = "0.3";
-        b.removeAttribute('data-used');
+        b.disabled = true; b.style.opacity = "0.3"; b.removeAttribute('data-used');
     });
-
-    createKeyboard();
-    renderWord();
-    drawHangman();
+    createKeyboard(); renderWord(); drawHangman();
     if (!amIMaster) startTimer();
-    else document.getElementById('timer-display').innerText = "WAITING";
 }
 
 function startTimer() {
@@ -113,10 +128,19 @@ function startTimer() {
     }, 1000);
 }
 
+// --- OVERLAY FINALE (STILE VERBUM) ---
 function triggerEnd(win) {
     clearInterval(timerInterval);
     if (!amIMaster) {
-        if (win) myScore++; else myScore = Math.max(0, myScore - 1);
+        if (win) {
+            myScore++;
+            if (myHackerTag === "GUEST_USER") {
+                let n = prompt("NEW RECORD! ENTER TAG:");
+                if(n) { myHackerTag = n; localStorage.setItem('mv_hacker_tag', n); }
+            }
+        } else {
+            myScore = Math.max(0, myScore - 1);
+        }
         updateRankUI();
     }
 
@@ -125,26 +149,28 @@ function triggerEnd(win) {
     
     const title = document.getElementById('result-title');
     title.innerText = win ? "ACCESS_GRANTED" : "CONNECTION_TERMINATED";
-    title.style.color = "#fff";
-
+    
+    // Applichiamo lo stile NEON pulito come VERBUM
+    title.style.fontSize = "2.5rem";
+    title.style.fontWeight = "900";
     if (win) {
-        title.style.textShadow = "0 0 10px #00f2ff, 0 0 20px #00f2ff, 0 0 40px #00f2ff";
+        title.style.color = "#00f2ff";
+        title.style.textShadow = "0 0 10px #00f2ff, 0 0 20px #00f2ff";
     } else {
-        title.style.textShadow = "0 0 10px #ff003c, 0 0 20px #ff003c, 0 0 40px #ff003c";
+        title.style.color = "#ff003c";
+        title.style.textShadow = "0 0 10px #ff003c, 0 0 20px #ff003c";
     }
 
     document.getElementById('result-desc').innerHTML = `
-        <p style="margin-top:10px;">KEYWORD: <span style="color:#00f2ff; font-weight:bold; letter-spacing:2px;">${secretWord}</span></p>
+        <p style="margin-top:20px; font-family:monospace;">KEYWORD: <span style="color:#fff; border-bottom: 2px solid;">${secretWord}</span></p>
     `;
 }
 
-// --- UTILS & POWERS ---
+// --- UTILS ---
 function handleMove(l) {
     if(guessedLetters.includes(l)) return;
     guessedLetters.push(l);
-    
     if (conn && !isBot && !amIMaster) conn.send({ type: 'move', letter: l });
-
     if(!secretWord.includes(l)) {
         if(isGhost) isGhost = false; else mistakes++;
         drawHangman();
@@ -152,26 +178,10 @@ function handleMove(l) {
     renderWord();
 }
 
-function drawHangman() {
-    const canvas = document.getElementById('hangmanCanvas');
-    if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2;
-    if (mistakes > 0) { ctx.beginPath(); ctx.moveTo(20, 80); ctx.lineTo(140, 80); ctx.stroke(); } 
-    if (mistakes > 1) { ctx.beginPath(); ctx.moveTo(40, 80); ctx.lineTo(40, 10); ctx.lineTo(100, 10); ctx.lineTo(100, 20); ctx.stroke(); } 
-    if (mistakes > 2) { ctx.beginPath(); ctx.arc(100, 30, 10, 0, Math.PI * 2); ctx.stroke(); } 
-    if (mistakes > 3) { ctx.beginPath(); ctx.moveTo(100, 40); ctx.lineTo(100, 60); ctx.stroke(); } 
-    if (mistakes > 4) { ctx.beginPath(); ctx.moveTo(100, 45); ctx.lineTo(85, 55); ctx.moveTo(100, 45); ctx.lineTo(115, 55); ctx.stroke(); } 
-    if (mistakes > 5) { ctx.beginPath(); ctx.moveTo(100, 60); ctx.lineTo(85, 75); ctx.moveTo(100, 60); ctx.lineTo(115, 75); ctx.stroke(); } 
-}
-
 function renderWord() {
     const d = document.getElementById('word-display');
     d.innerHTML = secretWord.split("").map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join("");
-    
-    const win = secretWord.split("").every(l => guessedLetters.includes(l));
-    if(win) triggerEnd(true);
+    if(secretWord.split("").every(l => guessedLetters.includes(l))) triggerEnd(true);
     else if(mistakes >= 6) triggerEnd(false);
 }
 
@@ -213,6 +223,5 @@ function copyId() { navigator.clipboard.writeText(myId); document.getElementById
 
 peer.on('open', id => { 
     document.getElementById('my-id').innerText = id; 
-    document.getElementById('status-text').innerText = "SYSTEM_READY";
+    updateRankUI(); 
 });
-updateRankUI();
