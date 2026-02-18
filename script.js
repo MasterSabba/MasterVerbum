@@ -1,258 +1,279 @@
-// --- SISTEMA DI SICUREZZA ANTI-BLOCK ---
-window.onerror = function(msg, url, linenumber) {
-    console.log('Codice Errore: ' + msg + ' alla linea: ' + linenumber);
-    return true;
-};
-
-// --- CONFIGURAZIONE CORE ---
-let myId = "OFFLINE_" + Math.random().toString(36).substring(2, 5).toUpperCase();
-let peer;
-try {
-    peer = new Peer(myId);
-} catch(e) {
-    console.log("PeerJS non caricato, modalità solo BOT attiva.");
-}
-
+// --- CONFIGURAZIONE E VARIABILI ---
+let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
+const peer = new Peer(myId);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
-let timerInterval, timeLeft = 60, isOverclock = false, isGhost = false;
+let timerInterval, timeLeft = 60, myMatchScore = 0, remoteMatchScore = 0, isOverclock = false, isGhost = false;
+let wordHistory = []; 
 
-// CARICAMENTO DATI [AUTO_SAVE]
-let myScore = JSON.parse(localStorage.getItem('mv_elite_stats'))?.score || 0;
+// [PERSONALIZZAZIONE] Nickname e Rank
 let myHackerTag = localStorage.getItem('mv_hacker_tag') || "GUEST_USER";
+let myScore = 0;
+const savedData = localStorage.getItem('mv_elite_stats');
+if(savedData) {
+    myScore = JSON.parse(savedData).score || 0;
+}
 
 const fallback = ["ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA","STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO","FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE","MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA","PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA","MELA","PERA","BANANA","LIMONE","FRAGOLA","CILIEGIA","PESCA","ARANCIA","UVA","PANE","PASTA","PIZZA","LATTE","UOVO","CARNE","PESCE","FORMAGGIO","VINO","BIRRA","ACQUA","SALE","PEPE","OLIO","ACETO","DOLCE","AMARO","SALATO","ACIDO","CALDO","FREDDO","ROSSO","VERDE","BLU","GIALLO","NERO","BIANCO","GRIGIO","AZZURRO","VIOLA","ROSA","MARRONE"];
 
-// --- INPUT TASTIERA ---
-document.addEventListener('keydown', (e) => {
-    if (document.getElementById('play-screen').classList.contains('hidden')) return;
-    if (amIMaster || document.getElementById('overlay').style.display === 'flex') return;
-    const l = e.key.toUpperCase();
-    if (l >= 'A' && l <= 'Z' && l.length === 1) {
-        handleMove(l);
-        // Effetto grafico sul tasto virtuale
-        const btn = Array.from(document.querySelectorAll('.key')).find(b => b.innerText === l);
-        if (btn) { btn.classList.add('used'); btn.disabled = true; }
-    }
+// --- INIZIALIZZAZIONE PEER ---
+peer.on('open', id => {
+    document.getElementById('my-id').innerText = id;
+    document.getElementById('connection-led').className = 'led led-on';
+    updateRankUI(); 
 });
 
-// --- UI & LED ---
-function updateRankUI() {
-    const progress = Math.min((myScore / 100) * 100, 100);
-    let r = "NOVICE", c = "#888";
-    if(myScore >= 10) { r = "SCRIPT_KIDDIE"; c = "#00d4ff"; }
-    if(myScore >= 50) { r = "ELITE_HACKER"; c = "#39ff14"; }
-    if(myScore >= 90) { r = "VOID_ARCHITECT"; c = "#ff003c"; }
+peer.on('connection', c => { 
+    conn = c; 
+    conn.on('open', () => setupRemote()); 
+});
 
-    localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
-    
-    const st = document.getElementById('status-text');
-    if(st) st.innerText = `[${myHackerTag}] SYSTEM_READY`;
-    
-    const mainLed = document.getElementById('connection-led');
-    if(mainLed) { 
-        mainLed.style.background = "#39ff14"; 
-        mainLed.style.boxShadow = "0 0 10px #39ff14";
-        mainLed.onclick = toggleManual; 
+// --- GESTIONE CONNESSIONE E RUOLI ---
+function connectToPeer() {
+    const input = document.getElementById('peer-id-input');
+    const rId = input.value.toUpperCase().trim();
+    if(!rId) return;
+    conn = peer.connect(rId);
+    conn.on('open', () => {
+        setupRemote();
+        const randomRole = Math.random() > 0.5 ? 'MASTER' : 'GUEST';
+        amIMaster = (randomRole === 'GUEST'); 
+        conn.send({ type: 'ROLE_ASSIGN', role: randomRole });
+        updateRoleUI();
+    });
+}
+
+function setupRemote() {
+    isBot = false;
+    document.getElementById('connect-section').classList.add('hidden');
+    conn.on('data', d => {
+        if(d.type === 'ROLE_ASSIGN') { amIMaster = (d.role === 'MASTER'); updateRoleUI(); }
+        if(d.type === 'REMATCH_REQUEST') { amIMaster = !amIMaster; updateRoleUI(); }
+        if(d.type === 'START') { secretWord = d.word; initGame(); }
+        if(d.type === 'GUESS') remoteMove(d.letter);
+        if(d.type === 'FINISH') forceEnd(d.win);
+        if(d.type === 'SYNC') { timeLeft = d.time; mistakes = d.mistakes; updateTimerUI(); renderWord(); }
+        if(d.type === 'SCORE_SYNC') { myMatchScore = d.yourScore; remoteMatchScore = d.oppScore; updateMatchScoreUI(); }
+        if(d.type === 'P_BLACKOUT') triggerBlackout();
+        if(d.type === 'P_DISTORT') triggerDistort();
+        if(d.type === 'P_CYBERFOG') triggerCyberfog();
+    });
+}
+
+function updateRoleUI() {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('play-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.remove('hidden');
+    if(amIMaster) {
+        document.getElementById('master-section').classList.remove('hidden');
+        document.getElementById('status-text').innerText = "YOUR_TURN_MASTER";
+    } else {
+        document.getElementById('master-section').classList.add('hidden');
+        document.getElementById('status-text').innerText = "WAITING_FOR_MASTER...";
     }
-
-    const update = (s) => {
-        const f = document.getElementById('rank-bar-fill-' + s);
-        const l = document.getElementById('rank-label-' + s);
-        if(f) { f.style.width = progress + "%"; f.style.background = c; }
-        if(l) { l.innerText = `${r} (${myScore}/100)`; l.style.color = c; }
-    };
-    update('setup'); update('final');
 }
 
-// --- OMINO CLASSICO ---
-function drawHangman() {
-    const canvas = document.getElementById('hangmanCanvas');
-    if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "#00f2ff";
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = "round";
-
-    ctx.beginPath();
-    if (mistakes > 0) { ctx.arc(75, 20, 10, 0, Math.PI * 2); } // Testa
-    if (mistakes > 1) { ctx.moveTo(75, 30); ctx.lineTo(75, 60); } // Busto
-    if (mistakes > 2) { ctx.moveTo(75, 40); ctx.lineTo(55, 50); } // B. SX
-    if (mistakes > 3) { ctx.moveTo(75, 40); ctx.lineTo(95, 50); } // B. DX
-    if (mistakes > 4) { ctx.moveTo(75, 60); ctx.lineTo(60, 80); } // G. SX
-    if (mistakes > 5) { ctx.moveTo(75, 60); ctx.lineTo(90, 80); } // G. DX
-    ctx.stroke();
-}
-
-// --- LOGICA GIOCO ---
-function startBotGame() { 
-    isBot = true; 
-    amIMaster = false; 
-    secretWord = fallback[Math.floor(Math.random()*fallback.length)]; 
-    initGame(); 
-}
-
+// --- LOGICA CORE GIOCO ---
 function initGame() {
+    if (secretWord) {
+        if (!wordHistory.includes(secretWord)) {
+            wordHistory.push(secretWord);
+            if (wordHistory.length > 20) wordHistory.shift();
+        }
+    }
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
     document.getElementById('overlay').style.display = 'none';
-    guessedLetters = []; mistakes = 0; timeLeft = 60;
     
-    document.querySelectorAll('.btn-pwr').forEach(b => {
-        b.disabled = true; b.style.opacity = "0.2"; b.style.boxShadow = "none";
-        b.style.color = "#444"; b.style.borderColor = "#444"; b.removeAttribute('data-used');
-    });
+    const pSfidante = document.getElementById('powers-sfidante');
+    const pMaster = document.getElementById('powers-master');
+    if(pSfidante) pSfidante.classList.toggle('hidden', amIMaster);
+    if(pMaster) pMaster.classList.toggle('hidden', !amIMaster);
 
-    createKeyboard(); renderWord(); drawHangman();
-    if (!amIMaster) startTimer();
+    guessedLetters = []; mistakes = 0; timeLeft = 60; isOverclock = false; isGhost = false;
+    document.querySelectorAll('.btn-pwr').forEach(b => {
+        b.disabled = amIMaster ? false : true;
+        b.removeAttribute('used'); b.style.opacity = "1";
+        const led = b.querySelector('.led');
+        if(led) led.className = 'led';
+    });
+    updateTimerUI(); updateMatchScoreUI(); createKeyboard(); renderWord(); startTimer();
 }
 
+async function startBotGame() {
+    isBot = true; amIMaster = false;
+    document.getElementById('status-text').innerText = "QUERYING_DATAMUSE...";
+    try {
+        const length = Math.floor(Math.random() * 4) + 5;
+        const response = await fetch(`https://api.datamuse.com/words?sp=${"?".repeat(length)}&v=it&max=50`);
+        const data = await response.json();
+        if (data && data.length > 0) {
+            let validChoices = data.map(w => w.word.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, ""))
+                .filter(w => !wordHistory.includes(w));
+            secretWord = validChoices.length > 0 ? validChoices[Math.floor(Math.random() * validChoices.length)] : getRandomWord();
+            initGame();
+        } else { throw new Error(); }
+    } catch (e) {
+        secretWord = getRandomWord();
+        initGame();
+    }
+}
+
+function getRandomWord() {
+    let availableWords = fallback.filter(word => !wordHistory.includes(word));
+    if (availableWords.length === 0) { wordHistory = []; availableWords = fallback; }
+    return availableWords[Math.floor(Math.random() * availableWords.length)];
+}
+
+function sendWord() {
+    const val = document.getElementById('secret-word-input').value.toUpperCase().trim();
+    const cleanWord = val.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, "");
+    if(cleanWord.length < 3) return alert("MIN_3_CHARS");
+    secretWord = cleanWord;
+    if(conn) conn.send({ type: 'START', word: secretWord });
+    initGame();
+}
+
+function forceEnd(win) {
+    clearInterval(timerInterval);
+    if (!amIMaster) {
+        if (win) { 
+            myScore++; myMatchScore++; 
+            if (myHackerTag === "GUEST_USER") {
+                let n = prompt("SISTEMA VIOLATO. INSERIRE HACKER_TAG:");
+                if(n) { myHackerTag = n.toUpperCase(); localStorage.setItem('mv_hacker_tag', myHackerTag); }
+            }
+        } 
+        else { 
+            // Immunità GOD_MODE
+            if(myScore < 50) myScore = Math.max(0, myScore - 1); 
+            remoteMatchScore++; 
+        }
+        if(conn && !isBot) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
+    } else {
+        if (!win) myMatchScore++; else remoteMatchScore++;
+    }
+    
+    updateMatchScoreUI(); updateRankUI();
+    const resTitle = document.getElementById('result-title');
+    document.getElementById('overlay').style.display = 'flex';
+    
+    if (win) {
+        resTitle.innerText = (myScore >= 50) ? "GOD_MODE_ACTIVE" : (amIMaster ? "UPLINK SECURED" : "SYSTEM BYPASSED");
+        resTitle.className = "win-glow";
+        if(myScore >= 50) resTitle.style.color = "#ff00ff";
+    } else {
+        resTitle.innerText = amIMaster ? "UPLINK COMPROMISED" : "CONNECTION LOST";
+        resTitle.className = "lose-glow";
+    }
+    document.getElementById('result-desc').innerHTML = `PAROLA: <span style="color:white; font-weight:bold; letter-spacing:3px;">${secretWord}</span>`;
+}
+
+// --- LOGICA PROGRESSIONE ---
+function updateRankUI() {
+    const p = Math.min((myScore / 100) * 100, 100);
+    let r = "HACKER", c = "#00f2ff"; 
+    if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
+    if(myScore >= 50) { r = "GOD_MODE"; c = "#ff00ff"; }
+
+    localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
+    document.getElementById('status-text').innerText = `[${myHackerTag}] SYSTEM_ONLINE`;
+    
+    document.querySelectorAll('.rank-bar-fill').forEach(el => { 
+        el.style.width = p + "%"; 
+        el.style.background = c; 
+        el.style.boxShadow = `0 0 10px ${c}`;
+    });
+    document.querySelectorAll('.rank-label').forEach(el => { 
+        el.innerText = `${r} (${myScore}/100)`; 
+        el.style.color = c; 
+    });
+}
+
+// --- RESTO DELLE FUNZIONI (TIMER, INPUT, POTERI) ---
 function startTimer() {
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
-        if(!isOverclock) timeLeft--;
-        if(timeLeft <= 45) unlockPower('p-overclock');
-        if(timeLeft <= 30) unlockPower('p-rescan');
-        if(timeLeft <= 15) unlockPower('p-ghost');
-        if(timeLeft <= 0) triggerEnd(false);
-        const timerDisp = document.getElementById('timer-display');
-        if(timerDisp) timerDisp.innerText = formatTime(timeLeft);
+        if(!amIMaster) {
+            if(!isOverclock) timeLeft--;
+            if(timeLeft <= 45) unlock('p-overclock', 'led-on');
+            if(timeLeft <= 30) unlock('p-rescan', 'led-on');
+            if(timeLeft <= 15) unlock('p-ghost', 'led-on');
+            if(timeLeft <= 0) triggerEnd(false);
+            if(conn && !isBot && timeLeft % 2 === 0) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
+        }
+        updateTimerUI();
     }, 1000);
 }
 
-// --- ABILITA AZZURRE ---
-function unlockPower(id) {
-    const b = document.getElementById(id);
-    if(b && !b.hasAttribute('data-used') && !amIMaster) {
-        b.disabled = false;
-        b.style.opacity = "1";
-        b.style.color = "#00f2ff";
-        b.style.borderColor = "#00f2ff";
-        b.style.boxShadow = "0 0 15px #00f2ff";
-    }
-}
-
-function useOverclock() { isOverclock = true; consumePower('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
-function useRescan() { 
-    if(timeLeft <= 10) return; 
-    timeLeft -= 10; 
-    consumePower('p-rescan'); 
-    let m = secretWord.split("").filter(l => !guessedLetters.includes(l));
-    if(m.length > 0) handleMove(m[0]);
-}
-function useGhost() { isGhost = true; consumePower('p-ghost'); }
-
-function consumePower(id) {
-    const b = document.getElementById(id);
-    if(b) { b.setAttribute('data-used', 'true'); b.disabled = true; b.style.opacity = "0.1"; b.style.boxShadow = "none"; }
-}
-
-// --- MULTIPLAYER ---
-function connectToPeer() {
-    const tid = document.getElementById('peer-id-input').value.toUpperCase();
-    if (!tid || !peer) return;
-    conn = peer.connect(tid);
-    amIMaster = false;
-    setupConn();
-}
-
-if(peer) {
-    peer.on('open', (id) => { 
-        myId = id; 
-        document.getElementById('my-id').innerText = id; 
-        updateRankUI(); 
-    });
-    peer.on('connection', (c) => { conn = c; amIMaster = true; setupConn(); });
-}
-
-function setupConn() {
-    conn.on('open', () => {
-        document.getElementById('status-text').innerText = "CONNECTED";
-        if (amIMaster) {
-            let w = prompt("CHOOSE WORD:").toUpperCase();
-            secretWord = w || "HACK";
-            conn.send({ type: 'start', word: secretWord });
-            initGame();
-        }
-    });
-    conn.on('data', (d) => {
-        if (d.type === 'start') { secretWord = d.word; amIMaster = false; initGame(); }
-        else if (d.type === 'move') { handleMove(d.letter); }
-    });
-}
-
-// --- GESTIONE MOSSE ---
 function handleMove(l) {
-    if(guessedLetters.includes(l)) return;
+    if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
-    
-    // Disabilita tasto fisico/virtuale
-    const btn = Array.from(document.querySelectorAll('.key')).find(b => b.innerText === l);
-    if(btn) { btn.classList.add('used'); btn.disabled = true; }
-
-    if (conn && !isBot && !amIMaster) conn.send({ type: 'move', letter: l });
-
-    if(!secretWord.includes(l)) {
-        if(isGhost) { isGhost = false; } else { mistakes++; }
-        drawHangman();
-    }
+    if(!secretWord.includes(l)) { if(isGhost) isGhost = false; else mistakes++; }
+    if(conn && !isBot) conn.send({type:'GUESS', letter:l});
     renderWord();
 }
 
 function renderWord() {
     const d = document.getElementById('word-display');
-    if(!d) return;
-    const wordArr = secretWord.split("");
-    d.innerHTML = wordArr.map(l => `<div class="letter-slot">${guessedLetters.includes(l) ? l : ""}</div>`).join("");
-    
-    if(wordArr.every(l => guessedLetters.includes(l))) triggerEnd(true);
-    else if(mistakes >= 6) triggerEnd(false);
-}
-
-function triggerEnd(win) {
-    clearInterval(timerInterval);
-    if (!amIMaster) {
-        if (win) { myScore++; } else { myScore = Math.max(0, myScore - 1); }
-        updateRankUI();
+    if(d) d.innerHTML = secretWord.split("").map(l => `<div class="letter-slot">${guessedLetters.includes(l)?l:""}</div>`).join("");
+    drawHangman();
+    if(!amIMaster) {
+        if(secretWord.split("").every(l => guessedLetters.includes(l))) triggerEnd(true);
+        else if(mistakes >= 6) triggerEnd(false);
     }
-    const ov = document.getElementById('overlay');
-    ov.style.display = 'flex';
-    const t = document.getElementById('result-title');
-    t.innerText = win ? "ACCESS_GRANTED" : "CONNECTION_TERMINATED";
-    t.style.fontSize = "clamp(1rem, 5vw, 2.2rem)";
-    t.style.color = win ? "#00f2ff" : "#ff003c";
-    t.style.textShadow = win ? "0 0 15px #00f2ff" : "0 0 15px #ff003c";
-    document.getElementById('result-desc').innerHTML = `<p>KEY: ${secretWord}</p>`;
 }
 
-// --- UTILS ---
 function createKeyboard() {
-    const k = document.getElementById('keyboard'); 
-    if(!k) return;
-    k.innerHTML = "";
+    const k = document.getElementById('keyboard'); k.innerHTML = "";
     "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
-        const b = document.createElement('button'); 
-        b.className = "key"; b.innerText = l;
-        if(amIMaster) b.disabled = true;
-        b.onclick = () => handleMove(l);
+        const b = document.createElement('button'); b.className="key"; b.innerText=l;
+        b.onclick = () => { if(amIMaster) return; b.classList.add('used'); b.disabled = true; handleMove(l); };
         k.appendChild(b);
     });
 }
 
-function toggleManual() {
-    const m = document.getElementById('manual-overlay');
-    if(m) m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+window.addEventListener('keydown', (e) => {
+    if (document.getElementById('play-screen').classList.contains('hidden') || amIMaster || document.getElementById('overlay').style.display === 'flex') return;
+    const key = e.key.toUpperCase();
+    if (key.length === 1 && key >= 'A' && key <= 'Z') {
+        if (guessedLetters.includes(key)) return;
+        const buttons = document.querySelectorAll('.key');
+        buttons.forEach(btn => { if (btn.innerText === key) { btn.classList.add('used'); btn.disabled = true; } });
+        handleMove(key);
+    }
+});
+
+function drawHangman() {
+    const c = document.getElementById('hangmanCanvas'); const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,160,90); ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2; ctx.beginPath();
+    if(mistakes>0) ctx.arc(80, 15, 7, 0, Math.PI*2);
+    if(mistakes>1) { ctx.moveTo(80, 22); ctx.lineTo(80, 50); }
+    if(mistakes>2) { ctx.moveTo(80, 30); ctx.lineTo(65, 45); }
+    if(mistakes>3) { ctx.moveTo(80, 30); ctx.lineTo(95, 45); }
+    if(mistakes>4) { ctx.moveTo(80, 50); ctx.lineTo(70, 75); }
+    if(mistakes>5) { ctx.moveTo(80, 50); ctx.lineTo(90, 75); }
+    ctx.stroke();
 }
 
-function resetAccount() { if(confirm("WIPE DATA?")) { localStorage.clear(); location.reload(); } }
-function retry() { if(isBot) startBotGame(); else location.reload(); }
-function formatTime(s) { const m = Math.floor(s/60); const sec = s%60; return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
-function copyId() { 
-    const idVal = document.getElementById('my-id').innerText;
-    navigator.clipboard.writeText(idVal); 
-    document.getElementById('copy-btn').innerText = "COPIED!"; 
-    setTimeout(() => document.getElementById('copy-btn').innerText = "Copy", 2000); 
-}
+// Poteri e Trigger Effetti
+function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
+function useRescan() { if(timeLeft <= 10) return; timeLeft -= 10; updateTimerUI(); consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[Math.floor(Math.random()*m.length)]); }
+function useGhost() { isGhost = true; consume('p-ghost'); }
+function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
+function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
+function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
 
-// Avvio iniziale
-updateRankUI();
+function triggerBlackout() { const ps = document.getElementById('play-screen'); ps.classList.add('effect-blackout'); setTimeout(() => ps.classList.remove('effect-blackout'), 5000); }
+function triggerDistort() { document.getElementById('keyboard').classList.add('effect-glitch'); setTimeout(() => document.getElementById('keyboard').classList.remove('effect-glitch'), 4000); }
+function triggerCyberfog() { document.getElementById('word-display').classList.add('effect-fog'); setTimeout(() => document.getElementById('word-display').classList.remove('effect-fog'), 6000); }
+
+function updateTimerUI() { const mins = Math.floor(timeLeft / 60); const secs = timeLeft % 60; document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; }
+function updateMatchScoreUI() { document.getElementById('score-me').innerText = myMatchScore; document.getElementById('score-remote').innerText = remoteMatchScore; }
+function unlock(id, colorClass) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; let led = b.querySelector('.led'); if(led) led.className = 'led ' + colorClass; } }
+function consume(id) { let b = document.getElementById(id); if(b) { b.disabled = true; b.setAttribute('used', 'true'); let led = b.querySelector('.led'); if(led) led.className = 'led'; b.style.opacity="0.1"; } }
+function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
+function retry() { if(isBot) startBotGame(); else if(conn) { amIMaster = !amIMaster; conn.send({type:'REMATCH_REQUEST'}); updateRoleUI(); } else location.reload(); }
+function remoteMove(l) { guessedLetters.push(l); if(!secretWord.includes(l)) mistakes++; renderWord(); }
+function toggleManual() { const m = document.getElementById('manual-overlay'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
+function resetAccount() { if(confirm("SURE? All system data will be wiped.")) { localStorage.clear(); location.reload(); } }
+function copyId() { const id = document.getElementById('my-id').innerText; navigator.clipboard.writeText(id); document.getElementById('copy-btn').innerText = "COPIED"; setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000); }
