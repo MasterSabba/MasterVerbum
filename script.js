@@ -201,7 +201,7 @@ function retry() {
 }
 
 function resetAccount() {
-    if(confirm("ELIMINARE TUTTI I DATI DI ACCESSO?")) {
+    if(confirm("DELETE ALL LOGIN DATA?")) {
         localStorage.clear();
         location.reload();
     }
