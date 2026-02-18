@@ -241,14 +241,42 @@ function toggleManual() { const m = document.getElementById('manual-overlay'); m
 function resetAccount() { if(confirm("SURE? All system data will be wiped.")) { localStorage.clear(); location.reload(); } }
 function copyId() { const id = document.getElementById('my-id').innerText; navigator.clipboard.writeText(id); document.getElementById('copy-btn').innerText = "COPIED"; setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000); }
 
+// --- SISTEMA DI RANKING AGGIORNATO (Versione 100 Livelli) ---
+
 function updateRankUI() {
-    const p = Math.min((myScore/100)*100, 100);
-    let r = "HACKER", c = "var(--neon-blue)"; 
-    if(myScore >= 30) { r = "ELITE_HACKER"; c = "#39ff14"; }
-    if(myScore >= 100) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
+    // Calcolo della percentuale basata su 100 come obiettivo finale
+    const progressPercent = Math.min((myScore / 100) * 100, 100);
+    
+    let rankTitle = "NOVICE_USER";
+    let rankColor = "#888"; // Grigio per i principianti
+
+    // Scala dei titoli basata sul punteggio (myScore)
+    if (myScore >= 5) { rankTitle = "SCRIPT_KIDDIE"; rankColor = "#00d4ff"; }
+    if (myScore >= 15) { rankTitle = "CYBER_GHOST"; rankColor = "#00f2ff"; }
+    if (myScore >= 30) { rankTitle = "ELITE_HACKER"; rankColor = "#39ff14"; }
+    if (myScore >= 50) { rankTitle = "SYSTEM_BREACHER"; rankColor = "#ffea00"; }
+    if (myScore >= 75) { rankTitle = "MAINFRAME_LORD"; rankColor = "#ff8c00"; }
+    if (myScore >= 90) { rankTitle = "ARCHITECT_OF_VOID"; rankColor = "#ff003c"; }
+    if (myScore >= 100) { rankTitle = "GOD_MODE"; rankColor = "var(--neon-pink)"; }
+
+    // Salvataggio automatico (già presente nel tuo sistema, lo manteniamo)
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
-    document.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = p+"%"; el.style.background = c; });
-    document.querySelectorAll('.rank-label').forEach(el => { el.innerText = `${r} (${myScore}/20)`; el.style.color = c; });
+
+    // Aggiornamento grafico della barra e delle etichette
+    document.querySelectorAll('.rank-bar-fill').forEach(el => { 
+        el.style.width = progressPercent + "%"; 
+        el.style.background = rankColor;
+        // Aggiungiamo un effetto bagliore quando si avvicina al God Mode
+        el.style.boxShadow = `0 0 15px ${rankColor}`;
+    });
+
+    document.querySelectorAll('.rank-label').forEach(el => { 
+        // Aggiornata la label per mostrare il progresso su 100
+        el.innerText = `${rankTitle} (${myScore}/100)`; 
+        el.style.color = rankColor; 
+        el.style.textShadow = `0 0 10px ${rankColor}`;
+    });
 }
 
+// Inizializzazione al caricamento
 updateRankUI();
