@@ -100,7 +100,7 @@ body {
 #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; }
 .key { aspect-ratio: 1/1; background: #1a1a1f; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
 .key.used { opacity: 0.05; pointer-events: none; }
-#word-display { display: flex; gap: 6px; min-height: 40px; margin-top: 10px; }
+#word-display { display: flex; gap: 6px; min-height: 40px; margin-top: 10px; margin-bottom: 30px}
 .letter-slot { width: 22px; border-bottom: 2px solid #333; font-size: 1.8rem; text-align: center; color: var(--neon-blue); font-weight: bold; }
 
 /* Overlays e Rank Up */
