@@ -5,9 +5,10 @@ let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false,
 let timerInterval, timeLeft = 60, myMatchScore = 0, remoteMatchScore = 0, isOverclock = false, isGhost = false;
 let wordHistory = []; 
 
-// [PERSONALIZZAZIONE] Nickname e Rank (Salvataggio automatico locale)
+// [PERSONALIZZAZIONE] Nickname e Rank
 let myHackerTag = localStorage.getItem('mv_hacker_tag') || "GUEST_USER";
 let myScore = 0;
+let lastRank = ""; // Per monitorare il passaggio di grado
 const savedData = localStorage.getItem('mv_elite_stats');
 if(savedData) {
     myScore = JSON.parse(savedData).score || 0;
@@ -20,6 +21,7 @@ peer.on('open', id => {
     document.getElementById('my-id').innerText = id;
     document.getElementById('connection-led').className = 'led led-on';
     updateRankUI(); 
+    lastRank = getRankName(myScore); // Inizializza il rank attuale
 });
 
 peer.on('connection', c => { 
@@ -89,11 +91,11 @@ function initGame() {
     if(pSfidante) pSfidante.classList.toggle('hidden', amIMaster);
     if(pMaster) pMaster.classList.toggle('hidden', !amIMaster);
 
-    // --- DIFFICOLTÀ DINAMICA BASATA SULLE 4 FASI ---
-    timeLeft = 60; // Base: Hacker (0-9)
-    if(myScore >= 10 && myScore < 50) timeLeft = 45;  // Elite Hacker
-    if(myScore >= 50 && myScore < 100) timeLeft = 40; // Cyber Phantom
-    if(myScore >= 100) timeLeft = 35;                 // God Mode
+    // DIFFICOLTÀ DINAMICA
+    timeLeft = 60;
+    if(myScore >= 10 && myScore < 50) timeLeft = 45;
+    if(myScore >= 50 && myScore < 100) timeLeft = 40;
+    if(myScore >= 100) timeLeft = 35;
 
     guessedLetters = []; mistakes = 0; isOverclock = false; isGhost = false;
     document.querySelectorAll('.btn-pwr').forEach(b => {
@@ -150,7 +152,6 @@ function forceEnd(win) {
             }
         } 
         else { 
-            // PRIVILEGIO GOD_MODE: Immunità alla perdita punti sopra i 100
             if(myScore < 100) myScore = Math.max(0, myScore - 1); 
             remoteMatchScore++; 
         }
@@ -159,12 +160,14 @@ function forceEnd(win) {
         if (!win) myMatchScore++; else remoteMatchScore++;
     }
     
-    updateMatchScoreUI(); updateRankUI();
+    updateMatchScoreUI(); 
+    checkRankUp(); // Controlla se il rank è cambiato dopo l'aggiornamento punti
+    updateRankUI();
+
     const resTitle = document.getElementById('result-title');
     document.getElementById('overlay').style.display = 'flex';
     
     if (win) {
-        // --- GESTIONE COLORI RISULTATO ---
         if (myScore >= 100) {
             resTitle.innerText = "GOD_MODE_ACTIVE";
             resTitle.style.color = "#ff00ff";
@@ -185,21 +188,58 @@ function forceEnd(win) {
     document.getElementById('result-desc').innerHTML = `PAROLA: <span style="color:white; font-weight:bold; letter-spacing:3px;">${secretWord}</span>`;
 }
 
-// --- LOGICA PROGRESSIONE (4 LIVELLI) ---
+// --- GESTIONE AVANZAMENTO RANK (SCHERMATA NUOVA) ---
+function getRankName(score) {
+    if(score >= 100) return "GOD_MODE";
+    if(score >= 50) return "CYBER_PHANTOM";
+    if(score >= 10) return "ELITE_HACKER";
+    return "HACKER";
+}
+
+function checkRankUp() {
+    let currentRank = getRankName(myScore);
+    if (currentRank !== lastRank && myScore > 0) {
+        showRankUpOverlay(currentRank);
+        lastRank = currentRank;
+    }
+}
+
+function showRankUpOverlay(newRank) {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay-rank-up';
+    let info = "";
+    let color = "#00f2ff";
+
+    if(newRank === "ELITE_HACKER") {
+        color = "#39ff14";
+        info = "TIMER: 45s | RISCHIO: Perdita Punti attiva.";
+    } else if(newRank === "CYBER_PHANTOM") {
+        color = "#ffcc00";
+        info = "TIMER: 40s | FIRMA: Digitale criptata.";
+    } else if(newRank === "GOD_MODE") {
+        color = "#ff00ff";
+        info = "TIMER: 35s | PRIVILEGIO: Immunità al Downgrade sbloccata.";
+    }
+
+    overlay.innerHTML = `
+        <div class="rank-up-content" style="border: 2px solid ${color}; box-shadow: 0 0 20px ${color}">
+            <h2 style="color: ${color}; text-shadow: 0 0 10px ${color}">RANK_UP: ${newRank}</h2>
+            <p style="color: white; font-family: monospace; letter-spacing: 1px;">SISTEMA AGGIORNATO CON SUCCESSO.</p>
+            <p style="color: ${color}; font-size: 0.8em;">${info}</p>
+            <button onclick="this.parentElement.parentElement.remove()" class="btn-pwr" style="margin-top: 20px; border-color: ${color}; color: ${color}">ACCETTA PROTOCOLLO</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
 function updateRankUI() {
     const p = Math.min((myScore / 100) * 100, 100);
-    let r = "HACKER", c = "#00f2ff"; 
+    let r = getRankName(myScore);
+    let c = "#00f2ff"; 
     
-    if(myScore >= 10 && myScore < 50) { 
-        r = "ELITE_HACKER"; 
-        c = "#39ff14"; 
-    } else if(myScore >= 50 && myScore < 100) {
-        r = "CYBER_PHANTOM";
-        c = "#ffcc00"; // Giallo Oro
-    } else if(myScore >= 100) { 
-        r = "GOD_MODE"; 
-        c = "#ff00ff"; // Fucsia
-    }
+    if(r === "ELITE_HACKER") c = "#39ff14";
+    if(r === "CYBER_PHANTOM") c = "#ffcc00";
+    if(r === "GOD_MODE") c = "#ff00ff";
 
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
     document.getElementById('status-text').innerText = `[${myHackerTag}] SYSTEM_ONLINE`;
@@ -215,18 +255,15 @@ function updateRankUI() {
     });
 }
 
-// --- RESTO DELLE FUNZIONI (TIMER, INPUT, POTERI) ---
+// --- FUNZIONI TIMER E POTERI ---
 function startTimer() {
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         if(!amIMaster) {
             if(!isOverclock) timeLeft--;
-            
-            // Sblocco poteri adattivo basato sul tempo
             if(timeLeft <= 45) unlock('p-overclock', 'led-on');
             if(timeLeft <= 30) unlock('p-rescan', 'led-on');
             if(timeLeft <= 15) unlock('p-ghost', 'led-on');
-            
             if(timeLeft <= 0) triggerEnd(false);
             if(conn && !isBot && timeLeft % 2 === 0) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
         }
