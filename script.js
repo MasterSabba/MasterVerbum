@@ -2,37 +2,41 @@
 let myId = Math.random().toString(36).substring(2, 7).toUpperCase();
 const peer = new Peer(myId);
 let conn, secretWord = "", guessedLetters = [], mistakes = 0, amIMaster = false, isBot = false;
-let timerInterval, timeLeft = 60, myMatchScore = 0, remoteMatchScore = 0, isOverclock = false, isGhost = false;
+let timerInterval, timeLeft = 60, isOverclock = false, isGhost = false;
 let wordHistory = []; 
 
-// [AUTO_SAVE] Caricamento dati locali
-let myScore = JSON.parse(localStorage.getItem('mv_elite_stats'))?.score || 0;
+// [AUTO_SAVE] Caricamento Punti e Nome
+let myScore = 0;
+try {
+    const savedData = JSON.parse(localStorage.getItem('mv_elite_stats'));
+    myScore = savedData ? savedData.score : 0;
+} catch(e) { myScore = 0; }
 let myHackerTag = localStorage.getItem('mv_hacker_tag') || "";
 
 const fallback = ["ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA","STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO","FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE","MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA","PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA","MELA","PERA","BANANA","LIMONE","FRAGOLA","CILIEGIA","PESCA","ARANCIA","UVA","PANE","PASTA","PIZZA","LATTE","UOVO","CARNE","PESCE","FORMAGGIO","VINO","BIRRA","ACQUA","SALE","PEPE","OLIO","ACETO","DOLCE","AMARO","SALATO","ACIDO","CALDO","FREDDO","ROSSO","VERDE","BLU","GIALLO","NERO","BIANCO","GRIGIO","AZZURRO","VIOLA","ROSA","MARRONE","ESTATE","INVERNO","PRIMAVERA","AUTUNNO","GENNAIO","FEBBRAIO","MARZO","APRILE","MAGGIO","GIUGNO","LUGLIO","AGOSTO","SETTEMBRE","OTTOBRE","NOVEMBRE","DICEMBRE","LUNEDI","MARTEDI","MERCOLEDI","GIOVEDI","VENERDI","SABATO","DOMENICA","BAMBINO","UOMO","DONNA","PADRE","MADRE","FRATELLO","SORELLA","NONNO","NONNA","AMICO","NEMICO","MEDICO","MAESTRO","STUDENTE","DOTTORE","AVVOCATO","POLIZIOTTO","SOLDATO","RE","REGINA","PRINCIPE","CAVALIERE","CASTELLO","REGNO","GUERRA","BATTAGLIA","PACE","LIBERTA","GIUSTIZIA","LEGGE","ORDINE","CAOS","VERITA","BUGIA","ERRORE","SUCCESSO","FALLIMENTO","RICCHEZZA","POVERTA","LAVORO","GIOCO","SPORT","CALCIO","MUSICA","CANZONE","FILM","TEATRO","QUADRO","STATUA","LIBRO","POESIA","LETTERA","PAROLA","VOCE","SILENZIO","RUMORE","SUONO","CHITARRA","PIANOFORTE","VIOLINO","TAMBURO","TROMBA","RADIO","TELEVISIONE","TELEFONO","COMPUTER","INTERNET","SCHERMO","TASTIERA","MOUSE","CHIAVE","OROLOGIO","SOLDI","BANCO","BORSA","ZAINO","SCARPA","VESTITO","GIACCA","CAPPELLO","OCCHIALI","ANELLO","COLLANA","PROFUMO","SAPONE","CARTA","MATITA","GOMMA","FORBICI","COLLE","GIORNALE","RIVISTA","MAPPA","BUSSOLA","TRENO","AEREO","NAVE","AUTO","MOTO","BICI","CAMMINO","CORSA","VOLO","SALTO","DANZA","RISATA","PIANTO","RABBIA","PAURA","CORAGGIO","GIOIA","TRISTEZZA","SPERANZA","FIDUCIA","DUBBIO","SCELTA","DECISIONE","DESTINO","FORTUNA","MORTE","VITA","NASCITA","SALUTE","MALATTIA","CURA","VELENO","CIBO","BEVANDA","FESTA","VIAGGIO","VACANZA","MONDO","PAESE","CITTA","VILLAGGIO","ISOLA","DESERTO","FORESTA","GIUNGLA","MONTAGNA","COLLINA","VALLE","PIANURA","COSTA","SPIAGGIA","ROCCIA","SABBIA","GROTTA","VULCANO","TERREMOTO","URAGANO","FULMINE","TUONO","NEVE","GHIACCIO","SOLE","LUNA","ALBA","TRAMONTO","NOTTE","GIORNO","POMERIGGIO","MATTINA","ORA","MINUTO","SECONDO","SECOLO","STORIA","PASSATO","PRESENTE","FUTURO","IDEA","MEMORIA","PENSIERO","LOGICA","NUMERO","FORMA","COLORE","SUONO","ODORE","SAPORE","TOCCO","PELLE","SGUARDO","SORRISO","ABBRACCIO","BACIO","MANO","PIEDE","TESTA","BRACCIO","GAMBA","OCCHIO","ORECCHIO","NASO","BOCCA","LINGUA","DENTE","CAPELLI","SANGUE","OSSO","MUSCOLO","CUORE","POLMONE","STOMACO","CERVELLO","NERVO","SPIRITO","FANTASMA","ANGELO","DEMONE","DIO","IDOLO","RELIGIONE","CHIESA","TEMPIO","PREGHIERA","RITO","MIRACOLO","PARADISO","INFERNO","PURGATORIO","PECCATO","VIRTU","MORALE","ETICA","VALORE","SIMBOLO","SEGNO","DIALETTO","SCRITTURA","ALFABETO","FRASE","TESTO","RACCONTO","FAVOLA","LEGGENDA","MITO","POEMA","DRAMMA","COMMEDIA","TRAGEDIA","ARTE","DESIGN","MODA","CUCINA","ARCHITETTURA","SCULTURA","PITTURA","FOTOGRAFIA","CINEMA","DANZA","CIRCO","MUSEO","BIBLIOTECA","SCUOLA","UNIVERSITA","LABORATORIO","ESPERIMENTO","SCOPERTA","INVENZIONE","TECNOLOGIA","MACCHINA","ROBOT","CHIMICA","FISICA","BIOLOGIA","ASTRONOMIA","MATEMATICA","GEOMETRIA","ALGEBRA","CALCOLO","FILOSOFIA","PSICOLOGIA","SOCIOLOGIA","ECONOMIA","POLITICA","NAZIONE","STATO","GOVERNO","PARLAMENTO","VOTO","ELEZIONE","DEMOCRAZIA","DITTATURA","IMPERO","COLONIA","CONFINI","BANDIERA","INNO","ESERCITO","MARINA","AVIAZIONE","ARRESA","VITTORIA","SCONFITTA","TRATTATO","ALLEANZA","TRADIMENTO","SPIA","CARCERE","PRIGIONE","LIBERTA","DIRITTO","DOVERE","RESPONSABILITA","ONORE","RISPETTO","UMILTA","ORGOGLIO","INVIDIA","AVIDITA","LUSSURIA","ACCIDIA","GOLA","IRA","SUPERBIA","PUDORE","GRAZIA","SALVEZZA","ETERNITA","INFINITO","NULLA","VUOTO","PIENO","PESO","MISURA","DISTANZA","ALTEZZA","LARGHEZZA","PROFONDITA","VOLUME","AREA","SUPERFICIE","LINEA","PUNTO","ANGOLO","CURVA","CERCHIO","QUADRATO","TRIANGOLO","RETTANGOLO","CUBO","SFERA","PIRAMIDE","CILINDRO","CONO","SPIRALE","FRATTALE","LABIRINTO","ENIGMA","MISTERO","SEGRETO","CODICE","CIFRA","CHIAVE","LUCCHETTO","PORTA","SOGLIA","PONTE","MURO","CONFINE","ORIZZONTE","CIELO","ABISSO","OCEANO","MAREA","ONDA","CORRENTE","VORTICE","FONDO","RIVA","PORTO","FARO","ANCORA","VELA","REMO","TIMONE","BUSSOLA","STELLE","COSTELLAZIONE","ZODIACO","OROSCOPO","COINCIDENZA","CASO","PROBABILITA","RISCHIO","PERICOLO","SICUREZZA","PROTEZIONE","DIFESA","ATTACCO","ASSEDIO","TRINCEA","SCUDO","SPADA","ARCO","FRECCIA","LANCIA","ASCE","MARTELLO","PUGNALE","PISTOLA","FUCILE","CANNONE","BOMBA","MINA","RADIAZIONE","FISSIONE","FUSIONE","ATOMO","MOLECOLA","ELEMENTO","METALLO","FERRO","ORO","ARGENTO","RAME","STAGNO","PIOMBO","ZINCO","MERCURIO","CARBONIO","OSSIGENO","IDROGENO","AZOTO","ELIO","GAS","LIQUIDO","SOLIDO","PLASMA","CALORE","ENERGIA","VIBRAZIONE","PARTICELLA","FOTONE","ELETTRONE","QUARK","SPAZIOTEMPO","DIMENSIONE","REALTA","ILLUSIONE","SPECCHIO","RIFLESSO","OMBRA","INCUBO","VISIONE","ESTASI","TRANCE","MEDITAZIONE","ARMONIA","EQUILIBRIO","CAOS","DISORDINE","RUMORE","GRIDO","CANTO","FINE"];
 
 // --- DIFFICOLTÀ ---
 function getDifficultySettings() {
-    let settings = { minL: 3, maxL: 20, time: 60, shake: false };
-    if (myScore >= 30) settings.minL = 6;
-    if (myScore >= 60) { settings.minL = 8; settings.time = 45; }
-    if (myScore >= 85) { settings.minL = 10; settings.time = 35; settings.shake = true; }
-    if (myScore >= 95) { settings.minL = 12; settings.time = 25; settings.shake = true; }
-    return settings;
+    let s = { minL: 3, maxL: 20, time: 60, shake: false };
+    if (myScore >= 30) s.minL = 6;
+    if (myScore >= 60) { s.minL = 8; s.time = 45; }
+    if (myScore >= 85) { s.minL = 10; s.time = 35; s.shake = true; }
+    if (myScore >= 95) { s.minL = 12; s.time = 25; s.shake = true; }
+    return s;
 }
 
 function getRandomWord() {
     const config = getDifficultySettings();
-    let availableWords = fallback.filter(word => !wordHistory.includes(word) && word.length >= config.minL && word.length <= config.maxL);
-    if (availableWords.length === 0) { wordHistory = []; availableWords = fallback.filter(word => word.length >= config.minL); }
-    const picked = availableWords[Math.floor(Math.random() * availableWords.length)];
+    let av = fallback.filter(w => !wordHistory.includes(w) && w.length >= config.minL && w.length <= config.maxL);
+    if (av.length === 0) { wordHistory = []; av = fallback.filter(w => w.length >= config.minL); }
+    const picked = av[Math.floor(Math.random() * av.length)];
     wordHistory.push(picked);
     return picked;
 }
 
-// --- RANK UI ---
+// --- UPDATE RANK ---
 function updateRankUI() {
-    const progressPercent = Math.min((myScore / 100) * 100, 100);
+    const progress = Math.min((myScore / 100) * 100, 100);
     let r = "NOVICE", c = "#888";
     if(myScore >= 10) { r = "SCRIPT_KIDDIE"; c = "#00d4ff"; }
     if(myScore >= 30) { r = "CYBER_GHOST"; c = "#00f2ff"; }
@@ -42,12 +46,20 @@ function updateRankUI() {
     if(myScore >= 100) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
 
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
-    document.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = progressPercent + "%"; el.style.background = c; el.style.boxShadow = `0 0 15px ${c}`; });
-    document.querySelectorAll('.rank-label').forEach(el => { el.innerText = `${r} (${myScore}/100)`; el.style.color = c; });
-    if (myScore >= 100) setTimeout(triggerGodEnding, 1500);
+    
+    document.querySelectorAll('.rank-bar-fill').forEach(el => { 
+        el.style.width = progress + "%"; 
+        el.style.background = c;
+        el.style.boxShadow = `0 0 15px ${c}`;
+    });
+    document.querySelectorAll('.rank-label').forEach(el => { 
+        el.innerText = `${r} (${myScore}/100)`; 
+        el.style.color = c; 
+    });
+    if (myScore >= 100) setTimeout(triggerGodEnding, 1000);
 }
 
-// --- CORE GAME ---
+// --- LOGICA GIOCO ---
 function startBotGame() {
     isBot = true; amIMaster = false;
     secretWord = getRandomWord();
@@ -71,13 +83,14 @@ function initGame() {
 
 function startTimer() {
     const config = getDifficultySettings();
-    if (timeLeft > config.time) timeLeft = config.time; 
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         if(!amIMaster) {
             if(!isOverclock) timeLeft--;
-            if(config.shake) document.getElementById('word-display').classList.add('effect-shake');
-            else document.getElementById('word-display').classList.remove('effect-shake');
+            const wordDisp = document.getElementById('word-display');
+            if(config.shake) wordDisp.classList.add('effect-shake');
+            else wordDisp.classList.remove('effect-shake');
+            
             if(timeLeft <= 45) unlock('p-overclock', 'led-on');
             if(timeLeft <= 30) unlock('p-rescan', 'led-on');
             if(timeLeft <= 15) unlock('p-ghost', 'led-on');
@@ -87,12 +100,22 @@ function startTimer() {
     }, 1000);
 }
 
-// --- PALLINO VERDE (MANUALE + CLASSIFICA) ---
+// --- OVERLAY & CLASSIFICA ---
 function showManual() {
     const board = JSON.parse(localStorage.getItem('mv_leaderboard')) || [{name:"ARCHITECT", score:95}, {name:"ZERO", score:50}];
-    const boardHTML = board.map((e, i) => `<div>${i+1}. ${e.name} - ${e.score}</div>`).join("");
+    const boardHTML = board.map((e, i) => `<div style="display:flex; justify-content:space-between;"><span>${i+1}. ${e.name}</span> <span>${e.score} PTS</span></div>`).join("");
+    
     document.getElementById('result-title').innerText = "INFO_SISTEMA";
-    document.getElementById('result-desc').innerHTML = `<div style="text-align:left; font-size:12px;"><p style="color:var(--neon-blue)">[ ELITE_RANKING ]</p>${boardHTML}<br><p style="color:var(--neon-blue)">[ COMANDI ]</p><p>OVERCLOCK: Blocca tempo 5s | RE-SCAN: Lettera -10s | GHOST: Salva da errore</p></div>`;
+    document.getElementById('result-desc').innerHTML = `
+        <div style="text-align:left; font-size:12px; font-family:monospace;">
+            <p style="color:var(--neon-blue); border-bottom:1px solid #333;">[ ELITE_RANKING ]</p>
+            ${boardHTML}
+            <br>
+            <p style="color:var(--neon-blue); border-bottom:1px solid #333;">[ POTENZIAMENTI ]</p>
+            <p>• OVERCLOCK: Ferma il tempo 5s.</p>
+            <p>• RE-SCAN: Rivela lettera (-10s).</p>
+            <p>• GHOST: Salva da 1 errore.</p>
+        </div>`;
     document.getElementById('overlay').style.display = 'flex';
     document.querySelector('#overlay button').innerText = "CHIUDI";
 }
@@ -110,21 +133,24 @@ function forceEnd(win) {
         } else { myScore = Math.max(0, myScore - 1); }
     }
     updateRankUI();
+    
     document.getElementById('overlay').style.display = 'flex';
     document.querySelector('#overlay button').innerText = "RETRY";
     document.getElementById('result-title').innerText = win ? "VITTORIA" : "SCONFITTA";
-    document.getElementById('result-desc').innerHTML = `<div class="led led-on" style="margin:10px auto; box-shadow:0 0 10px var(--neon-blue);"></div><p>PAROLA: <span style="color:white;">${secretWord}</span></p>`;
+    document.getElementById('result-desc').innerHTML = `
+        <div class="led led-on" style="margin:10px auto; box-shadow:0 0 10px var(--neon-blue);"></div>
+        <p>PAROLA: <span style="color:white; letter-spacing:2px;">${secretWord}</span></p>`;
 }
 
 function updateLeaderboard(name, score) {
     let board = JSON.parse(localStorage.getItem('mv_leaderboard')) || [{name:"ARCHITECT", score:95}];
-    let existing = board.find(e => e.name === name);
-    if(existing) { if(score > existing.score) existing.score = score; } else { board.push({name, score}); }
+    let ex = board.find(e => e.name === name);
+    if(ex) { if(score > ex.score) ex.score = score; } else { board.push({name, score}); }
     board.sort((a, b) => b.score - a.score);
     localStorage.setItem('mv_leaderboard', JSON.stringify(board.slice(0, 5)));
 }
 
-// --- UTILS ---
+// --- UTILITIES ---
 function unlock(id, c) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led ' + c; } }
 function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
 function handleMove(l) { if(guessedLetters.includes(l) || amIMaster) return; guessedLetters.push(l); if(!secretWord.includes(l)) { if(isGhost) isGhost = false; else mistakes++; } renderWord(); }
@@ -148,20 +174,24 @@ function retry() {
     if(document.querySelector('#overlay button').innerText === "CHIUDI") document.getElementById('overlay').style.display = 'none';
     else { document.getElementById('overlay').style.display = 'none'; if(isBot) startBotGame(); else location.reload(); }
 }
-function showPowerInfo(type) {
-    const info = {'overclock': "Blocca tempo 5s.", 'rescan': "Rivela lettera (-10s).", 'ghost': "Salva da errore."};
-    document.getElementById('status-text').innerText = info[type] || "SYSTEM_READY";
-}
+
+// --- POTERI ---
 function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
 function useRescan() { if(timeLeft <= 10) return; timeLeft -= 10; consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[0]); }
 function useGhost() { isGhost = true; consume('p-ghost'); }
 
 function triggerGodEnding() {
-    const endOverlay = document.createElement('div');
-    endOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:black; color:#39ff14; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:monospace; text-align:center;';
-    endOverlay.innerHTML = `<h1 style="font-size:30px;">SYSTEM_OVERRRIDE</h1><p>> HAI SUPERATO IL LIVELLO 100.</p><button onclick="localStorage.clear();location.reload();" style="background:#39ff14; padding:15px; margin-top:20px;">REBOOT</button>`;
-    document.body.appendChild(endOverlay);
+    const end = document.createElement('div');
+    end.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:#39ff14;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;';
+    end.innerHTML = `<h1>SYSTEM_OVERRRIDE</h1><p>ACCESSO GOD_MODE OTTENUTO.</p><button onclick="localStorage.clear();location.reload();" style="background:#39ff14;color:black;border:none;padding:15px;margin-top:20px;font-weight:bold;">REBOOT</button>`;
+    document.body.appendChild(end);
 }
 
-peer.on('open', id => { document.getElementById('my-id').innerText = id; });
+// --- INIT ---
+peer.on('open', id => { 
+    document.getElementById('my-id').innerText = id; 
+    const led = document.getElementById('connection-led');
+    if(led) led.className = 'led led-on';
+});
+
 updateRankUI();
