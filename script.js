@@ -242,10 +242,10 @@ function resetAccount() { if(confirm("SURE? All system data will be wiped.")) { 
 function copyId() { const id = document.getElementById('my-id').innerText; navigator.clipboard.writeText(id); document.getElementById('copy-btn').innerText = "COPIED"; setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000); }
 
 function updateRankUI() {
-    const p = Math.min((myScore/20)*100, 100);
+    const p = Math.min((myScore/100)*100, 100);
     let r = "HACKER", c = "var(--neon-blue)"; 
-    if(myScore >= 10) { r = "ELITE_HACKER"; c = "#39ff14"; }
-    if(myScore >= 20) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
+    if(myScore >= 30) { r = "ELITE_HACKER"; c = "#39ff14"; }
+    if(myScore >= 100) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
     document.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = p+"%"; el.style.background = c; });
     document.querySelectorAll('.rank-label').forEach(el => { el.innerText = `${r} (${myScore}/20)`; el.style.color = c; });
