@@ -124,6 +124,37 @@ function startTimer() {
     }, 1000);
 }
 
+// --- GESTIONE POTENZIAMENTI (INFO LED) ---
+function showPowerInfo(type) {
+    const status = document.getElementById('status-text');
+    const info = {
+        'overclock': "OVERCLOCK: Ferma il tempo per 5 secondi.",
+        'rescan': "RE-SCAN: Sacrifica 10s per scoprire una lettera.",
+        'ghost': "GHOST_PROTOCOL: Protegge dal prossimo errore.",
+        'blackout': "BLACKOUT: Oscura lo schermo nemico.",
+        'distort': "DISTORT: Rende la tastiera nemica instabile.",
+        'cyberfog': "CYBER_FOG: Crea nebbia digitale sulla parola nemica."
+    };
+    status.innerText = info[type] || "SYSTEM_ACTIVE";
+}
+
+function unlock(id, colorClass) { 
+    let b = document.getElementById(id); 
+    if(b && !b.getAttribute('used')) { 
+        b.disabled = false; 
+        b.querySelector('.led').className = 'led ' + colorClass; 
+    } 
+}
+
+function consume(id) { 
+    let b = document.getElementById(id); 
+    b.disabled = true; 
+    b.setAttribute('used', 'true'); 
+    b.querySelector('.led').className = 'led'; 
+    b.style.opacity="0.1"; 
+}
+
+// --- INTERAZIONE ---
 function handleMove(l) {
     if(guessedLetters.includes(l) || amIMaster) return;
     guessedLetters.push(l);
@@ -142,11 +173,9 @@ function renderWord() {
     }
 }
 
-// --- UI & RANKING ---
 function updateRankUI() {
     const progressPercent = Math.min((myScore / 100) * 100, 100);
     let r = "NOVICE", c = "#888";
-
     if(myScore >= 10) { r = "SCRIPT_KIDDIE"; c = "#00d4ff"; }
     if(myScore >= 30) { r = "CYBER_GHOST"; c = "#00f2ff"; }
     if(myScore >= 50) { r = "ELITE_HACKER"; c = "#39ff14"; }
@@ -155,19 +184,8 @@ function updateRankUI() {
     if(myScore >= 100) { r = "GOD_MODE"; c = "var(--neon-pink)"; }
 
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
-
-    document.querySelectorAll('.rank-bar-fill').forEach(el => { 
-        el.style.width = progressPercent + "%"; 
-        el.style.background = c;
-        el.style.boxShadow = `0 0 15px ${c}`;
-    });
-
-    document.querySelectorAll('.rank-label').forEach(el => { 
-        el.innerText = `${r} (${myScore}/100)`; 
-        el.style.color = c; 
-    });
-
-    if (myScore >= 100) setTimeout(triggerGodEnding, 1500);
+    document.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = progressPercent + "%"; el.style.background = c; });
+    document.querySelectorAll('.rank-label').forEach(el => { el.innerText = `${r} (${myScore}/100)`; el.style.color = c; });
 }
 
 function forceEnd(win) {
@@ -175,69 +193,34 @@ function forceEnd(win) {
     if (!amIMaster) {
         if (win) { myScore++; myMatchScore++; } 
         else { myScore = Math.max(0, myScore - 1); remoteMatchScore++; }
-        if(conn && !isBot) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
-    } else {
-        if (!win) myMatchScore++; else remoteMatchScore++;
     }
-    updateMatchScoreUI(); updateRankUI();
+    updateRankUI();
     document.getElementById('overlay').style.display = 'flex';
-    const resTitle = document.getElementById('result-title');
-    resTitle.innerText = win ? "SYSTEM BYPASSED" : "CONNECTION LOST";
-    resTitle.className = win ? "win-glow" : "lose-glow";
-    document.getElementById('result-desc').innerHTML = `PAROLA: <span style="color:white; font-weight:bold;">${secretWord}</span>`;
+    document.getElementById('result-title').innerText = win ? "SYSTEM BYPASSED" : "CONNECTION LOST";
 }
 
-// --- PULSANTI E UTILITY (RIPRISTINATI) ---
-function retry() { 
-    if(isBot) startBotGame(); 
-    else if(conn) { amIMaster = !amIMaster; conn.send({type:'REMATCH_REQUEST'}); updateRoleUI(); } 
-    else location.reload(); 
-}
-
-function copyId() { 
-    const id = document.getElementById('my-id').innerText; 
-    navigator.clipboard.writeText(id); 
-    const btn = document.getElementById('copy-btn');
-    btn.innerText = "COPIED"; 
-    setTimeout(() => btn.innerText = "Copy Code", 2000); 
-}
-
-function resetAccount() { 
-    if(confirm("SURE? All system data will be wiped.")) { 
-        localStorage.clear(); 
-        location.reload(); 
-    } 
-}
-
+// --- UTILITY ---
+function retry() { if(isBot) startBotGame(); else if(conn) { amIMaster = !amIMaster; conn.send({type:'REMATCH_REQUEST'}); updateRoleUI(); } else location.reload(); }
+function copyId() { const id = document.getElementById('my-id').innerText; navigator.clipboard.writeText(id); document.getElementById('copy-btn').innerText = "COPIED"; setTimeout(() => document.getElementById('copy-btn').innerText = "Copy Code", 2000); }
+function resetAccount() { if(confirm("SURE? All data will be wiped.")) { localStorage.clear(); location.reload(); } }
 function updateRoleUI() {
     document.getElementById('overlay').style.display = 'none';
     document.getElementById('play-screen').classList.add('hidden');
     document.getElementById('setup-screen').classList.remove('hidden');
-    if(amIMaster) {
-        document.getElementById('master-section').classList.remove('hidden');
-        document.getElementById('status-text').innerText = "YOUR_TURN_MASTER";
-    } else {
-        document.getElementById('master-section').classList.add('hidden');
-        document.getElementById('status-text').innerText = "WAITING_FOR_MASTER...";
-    }
+    if(amIMaster) { document.getElementById('master-section').classList.remove('hidden'); } 
+    else { document.getElementById('master-section').classList.add('hidden'); }
 }
-
-function updateTimerUI() { const mins = Math.floor(timeLeft / 60); const secs = timeLeft % 60; document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; }
+function updateTimerUI() { document.getElementById('timer-display').innerText = timeLeft; }
 function updateMatchScoreUI() { document.getElementById('score-me').innerText = myMatchScore; document.getElementById('score-remote').innerText = remoteMatchScore; }
-function unlock(id, colorClass) { let b = document.getElementById(id); if(b && !b.getAttribute('used')) { b.disabled = false; b.querySelector('.led').className = 'led ' + colorClass; } }
-function consume(id) { let b = document.getElementById(id); b.disabled = true; b.setAttribute('used', 'true'); b.querySelector('.led').className = 'led'; b.style.opacity="0.1"; }
 function triggerEnd(win) { if(conn && !isBot) conn.send({type:'FINISH', win:win}); forceEnd(win); }
-function remoteMove(l) { guessedLetters.push(l); if(!secretWord.includes(l)) mistakes++; renderWord(); }
-
 function createKeyboard() {
     const k = document.getElementById('keyboard'); k.innerHTML = "";
     "QWERTYUIOPASDFGHJKLZXCVBNM".split("").forEach(l => {
         const b = document.createElement('button'); b.className="key"; b.innerText=l;
-        b.onclick = () => { if(amIMaster) return; b.classList.add('used'); handleMove(l); };
+        b.onclick = () => { if(!amIMaster) { b.classList.add('used'); handleMove(l); } };
         k.appendChild(b);
     });
 }
-
 function drawHangman() {
     const c = document.getElementById('hangmanCanvas'); const ctx = c.getContext('2d');
     ctx.clearRect(0,0,160,90); ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2; ctx.beginPath();
@@ -250,14 +233,17 @@ function drawHangman() {
     ctx.stroke();
 }
 
-// --- ATTACCHI E POTERI ---
-function triggerBlackout() { const ps = document.getElementById('play-screen'); ps.style.filter = "brightness(0)"; setTimeout(() => ps.style.filter = "none", 4000); }
-function triggerDistort() { document.getElementById('keyboard').style.transform = "skew(20deg)"; setTimeout(() => document.getElementById('keyboard').style.transform = "none", 4000); }
-function triggerCyberfog() { document.getElementById('word-display').style.filter = "blur(10px)"; setTimeout(() => document.getElementById('word-display').style.filter = "none", 5000); }
+// Attacchi
+function triggerBlackout() { const ps = document.getElementById('play-screen'); ps.style.opacity = "0"; setTimeout(() => ps.style.opacity = "1", 3000); }
+function triggerDistort() { document.getElementById('keyboard').style.filter = "invert(1)"; setTimeout(() => document.getElementById('keyboard').style.filter = "none", 3000); }
+function triggerCyberfog() { document.getElementById('word-display').style.filter = "blur(15px)"; setTimeout(() => document.getElementById('word-display').style.filter = "none", 4000); }
 
+// Uso Poteri
 function useOverclock() { isOverclock = true; consume('p-overclock'); setTimeout(() => isOverclock = false, 5000); }
-function useRescan() { if(timeLeft <= 10) return; timeLeft -= 10; updateTimerUI(); consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[Math.floor(Math.random()*m.length)]); }
+function useRescan() { if(timeLeft <= 10) return; timeLeft -= 10; consume('p-rescan'); let m = secretWord.split("").filter(l => !guessedLetters.includes(l)); if(m.length) handleMove(m[0]); }
 function useGhost() { isGhost = true; consume('p-ghost'); }
+function useBlackout() { if(conn) conn.send({type:'P_BLACKOUT'}); consume('p-blackout'); }
+function useDistort() { if(conn) conn.send({type:'P_DISTORT'}); consume('p-distort'); }
+function useCyberfog() { if(conn) conn.send({type:'P_CYBERFOG'}); consume('p-cyberfog'); }
 
-// Inizializzazione Rank
 updateRankUI();
