@@ -1,7 +1,26 @@
 /* Variabili Colori, Prevenzione Fuori Bordi, Aspetto */ 
-:root { --neon-blue: #00f2ff; --neon-pink: #ff0055; --bg-dark: #0a0a0c; --led-green: #39ff14; --grey: #A9A9A9; }
+:root { 
+    --neon-blue: #00f2ff; 
+    --neon-pink: #ff0055; 
+    --bg-dark: #0a0a0c; 
+    --led-green: #39ff14; 
+    --grey: #A9A9A9; 
+    --phantom-gold: #ffcc00; /* Colore per la fase intermedia */
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-body { margin: 0; background: var(--bg-dark); color: white; font-family: monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+
+body { 
+    margin: 0; 
+    background: var(--bg-dark); 
+    color: white; 
+    font-family: monospace; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+    overflow: hidden; 
+}
 
 /* Interfaccia iniziale */
 .panel { width: 95%; max-width: 380px; }
@@ -20,7 +39,7 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .pink-text { color: var(--neon-pink); }
 .terminal-footer { font-size: 0.5rem; color: #333; margin-top: 20px; text-align: center; letter-spacing: 2px; }
 
-/* Punteggio: Contenitore, Etichette, Numeri, Divisore */
+/* Punteggio */
 .match-score { position: absolute; top: 15px; left: 15px; display: flex; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 12px; border-radius: 6px; }
 .score-display { display: flex; align-items: center; gap: 8px; }
 .score-box { display: flex; flex-direction: column; align-items: center; }
@@ -28,11 +47,9 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 #score-me, #score-remote { font-size: 1.2rem; font-weight: 900; color: var(--neon-blue); line-height: 1; }
 .score-divider { color: #333; margin: 8px 2px 0 2px; font-weight: bold; }
 
-/* Stato: online, Multiplayer, Master */
+/* Stato e Status Bar */
 .led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #333; transition: 0.3s; cursor: pointer; }
 .led-on { background: var(--led-green); box-shadow: 0 0 10px var(--led-green); }
-
-/* Status bar: barra in alto che contiene il led/ Sistetm Off & on */
 .status-bar { width: 100%; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #222; padding-bottom: 10px; margin-bottom: 5px; }
 #status-text { font-size: 0.7rem; color: #444; }
 
@@ -42,14 +59,12 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 
 /* Id Display e Input */
 .id-display { font-size: 2.5rem; font-weight: 900; color: var(--neon-pink); letter-spacing: 5px; text-align: center; width: 100%; margin: 0; display: block; }
-
-/* Bottone Copia e Stile ID e Secret Word  */
 .btn-copy { margin: 10px auto 20px auto !important; display: table; background: none; border: 1px solid #333; color: #555; font-size: 0.6rem; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
 #peer-id-input, #secret-word-input { width: 100%; height: 55px; background: rgba(255,255,255,0.05) !important; border: none !important; border-bottom: 2px solid #333 !important; color: var(--grey) !important; text-align: center; font-size: 1.1rem; border-radius: 0 !important; margin-bottom: 20px !important; transition: 0.3s; }
 #peer-id-input:focus { border-bottom-color: var(--neon-blue) !important; }
 #secret-word-input:focus { border-bottom-color: var(--neon-pink) !important; }
 
-/*  Centratura Schermata Master */
+/* Centratura Schermata Master */
 #master-section { display: flex; flex-direction: column; align-items: center; width: 100%; justify-content: center; text-align: center; min-height: 200px; }
 
 /* Barra del Rank */
@@ -63,71 +78,57 @@ body { margin: 0; background: var(--bg-dark); color: white; font-family: monospa
 .blue { background: var(--neon-blue); color: #000; }
 .pink { background: var(--neon-pink); color: #fff; margin-bottom: 12px }
 .btn-main:active { transform: scale(0.96); }
-
-/* Bottone Reset */
 .btn-reset { margin-top: 20px ; margin-bottom: 5px ; background: transparent; border: none; color: rgba(255, 255, 255, 0.1); font-size: 0.65rem; cursor: pointer; font-family: monospace; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
 .btn-reset:hover { color: var(--neon-pink); }
 
-/* Bottoni poteri */
+/* Poteri */
 .powers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 10px }
 .btn-pwr { height: 45px; background: #000; border: 1px solid #222; color: #333; font-size: 0.65rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; }
 .btn-pwr:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
 .btn-pwr.master:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); }
 
-/* Effetto BLACKOUT: Schermo nero */
+/* Effetti Speciali */
 .effect-blackout { filter: brightness(0); pointer-events: none; transition: 0.3s; }
-
-/* Effetto GLITCH: Scuote e distorce la tastiera */
 .effect-glitch { animation: glitch-anim 0.2s infinite; filter: hue-rotate(90deg); }
-@keyframes glitch-anim { 0% { transform: translate(0); } 20% { transform: translate(-5px, 5px); } 40% { transform: translate(-5px, -5px); } 60% { transform: translate(5px, 5px); } 80% { transform: translate(5px, -5px); } 100% { transform: translate(0); } }
-
-/* Effetto FOG: Sfoca le lettere della parola */
 .effect-fog { filter: blur(8px); transition: 0.5s; }
+.effect-shake { animation: letterShake 0.2s infinite; }
 
-/* Tastiera e Display Parola */
+@keyframes glitch-anim { 0% { transform: translate(0); } 20% { transform: translate(-5px, 5px); } 40% { transform: translate(-5px, -5px); } 60% { transform: translate(5px, 5px); } 80% { transform: translate(5px, -5px); } 100% { transform: translate(0); } }
+@keyframes letterShake { 0% { transform: translate(0,0); } 50% { transform: translate(1px, -1px); } 100% { transform: translate(0,0); } }
+
+/* Tastiera e Parola */
 #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; }
 .key { aspect-ratio: 1/1; background: #1a1a1f; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
 .key.used { opacity: 0.05; pointer-events: none; }
 #word-display { display: flex; gap: 6px; min-height: 40px; margin-top: 10px; }
 .letter-slot { width: 22px; border-bottom: 2px solid #333; font-size: 1.8rem; text-align: center; color: var(--neon-blue); font-weight: bold; }
-.wrong-text { color: var(--neon-pink); text-decoration: line-through; font-size: 0.8rem; height: 15px; }
 
-/* Overlays */
+/* Overlays e Rank Up */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
 .overlay-card { background: #000; padding: 40px 20px; border: 1px solid #222; border-radius: 20px; text-align: center; width: 90%; max-width: 380px; }
-.overlay-btns { display: flex; gap: 15px; margin-top: 20px; width: 100%; justify-content: center; }
-.overlay-btns .blue { background: var(--neon-blue) !important; color: #000 !important; box-shadow: 0 0 15px rgba(0, 242, 255, 0.5); border: none; flex: 1; height: 50px; font-weight: bold; cursor: pointer; }
-.overlay-btns .blue:hover { filter: brightness(1.2); }
-.overlay-btns button:last-child { background: rgba(255,255,255,0.05); border: 1px solid #333; color: #888; flex: 1; height: 50px; font-weight: bold; cursor: pointer; }
-.overlay-btns button:last-child:hover { background: #ff0055; color: #fff; border-color: #ff0055; }
-.lose-glow { color: #ff0055 !important; text-shadow: 0 0 15px rgba(255, 0, 85, 0.8), 0 0 5px #ff0055; text-transform: uppercase; }
-.win-glow { color: #00f2ff !important; text-shadow: 0 0 15px rgba(0, 242, 255, 0.8), 0 0 5px #00f2ff; text-transform: uppercase; }
-.hidden { display: none !important; }
 
-/* Effetti di disturbo per livelli alti */
+.overlay-rank-up {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); display: flex; align-items: center;
+    justify-content: center; z-index: 9999;
+}
+.rank-up-content {
+    background: #000; padding: 40px; text-align: center;
+    border-radius: 15px; border: 1px solid white;
+    animation: rank-entry 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes rank-entry {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
 @keyframes glitch-fast {
     0% { clip-path: inset(50% 0 30% 0); transform: translate(-5px); }
     20% { clip-path: inset(10% 0 80% 0); transform: translate(5px); }
     100% { clip-path: inset(50% 0 30% 0); transform: translate(-5px); }
 }
 
-.god-mode-active {
-    animation: glitch-fast 0.2s infinite !important;
-    border: 2px solid var(--neon-pink) !important;
-    box-shadow: 0 0 20px var(--neon-pink) !important;
-}
-
-.effect-shake { animation: letterShake 0.2s infinite; }
-@keyframes letterShake {
-    0% { transform: translate(0,0); }
-    50% { transform: translate(1px, -1px); }
-    100% { transform: translate(0,0); }
-}
-
-/* Bolla finale God Mode */
-#god-ending-overlay {
-    position: fixed; top:0; left:0; width:100%; height:100%;
-    background: black; z-index: 9999; display: none;
-    flex-direction: column; align-items: center; justify-content: center;
-    font-family: 'Courier New', monospace; color: #39ff14;
-}
+.win-glow { color: var(--neon-blue) !important; text-shadow: 0 0 15px var(--neon-blue); text-transform: uppercase; }
+.lose-glow { color: var(--neon-pink) !important; text-shadow: 0 0 15px var(--neon-pink); text-transform: uppercase; }
+.hidden { display: none !important; }
