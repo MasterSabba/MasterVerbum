@@ -262,8 +262,8 @@ function startTimer() {
         if(!amIMaster) {
             if(!isOverclock) timeLeft--;
             if(timeLeft <= 45) unlock('p-overclock', 'led-on');
-            if(timeLeft <= 30) unlock('p-rescan', 'led-on');
-            if(timeLeft <= 15) unlock('p-ghost', 'led-on');
+            if(timeLeft <= 30) unlock('p-ghost', 'led-on');
+            if(timeLeft <= 10) unlock('p-rescan', 'led-on');
             if(timeLeft <= 0) triggerEnd(false);
             if(conn && !isBot && timeLeft % 2 === 0) conn.send({type:'SYNC', time:timeLeft, mistakes:mistakes});
         }
