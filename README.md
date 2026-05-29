@@ -16,3 +16,5 @@ Il piccolo LED in alto a sinistra è uno stato di sistema:
 🔴 OFF → sistema offline
 🟢 ON → connessione attiva
 click sul LED → apre il manuale dei power-up (overlay nascosto con spiegazione dei poteri)
+
+![Immagine](IMG_9433.jpeg)
