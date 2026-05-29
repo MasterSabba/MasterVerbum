@@ -17,6 +17,6 @@ Il piccolo LED in alto a sinistra è uno stato di sistema:
 🟢 ON → connessione attiva
 click sul LED → apre il manuale dei power-up (overlay nascosto con spiegazione dei poteri)
 
-È collegato alla repository centrale MasterHub (https://mastersabba.github.io/MasterSabba/), che contiene tutti i minigiochi della serie Master.
+È collegato alla repository centrale MasterGames (https://mastersabba.github.io/MasterSabba/), che contiene tutti i minigiochi della serie Master.
 
 ![Immagine](IMG_9433.jpeg)
