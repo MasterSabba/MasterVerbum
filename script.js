@@ -6,7 +6,7 @@ let timerInterval, timeLeft = 60, myMatchScore = 0, remoteMatchScore = 0, isOver
 let wordHistory = []; 
 
 // [PERSONALIZZAZIONE] Nickname e Rank
-let myHackerTag = localStorage.getItem('mv_hacker_tag') || "GUEST_USER";
+let myHackerTag = localStorage.getItem('mv_hacker_tag') || localStorage.getItem('nickname') || localStorage.getItem('username') || "GUEST_USER";
 let myScore = 0;
 let lastRank = ""; // Per monitorare il passaggio di grado
 const savedData = localStorage.getItem('mv_elite_stats');
@@ -14,7 +14,33 @@ if(savedData) {
     myScore = JSON.parse(savedData).score || 0;
 }
 
+// Sincronizzazione con il formato chiave standard dell'Hub (points_masterverbum)
+let savedPointsHub = parseInt(localStorage.getItem('points_masterverbum')) || 0;
+if (savedPointsHub > myScore) {
+    myScore = savedPointsHub;
+}
+localStorage.setItem('points_masterverbum', myScore);
+
 const fallback = ["ALBERO","CASA","CANE","GATTO","LIBRO","PENNA","TAVOLO","SEDIA","FINESTRA","PORTA","STRADA","PIAZZA","SCUOLA","MARE","MONTE","FIUME","LAGO","NUVOLA","PIOGGIA","VENTO","FUOCO","TERRA","ARIA","LUCE","OMBRA","SOGNO","TEMPO","SPAZIO","ANIMA","CUORE","MENTE","CORPO","AMORE","ODIO","PACE","GUERRA","FORZA","ENERGIA","MAGIA","STELLA","PIANETA","GALASSIA","UNIVERSO","COMETA","ASTEROIDE","SATELLITE","ORBITA","GRAVITA","MELA","PERA","BANANA","LIMONE","FRAGOLA","CILIEGIA","PESCA","ARANCIA","UVA","PANE","PASTA","PIZZA","LATTE","UOVO","CARNE","PESCE","FORMAGGIO","VINO","BIRRA","ACQUA","SALE","PEPE","OLIO","ACETO","DOLCE","AMARO","SALATO","ACIDO","CALDO","FREDDO","ROSSO","VERDE","BLU","GIALLO","NERO","BIANCO","GRIGIO","AZZURRO","VIOLA","ROSA","MARRONE"];
+
+// --- SINCRONIZZAZIONE FIRESTORE ---
+async function savePointsToCloud(newScore) {
+    myScore = newScore;
+    localStorage.setItem('points_masterverbum', myScore);
+    localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
+    updateRankUI();
+
+    try {
+        if (typeof db !== 'undefined') {
+            await db.collection("users").doc(myHackerTag).set({
+                MasterVerbum: myScore
+            }, { merge: true });
+            console.log("Punti MasterVerbum sincronizzati su Firestore per: " + myHackerTag);
+        }
+    } catch (e) {
+        console.error("Errore di scrittura database: ", e);
+    }
+}
 
 // --- INIZIALIZZAZIONE PEER ---
 peer.on('open', id => {
@@ -144,17 +170,19 @@ function sendWord() {
 function forceEnd(win) {
     clearInterval(timerInterval);
     if (!amIMaster) {
+        let updatedScore = myScore;
         if (win) { 
-            myScore++; myMatchScore++; 
+            updatedScore++; myMatchScore++; 
             if (myHackerTag === "GUEST_USER") {
                 let n = prompt("SISTEMA VIOLATO. INSERIRE HACKER_TAG:");
                 if(n) { myHackerTag = n.toUpperCase(); localStorage.setItem('mv_hacker_tag', myHackerTag); }
             }
         } 
         else { 
-            if(myScore < 100) myScore = Math.max(0, myScore - 1); 
+            if(myScore < 100) updatedScore = Math.max(0, myScore - 1); 
             remoteMatchScore++; 
         }
+        savePointsToCloud(updatedScore);
         if(conn && !isBot) conn.send({type:'SCORE_SYNC', yourScore: remoteMatchScore, oppScore: myMatchScore});
     } else {
         if (!win) myMatchScore++; else remoteMatchScore++;
@@ -243,7 +271,7 @@ function updateRankUI() {
 
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
     
-    // --- NUOVO: SALVATAGGIO DEI PUNTI PER L'HUB ---
+    // --- SALVATAGGIO AUTOMATICO DEI PUNTI PER L'HUB ---
     localStorage.setItem("points_masterverbum", myScore);
 
     document.getElementById('status-text').innerText = `[${myHackerTag}] SYSTEM_ONLINE`;
