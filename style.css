@@ -132,3 +132,11 @@ body {
 .win-glow { color: var(--neon-blue) !important; text-shadow: 0 0 15px var(--neon-blue); text-transform: uppercase; }
 .lose-glow { color: var(--neon-pink) !important; text-shadow: 0 0 15px var(--neon-pink); text-transform: uppercase; }
 .hidden { display: none !important; }
+
+    .exit-button {
+            position: absolute; top: 15px; left: 20px; font-size: 2rem; line-height: 1;
+            color: var(--empty-border); text-decoration: none; z-index: 100;
+            transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; font-family: Arial, sans-serif;
+        }
+        .exit-button:hover { color: var(--text-color); transform: scale(1.1); }
+
