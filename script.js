@@ -30,12 +30,20 @@ async function savePointsToCloud(newScore) {
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
     updateRankUI();
 
+    // Notifica all'Hub Arcade
+    const target = window.opener || (window.parent !== window ? window.parent : null);
+    if (target) {
+        target.postMessage({
+            gameKey: 'masterverbum',
+            points: myScore
+        }, '*');
+    }
+
     try {
         if (typeof db !== 'undefined') {
             await db.collection("users").doc(myHackerTag).set({
                 MasterVerbum: myScore
             }, { merge: true });
-            console.log("Punti MasterVerbum sincronizzati su Firestore per: " + myHackerTag);
         }
     } catch (e) {
         console.error("Errore di scrittura database: ", e);
