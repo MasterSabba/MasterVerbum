@@ -30,20 +30,15 @@ async function savePointsToCloud(newScore) {
     localStorage.setItem('mv_elite_stats', JSON.stringify({score: myScore}));
     updateRankUI();
 
-    // Notifica all'Hub Arcade
+    // 🟢 NOTIFICA ALL'HUB ARCADE
     const target = window.opener || (window.parent !== window ? window.parent : null);
     if (target) {
-        target.postMessage({
-            gameKey: 'masterverbum',
-            points: myScore
-        }, '*');
+        target.postMessage({ gameKey: 'master-verbum', points: 50 }, '*');
     }
 
     try {
         if (typeof db !== 'undefined') {
-            await db.collection("users").doc(myHackerTag).set({
-                MasterVerbum: myScore
-            }, { merge: true });
+            await db.collection("users").doc(myHackerTag).set({ MasterVerbum: myScore }, { merge: true });
         }
     } catch (e) {
         console.error("Errore di scrittura database: ", e);
